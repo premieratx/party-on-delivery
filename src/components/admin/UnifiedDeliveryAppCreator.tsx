@@ -882,42 +882,44 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
               <TabsContent value="preview" className="flex-1 overflow-hidden p-6">
                 <div className="h-full flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Preview</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={previewDevice === 'mobile' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPreviewDevice('mobile')}
-                      >
-                        <Smartphone className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant={previewDevice === 'tablet' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPreviewDevice('tablet')}
-                      >
-                        <Tablet className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant={previewDevice === 'desktop' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPreviewDevice('desktop')}
-                      >
-                        <Monitor className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <h3 className="text-lg font-semibold">Configuration Summary</h3>
                   </div>
                   
-                  <div className="flex-1 flex items-center justify-center bg-muted/10 rounded-lg">
-                    <DeliveryAppPreview
-                      appName={appName || 'My Delivery App'}
-                      heroHeading={heroHeading}
-                      heroSubheading={heroSubheading}
-                      logoUrl={logoUrl}
-                      tabs={tabs}
-                      theme={theme}
-                      device={previewDevice}
-                    />
+                  <div className="flex-1 bg-muted/10 rounded-lg p-6">
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">App Details</h4>
+                        <div className="bg-card rounded-lg p-4 space-y-2">
+                          <p><span className="font-medium">Name:</span> {appName || 'Not set'}</p>
+                          <p><span className="font-medium">Slug:</span> {appSlug || 'Not set'}</p>
+                          <p><span className="font-medium">Theme:</span> {theme || 'Not set'}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Content</h4>
+                        <div className="bg-card rounded-lg p-4 space-y-2">
+                          <p><span className="font-medium">Headline:</span> {heroHeading || 'Not set'}</p>
+                          <p><span className="font-medium">Subheadline:</span> {heroSubheading || 'Not set'}</p>
+                          <p><span className="font-medium">Logo:</span> {logoUrl ? 'Uploaded' : 'Not set'}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Collections ({tabs.length} tabs)</h4>
+                        <div className="bg-card rounded-lg p-4">
+                          <div className="space-y-2">
+                            {tabs.map((tab, index) => (
+                              <div key={index} className="flex items-center gap-2 text-sm">
+                                <span className="text-lg">{tab.icon}</span>
+                                <span className="font-medium">{tab.name}</span>
+                                <span className="text-muted-foreground">→ {tab.collection_handle}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </TabsContent>

@@ -131,94 +131,128 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content */}
-        <div className="relative z-10 flex h-full flex-col items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)] uppercase tracking-wider">
-          <header className="w-full text-center my-5">
-            <div className="relative inline-block mx-auto" style={{ marginTop: (logoOffsetY || 0) }}>
-              {logoBgColor && logoBgMode !== 'none' && (
-                logoBgMode === 'rectangle' ? (
-                  <div
-                    className="absolute inset-0 -m-1 rounded-md"
-                    style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))' }}
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      backgroundColor: logoBgColor,
-                      WebkitMaskImage: `url(${logoUrl || partyLogo})`,
-                      maskImage: `url(${logoUrl || partyLogo})`,
-                      WebkitMaskRepeat: 'no-repeat',
-                      maskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'center',
-                      maskPosition: 'center',
-                      WebkitMaskSize: 'contain',
-                      maskSize: 'contain',
-                    }}
-                    aria-hidden="true"
-                  />
-                )
-              )}
-              <img
-                src={logoUrl || partyLogo}
-                alt={`${appName} logo`}
-                className="relative w-auto max-h-[30vh] drop-shadow-lg mx-auto"
-                style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160) }}
-                loading="eager"
-              />
+        {/* Content - Improved Responsive and Centered Layout */}
+        <div className="relative z-10 flex h-full flex-col justify-center items-center px-4 sm:px-6 py-6">
+          
+          {/* Top Section: Logo and Title - Centered */}
+          <div className="text-center flex flex-col items-center flex-shrink-0 w-full max-w-4xl">
+            {/* Logo with better responsive handling */}
+            <div className="mb-6 sm:mb-8" style={{ marginTop: (logoOffsetY || 0) }}>
+              <div className="relative inline-block mx-auto">
+                {logoBgColor && logoBgMode !== 'none' && (
+                  logoBgMode === 'rectangle' ? (
+                    <div
+                      className="absolute inset-0 -m-1 rounded-md"
+                      style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))' }}
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundColor: logoBgColor,
+                        WebkitMaskImage: `url(${logoUrl || partyLogo})`,
+                        maskImage: `url(${logoUrl || partyLogo})`,
+                        WebkitMaskRepeat: 'no-repeat',
+                        maskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        maskPosition: 'center',
+                        WebkitMaskSize: 'contain',
+                        maskSize: 'contain',
+                      }}
+                      aria-hidden="true"
+                    />
+                  )
+                )}
+                <img
+                  src={logoUrl || partyLogo}
+                  alt={`${appName} logo`}
+                  className="relative w-auto object-contain drop-shadow-lg mx-auto"
+                  style={{ 
+                    height: Math.min(
+                      (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160),
+                      window.innerHeight * 0.15
+                    ), 
+                    maxHeight: '160px' 
+                  }}
+                  loading="eager"
+                />
+              </div>
             </div>
+
+            {/* Title with responsive sizing */}
             <h1
-              className="font-bold tracking-tight text-white mt-2"
-              style={{ fontSize: titleSizeProp ? `${titleSizeProp}px` : 'clamp(24px,4vw,40px)', marginTop: (titleOffsetY || 0) }}
+              className="font-bold tracking-tight text-white mb-4 px-2 leading-tight"
+              style={{ 
+                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, window.innerWidth < 640 ? 32 : titleSizeProp)}px` : 'clamp(24px,4vw,40px)', 
+                marginTop: (titleOffsetY || 0) 
+              }}
             >
               {title}
             </h1>
+
+            {/* Subtitle with responsive sizing */}
             {subtitle && (
               <p
-                className="text-white/90 mt-1"
-                style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : 'clamp(14px,2.5vw,20px)', marginTop: (subtitleOffsetY || 0) }}
+                className="text-white/90 mb-6 sm:mb-8 px-2 leading-relaxed"
+                style={{ 
+                  fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, window.innerWidth < 640 ? 16 : subtitleSizeProp)}px` : 'clamp(14px,2.5vw,20px)', 
+                  marginTop: (subtitleOffsetY || 0) 
+                }}
               >
                 {subtitle}
               </p>
             )}
-          </header>
+          </div>
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Checklist + Buttons */}
-          <div className="w-full max-w-sm mt-2 mb-0">
-            {/* Auto-shrinking checklist area */}
-            <div className="w-full mx-auto my-5" style={{ marginTop: (checklistOffsetY || 0) }}>
-              <div className="flex flex-col items-center gap-1 max-h-[20vh] overflow-hidden">
-                {(checklistItems?.filter(Boolean).slice(0, 5) || []).map((item, idx, arr) => (
-                  <React.Fragment key={idx}>
-                    <p
-                      className="text-white/90 font-semibold leading-tight animate-fade-in my-5"
-                      style={{ animationDelay: `${idx * 80}ms`, fontSize: checklistSizeProp ? `${checklistSizeProp}px` : 'clamp(12px,2.8vw,16px)' }}
+          {/* Middle Section: Checklist - Responsive with scroll */}
+          {checklistItems && checklistItems.length > 0 && (
+            <div 
+              className="w-full max-w-4xl mx-auto flex-1 overflow-y-auto px-2 my-4"
+              style={{ marginTop: (checklistOffsetY || 0) }}
+            >
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {checklistItems.filter(Boolean).slice(0, 8).map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 animate-fade-in"
+                    style={{ animationDelay: `${idx * 80}ms` }}
+                  >
+                    <div className="flex-shrink-0">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                    <span 
+                      className="text-white font-medium flex-1"
+                      style={{ 
+                        fontSize: checklistSizeProp ? `${Math.min(checklistSizeProp, window.innerWidth < 640 ? 14 : checklistSizeProp)}px` : 'clamp(12px,2.8vw,16px)',
+                        lineHeight: '1.4'
+                      }}
                     >
                       {item}
-                    </p>
-                    {idx < arr.length - 1 && (
-                      <span className="text-white/60 animate-fade-in" style={{ animationDelay: `${idx * 80 + 40}ms` }} aria-hidden="true">•</span>
-                    )}
-                  </React.Fragment>
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Minimum 100px gap between checklist and first button (adjustable) */}
-            <div className="min-h-[100px]" aria-hidden="true" style={{ marginTop: (buttonsOffsetY || 0) }} />
-
-            {/* Buttons layout: stack for 1-2, special layout for 3, grid for 4+ */}
+          {/* Bottom Section: Buttons - Always visible and centered */}
+          <div 
+            className="w-full max-w-lg mx-auto flex-shrink-0 pb-safe"
+            style={{ marginTop: (buttonsOffsetY || 0) }}
+          >
+            {/* Responsive Button Layout */}
             {buttons.length <= 2 ? (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 {buttons.map((b, i) => (
                   <Button
                     key={`${b.text}-${i}`}
                     size="lg"
-                    className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                    className={`w-full h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                     style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                     onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
                   >
@@ -227,22 +261,22 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 ))}
               </div>
             ) : buttons.length === 3 ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <Button
                   key={`${buttons[0].text}-0`}
                   size="lg"
-                  className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                  className={`w-full h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                   style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
                   onClick={(e) => { e.stopPropagation(); buttons[0].onClick?.(); }}
                 >
                   {buttons[0].text}
                 </Button>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {buttons.slice(1).map((b, i) => (
                     <Button
                       key={`${b.text}-${i + 1}`}
                       size="lg"
-                      className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                      className={`h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                       style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                       onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
                     >
@@ -252,12 +286,12 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {buttons.map((b, i) => (
                   <Button
                     key={`${b.text}-${i}`}
                     size="lg"
-                    className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                    className={`h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                     style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                     onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
                   >

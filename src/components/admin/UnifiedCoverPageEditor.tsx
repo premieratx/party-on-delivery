@@ -1109,49 +1109,40 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center bg-muted/10 rounded-lg">
             <div 
-              className={`${DEVICE_CONFIGS[activeDevice].className} transition-all duration-300 border-2 border-border/20 shadow-2xl`}
+              className={`${DEVICE_CONFIGS[activeDevice].className} transition-all duration-300 border-2 border-border/20 shadow-2xl overflow-hidden`}
               style={{ 
                 width: DEVICE_CONFIGS[activeDevice].previewWidth,
                 height: DEVICE_CONFIGS[activeDevice].previewHeight
               }}
             >
-              {previewMode ? (
-                <MobileFirstCoverPreview
+              {/* Always use CoverStartScreen for consistent real-time updates */}
+              <div className="relative w-full h-full">
+                <CoverStartScreen
                   title={title}
                   subtitle={subtitle}
-                  checklist={checklist}
-                  buttons={buttons}
-                  selectedTheme={selectedTheme}
                   logoUrl={logoUrl}
-                  elementPositions={elementPositions}
-                  dragMode={dragMode}
+                  logoHeight={logoHeight}
+                  backgroundImageUrl={bgImageUrl}
+                  backgroundVideoUrl={bgVideoUrl}
+                  checklistItems={checklist}
+                  buttons={buttons}
+                  titleSize={titleSize}
+                  subtitleSize={subtitleSize}
+                  checklistSize={checklistSize}
+                  titleOffsetY={titleOffsetY}
+                  subtitleOffsetY={subtitleOffsetY}
+                  checklistOffsetY={checklistOffsetY}
+                  buttonsOffsetY={buttonsOffsetY}
+                  logoOffsetY={logoOffsetY}
                 />
-              ) : (
-                <div className="relative">
-                  <AnimatedCoverPreview
-                    title={title}
-                    subtitle={subtitle}
-                    checklist={checklist}
-                    buttons={buttons}
-                    selectedTheme={selectedTheme}
-                    activeDevice={activeDevice}
-                    logoUrl={logoUrl}
-                    bgImageUrl={bgImageUrl}
-                    bgVideoUrl={bgVideoUrl}
-                    dragMode={dragMode}
-                    elementPositions={elementPositions}
-                    onElementDrag={handleElementDrag}
-                    templateData={templateData}
-                  />
-                  {dragMode && (
-                    <div className="absolute top-2 left-2 z-50 bg-black/80 text-white px-2 py-1 rounded text-xs">
-                      Drag Mode: Move elements by dragging them
-                    </div>
-                  )}
-                </div>
-              )}
+                {dragMode && (
+                  <div className="absolute top-2 left-2 z-50 bg-black/80 text-white px-2 py-1 rounded text-xs">
+                    Drag Mode: Move elements by dragging them
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
