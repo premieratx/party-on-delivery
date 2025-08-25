@@ -833,18 +833,25 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                         No collections available
                                       </SelectItem>
                                     ) : (
-                                       shopifyCollections.map((collection) => {
-                                         const displayName = collection.title || collection.name || collection.handle;
+                                       shopifyCollections.map((collection, collectionIndex) => {
+                                         const displayName = collection.title || collection.name || collection.handle || `Collection ${collectionIndex + 1}`;
                                          const productCount = collection.products_count || 0;
+                                         console.log(`🔍 Collection ${collectionIndex}:`, { 
+                                           title: collection.title, 
+                                           name: collection.name, 
+                                           handle: collection.handle,
+                                           displayName,
+                                           productCount 
+                                         });
                                          return (
                                            <SelectItem 
-                                             key={`${collection.handle}-${productCount}`} 
-                                             value={collection.handle}
+                                             key={`${collection.handle || collectionIndex}-${productCount}`} 
+                                             value={collection.handle || `collection-${collectionIndex}`}
                                              className="bg-background hover:bg-muted cursor-pointer"
                                            >
                                              <div className="w-full flex justify-between items-center">
-                                               <span className="font-medium">{displayName}</span>
-                                               <span className="text-muted-foreground">({productCount})</span>
+                                               <span className="font-medium text-foreground">{displayName}</span>
+                                               <span className="text-muted-foreground text-sm">({productCount})</span>
                                              </div>
                                            </SelectItem>
                                          );

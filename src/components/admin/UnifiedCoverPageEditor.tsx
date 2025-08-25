@@ -486,9 +486,32 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     setSaving(true);
     console.log('🔄 Saving cover page...', { title, slug: computedSlug, isEditing, initialId: initial?.id });
     try {
+      // Check for existing slug and auto-increment if needed
+      let finalSlug = computedSlug;
+      let counter = 1;
+      
+      while (true) {
+        const { data: existing } = await supabase
+          .from('cover_pages')
+          .select('id')
+          .eq('slug', finalSlug)
+          .maybeSingle();
+        
+        // If no existing record, or if we're editing and it's our own record
+        if (!existing || (isEditing && initial?.id && existing.id === initial.id)) {
+          break;
+        }
+        
+        // If slug exists, try with counter
+        finalSlug = `${computedSlug}-${counter}`;
+        counter++;
+      }
+      
+      console.log(`💾 Using final slug: ${finalSlug}`);
+
       // Clean payload - remove unnecessary flow references
       const payload = {
-        slug: computedSlug,
+        slug: finalSlug,
         title: title.trim(),
         subtitle: subtitle.trim() || null,
         logo_url: logoUrl || null,
