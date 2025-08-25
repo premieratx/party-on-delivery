@@ -7,14 +7,16 @@ import { supabase } from '@/integrations/supabase/client';
 export default function AdminBypass() {
   const navigate = useNavigate();
 
-  const handleDirectAccess = async () => {
+  const handleDirectAccess = () => {
+    console.log('🔥 Direct admin access clicked - navigating to /admin');
     try {
       // Just navigate directly to admin - bypass all auth checks
       navigate('/admin', { replace: true });
+      console.log('✅ Navigation successful');
     } catch (error) {
-      console.error('Direct access error:', error);
-      // Still navigate even if there's an error
-      navigate('/admin', { replace: true });
+      console.error('❌ Navigation error:', error);
+      // Force navigation with window.location as fallback
+      window.location.href = '/admin';
     }
   };
 
