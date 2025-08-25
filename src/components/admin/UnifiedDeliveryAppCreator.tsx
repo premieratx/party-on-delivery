@@ -259,6 +259,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const loadCollections = async () => {
     try {
       console.log('🔄 Loading real Shopify collections...');
+      setCollections([]); // Clear existing collections while loading
       
       const { data, error } = await supabase.functions.invoke('get-all-collections', {
         body: {}
@@ -274,8 +275,9 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         return;
       }
 
-      if (data && data.collections) {
+      if (data && data.collections && Array.isArray(data.collections)) {
         console.log('✅ Loaded real collections:', data.collections.length);
+        console.log('📋 Sample collections:', data.collections.slice(0, 3));
         
         // Transform the collections to include product counts in the name
         const transformedCollections = data.collections.map((collection: any) => ({
@@ -286,9 +288,16 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           products_count: collection.products_count || 0
         }));
         
+        console.log('🔄 Setting transformed collections:', transformedCollections.length);
         setCollections(transformedCollections);
+        
+        // Force re-render after a brief delay to ensure state update
+        setTimeout(() => {
+          console.log('🔄 Collections state after update:', transformedCollections.length);
+        }, 100);
+        
       } else {
-        console.warn('⚠️ No collections data received');
+        console.warn('⚠️ No collections data received or invalid format:', data);
         setCollections([]);
       }
     } catch (error) {
@@ -715,14 +724,20 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                           onValueChange={(value) => updateTab(index, 'collection_handle', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Collection" />
+                            <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
                           </SelectTrigger>
                           <SelectContent>
-                            {collections.map((collection) => (
-                              <SelectItem key={collection.id} value={collection.handle}>
-                                {collection.name}
+                            {collections.length > 0 ? (
+                              collections.map((collection) => (
+                                <SelectItem key={collection.handle} value={collection.handle}>
+                                  {collection.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="" disabled>
+                                {collections.length === 0 ? "Loading collections..." : "No collections found"}
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
                         <Select
