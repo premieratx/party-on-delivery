@@ -253,27 +253,55 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     }
   };
 
-  // Load Shopify collections - FIXED TO LOAD ALL 50+ COLLECTIONS
+  // Load Shopify collections using get-all-collections edge function
   const loadShopifyCollections = async () => {
     try {
       setLoadingCollections(true);
-      const { getAllCollectionsCached } = await import('@/utils/instantCacheClient');
-      const collections = await getAllCollectionsCached();
+      console.log('🔄 Loading Shopify collections...');
       
-      const formattedCollections = collections
-        .filter((collection: any) => collection.products_count > 0)
-        .map((collection: any) => ({
-          handle: collection.handle,
-          title: collection.title || collection.name || collection.handle,
-          name: collection.title || collection.name || collection.handle,
-          products_count: collection.products_count || collection.product_count || 0
-        }))
-        .sort((a: any, b: any) => b.products_count - a.products_count);
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
       
-      setShopifyCollections(formattedCollections);
+      if (error) {
+        console.error('❌ Error loading collections:', error);
+        toast({
+          title: "Error Loading Collections",
+          description: "Could not load Shopify collections",
+          variant: "destructive"
+        });
+        setShopifyCollections([]);
+        return;
+      }
+      
+      if (data?.collections && Array.isArray(data.collections)) {
+        const formattedCollections = data.collections
+          .filter((collection: any) => collection.products_count > 0)
+          .map((collection: any) => ({
+            handle: collection.handle,
+            title: collection.title || collection.name || collection.handle,
+            name: collection.title || collection.name || collection.handle,
+            products_count: collection.products_count || collection.product_count || 0
+          }))
+          .sort((a: any, b: any) => b.products_count - a.products_count);
+        
+        console.log(`✅ Loaded ${formattedCollections.length} collections with names`);
+        setShopifyCollections(formattedCollections);
+        
+        toast({
+          title: "Collections Loaded",
+          description: `${formattedCollections.length} collections available`,
+        });
+      } else {
+        console.log('⚠️ No collections returned');
+        setShopifyCollections([]);
+      }
     } catch (error) {
       console.error('❌ Error loading collections:', error);
       setShopifyCollections([]);
+      toast({
+        title: "Failed to Load Collections",
+        description: "Please try refreshing the page",
+        variant: "destructive"
+      });
     } finally {
       setLoadingCollections(false);
     }

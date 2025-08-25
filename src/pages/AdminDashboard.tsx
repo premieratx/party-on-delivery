@@ -14,7 +14,7 @@ import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 // EnhancedCoverPageCreator removed - standalone implementation only
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
-import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
+import { UnifiedDeliveryAppCreator } from '@/components/admin/UnifiedDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -434,7 +434,7 @@ export default function AdminDashboard() {
       )}
       
       {showDeliveryCreator && (
-        <FixedDeliveryAppCreator 
+        <UnifiedDeliveryAppCreator 
           open={showDeliveryCreator}
           onOpenChange={setShowDeliveryCreator}
           onSaved={() => {

@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { FixedDeliveryAppCreator } from './FixedDeliveryAppCreator';
+import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
 
 
 interface Tab {
@@ -70,6 +70,7 @@ interface DeliveryAppConfig {
     tab_count: number;
     tabs: { name: string; collection_handle: string; icon?: string }[];
   };
+  theme: 'original' | 'gold' | 'platinum';
   is_homepage: boolean;
   is_active: boolean;
 }
@@ -126,6 +127,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
           { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
         ]
       },
+      theme: 'gold' as const,
       is_homepage: app.is_homepage,
       is_active: app.is_active
     };
@@ -333,7 +335,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
       {/* Delivery App Creator */}
       {showEditor && (
-        <FixedDeliveryAppCreator
+        <UnifiedDeliveryAppCreator
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingApp}
@@ -475,7 +477,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
       {/* Editor Modal */}
       {showEditor && (
-        <FixedDeliveryAppCreator 
+        <UnifiedDeliveryAppCreator 
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingApp}
