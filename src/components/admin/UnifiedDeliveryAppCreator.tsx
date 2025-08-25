@@ -52,17 +52,6 @@ interface UnifiedDeliveryAppCreatorProps {
   onSaved?: () => void;
 }
 
-const ICON_OPTIONS = [
-  { value: '⭐', label: '⭐ Featured' },
-  { value: '🥃', label: '🥃 Spirits' },
-  { value: '🍺', label: '🍺 Beer' },
-  { value: '🍷', label: '🍷 Wine' },
-  { value: '🥤', label: '🥤 Seltzers' },
-  { value: '🧊', label: '🧊 Mixers' },
-  { value: '🍸', label: '🍸 Cocktails' },
-  { value: '🎉', label: '🎉 Party Supplies' },
-  { value: '🍿', label: '🍿 Snacks' }
-];
 
 // Enhanced Preview Component with proper responsive handling
 const DeliveryAppLivePreview: React.FC<{
@@ -794,21 +783,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                   </SelectItem>
                                 );
                               })()}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={tab.icon || '📦'}
-                            onValueChange={(value) => updateTab(index, 'icon', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Icon" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ICON_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
                             </SelectContent>
                           </Select>
                         </div>
