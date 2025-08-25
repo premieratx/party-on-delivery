@@ -25,21 +25,29 @@ export const DeliveryAppIntegrationTest: React.FC = () => {
     try {
       console.log('🧪 Testing collection names loading...');
       const { data } = await supabase.functions.invoke('get-all-collections');
+      console.log('📊 Collections data received:', data);
+      
       if (data?.success && data?.collections?.length > 0) {
         const hasNames = data.collections.every((c: any) => c.title || c.name);
+        const sampleCollection = data.collections[0];
+        console.log('📝 Sample collection:', sampleCollection);
+        
         results.push({
           name: 'Collection Names Loading',
           passed: hasNames,
-          message: hasNames ? `✅ ${data.collections.length} collections loaded with names` : '❌ Collections missing names'
+          message: hasNames ? 
+            `✅ ${data.collections.length} collections loaded with names (Sample: "${sampleCollection.title || sampleCollection.name}")` : 
+            `❌ Collections missing names (Sample: ${JSON.stringify(sampleCollection)})`
         });
       } else {
         results.push({
           name: 'Collection Names Loading',
           passed: false,
-          message: '❌ Failed to load collections'
+          message: data ? `❌ Failed to load collections - Data: ${JSON.stringify(data)}` : '❌ No data received'
         });
       }
     } catch (error) {
+      console.error('❌ Collection loading error:', error);
       results.push({
         name: 'Collection Names Loading',
         passed: false,
