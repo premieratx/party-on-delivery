@@ -222,6 +222,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const [isHomepage, setIsHomepage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [shopifyCollections, setShopifyCollections] = useState<any[]>([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
 
   // Size and positioning controls
@@ -255,6 +256,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   // Load Shopify collections - FIXED TO LOAD ALL 50+ COLLECTIONS
   const loadShopifyCollections = async () => {
     try {
+      setLoadingCollections(true);
       console.log('🔍 Loading ALL collections for delivery app creator...');
       console.log('📊 Current collections state:', shopifyCollections);
       
@@ -371,52 +373,60 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     } catch (error) {
       console.error('❌ Error loading collections:', error);
       setShopifyCollections([]);
+    } finally {
+      setLoadingCollections(false);
     }
   };
 
-  // Initialize form - FIXED PERSISTENCE
+  // Initialize form - FIXED PERSISTENCE AND TIMING
   useEffect(() => {
     if (!open) return;
 
-    loadShopifyCollections();
-    loadHomepageTemplate();
+    // Load collections first, then restore tabs to ensure dropdowns work
+    const initializeApp = async () => {
+      // Always load collections first
+      await loadShopifyCollections();
+      loadHomepageTemplate();
 
-    // Only initialize once when dialog opens
-    if (initial && initial.id) {
-      console.log('📝 Loading existing delivery app:', initial);
-      setAppName(initial.app_name || '');
-      setAppSlug(initial.app_slug || '');
-      setHeroHeading(initial.main_app_config?.hero_heading || '');
-      setHeroSubheading(initial.main_app_config?.hero_subheading || '');
-      setLogoUrl(initial.logo_url || '');
-      setTheme(initial.theme || migrateLegacyTheme('gold'));
-      
-      // CRITICAL: Ensure tabs are preserved exactly as saved
-      const savedTabs = initial.collections_config?.tabs || [];
-      console.log('🔄 Restoring saved tabs:', savedTabs);
-      setTabs(savedTabs);
-      
-      setIsActive(initial.is_active ?? true);
-      setIsHomepage(initial.is_homepage ?? false);
-    } else if (!initial) {
-      // Only reset for completely new apps
-      console.log('🆕 Creating new delivery app');
-      setAppName('');
-      setAppSlug('');
-      setHeroHeading('Austin\'s Premier Party Supply Delivery');
-      setHeroSubheading('Satisfaction Guaranteed, On-Time Delivery');
-      setLogoUrl('');
-      setTheme('gold');
-      setTabs([
-        { name: 'Beer', collection_handle: 'tailgate-beer', icon: '🍺' },
-        { name: 'Seltzers', collection_handle: 'seltzer-collection', icon: '🥤' },
-        { name: 'Cocktails', collection_handle: 'cocktail-kits', icon: '🍸' },
-        { name: 'Mixers & N/A', collection_handle: 'mixers-non-alcoholic', icon: '🧊' },
-        { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
-      ]);
-      setIsActive(true);
-      setIsHomepage(false);
-    }
+      // Only initialize once when dialog opens
+      if (initial && initial.id) {
+        console.log('📝 Loading existing delivery app:', initial);
+        setAppName(initial.app_name || '');
+        setAppSlug(initial.app_slug || '');
+        setHeroHeading(initial.main_app_config?.hero_heading || '');
+        setHeroSubheading(initial.main_app_config?.hero_subheading || '');
+        setLogoUrl(initial.logo_url || '');
+        setTheme(initial.theme || migrateLegacyTheme('gold'));
+        
+        // CRITICAL: Ensure tabs are preserved exactly as saved - AFTER collections load
+        const savedTabs = initial.collections_config?.tabs || [];
+        console.log('🔄 Restoring saved tabs with collections loaded:', savedTabs);
+        setTabs(savedTabs);
+        
+        setIsActive(initial.is_active ?? true);
+        setIsHomepage(initial.is_homepage ?? false);
+      } else if (!initial) {
+        // Only reset for completely new apps
+        console.log('🆕 Creating new delivery app');
+        setAppName('');
+        setAppSlug('');
+        setHeroHeading('Austin\'s Premier Party Supply Delivery');
+        setHeroSubheading('Satisfaction Guaranteed, On-Time Delivery');
+        setLogoUrl('');
+        setTheme('gold');
+        setTabs([
+          { name: 'Beer', collection_handle: 'tailgate-beer', icon: '🍺' },
+          { name: 'Seltzers', collection_handle: 'seltzer-collection', icon: '🥤' },
+          { name: 'Cocktails', collection_handle: 'cocktail-kits', icon: '🍸' },
+          { name: 'Mixers & N/A', collection_handle: 'mixers-non-alcoholic', icon: '🧊' },
+          { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
+        ]);
+        setIsActive(true);
+        setIsHomepage(false);
+      }
+    };
+
+    initializeApp();
   }, [open, initial?.id]); // Only depend on open and initial.id to prevent unnecessary resets
 
   // Auto-generate slug
@@ -804,14 +814,21 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                             <div>
                               <Label>Collection</Label>
                               <Select 
-                                value={tab.collection_handle} 
-                                onValueChange={(value) => updateTab(index, { collection_handle: value })}
+                                value={tab.collection_handle || ''} 
+                                onValueChange={(value) => {
+                                  console.log(`🔄 Tab ${index} collection changed to:`, value);
+                                  updateTab(index, { collection_handle: value });
+                                }}
                               >
                                 <SelectTrigger>
-                                  <SelectValue />
+                                  <SelectValue placeholder={loadingCollections ? "Loading..." : "Select a collection"} />
                                 </SelectTrigger>
                                  <SelectContent className="z-[9999] bg-background border">
-                                    {shopifyCollections.length === 0 ? (
+                                    {loadingCollections ? (
+                                      <SelectItem value="" disabled>
+                                        Loading collections...
+                                      </SelectItem>
+                                    ) : shopifyCollections.length === 0 ? (
                                       <SelectItem value="" disabled>
                                         No collections available
                                       </SelectItem>
@@ -819,7 +836,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                        shopifyCollections.map((collection) => {
                                          const displayName = collection.title || collection.name || collection.handle;
                                          const productCount = collection.products_count || 0;
-                                         console.log('🔍 Rendering collection:', { displayName, productCount, collection });
                                          return (
                                            <SelectItem 
                                              key={`${collection.handle}-${productCount}`} 
