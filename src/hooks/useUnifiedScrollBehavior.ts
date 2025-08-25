@@ -59,13 +59,11 @@ export function useUnifiedScrollBehavior(options: ScrollBehaviorOptions = {}) {
         setIsScrollingDown(scrollDirection === 'down' && currentScrollY > threshold);
         
         // IMMEDIATE keyboard hiding on ANY scroll movement on mobile
-        if (hideKeyboardOnScroll && isMobile() && Math.abs(currentScrollY - lastScrollYRef.current) > 1) {
+        if (hideKeyboardOnScroll && isMobile() && Math.abs(currentScrollY - lastScrollYRef.current) > 5) {
           const activeEl = document.activeElement;
           if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
             (activeEl as HTMLElement).blur();
             setKeyboardVisible(false);
-            // Force viewport reset
-            window.scrollTo({ top: currentScrollY, behavior: 'instant' });
           }
         }
         
@@ -100,24 +98,25 @@ export function useUnifiedScrollBehavior(options: ScrollBehaviorOptions = {}) {
       }, 100);
     };
 
-    // Immediate keyboard hiding on touch start if scrolling
-    const handleTouchStart = () => {
-      if (isMobile() && keyboardVisible) {
-        const activeEl = document.activeElement;
-        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-          (activeEl as HTMLElement).blur();
-          setKeyboardVisible(false);
-        }
-      }
+    // Immediate keyboard hiding on touch movement
+    let touchStartY = 0;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (isMobile() && keyboardVisible) {
-        const activeEl = document.activeElement;
-        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-          (activeEl as HTMLElement).blur();
-          setKeyboardVisible(false);
-          e.preventDefault(); // Prevent scroll fighting
+      if (isMobile()) {
+        const currentY = e.touches[0].clientY;
+        const deltaY = Math.abs(currentY - touchStartY);
+        
+        // Hide keyboard if user scrolls more than 10px
+        if (deltaY > 10) {
+          const activeEl = document.activeElement;
+          if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+            (activeEl as HTMLElement).blur();
+            setKeyboardVisible(false);
+          }
         }
       }
     };

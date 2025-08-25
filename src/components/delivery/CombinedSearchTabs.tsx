@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Search, ShoppingCart, CreditCard, Check } from 'lucide-react';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { safePrice, formatPrice } from '@/utils/safeCalculations';
-import { useStickySearchHeader } from '@/hooks/useStickySearchHeader';
+import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import { AdvancedSearchBar } from '@/components/search/AdvancedSearchBar';
 
 // Preload critical images
@@ -64,11 +64,39 @@ export const CombinedSearchTabs = ({
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [tabLayout, setTabLayout] = useState<'full' | 'compact' | 'minimal' | 'icon-only'>('full');
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const { getSearchClasses, getTabsClasses, hideKeyboard, isMobile } = useStickySearchHeader();
+  
+  // Use unified scroll behavior for better mobile performance
+  const { 
+    getStickyBehavior, 
+    shouldCondense, 
+    isMobile: isMobileDevice,
+    hideKeyboard: unifiedHideKeyboard,
+    getScrollClasses
+  } = useUnifiedScrollBehavior({
+    hideKeyboardOnScroll: true,
+    mobileSticky: 'auto',
+    threshold: 100
+  });
 
-  // Get dynamic classes for responsive behavior
-  const searchClasses = getSearchClasses();
-  const tabsClasses = getTabsClasses();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  const activateSearch = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  };
+  
+  const deactivateSearch = () => {
+    unifiedHideKeyboard();
+  };
+
+  const stickyBehavior = getStickyBehavior();
+  const condensed = shouldCondense();
+  const isSticky = stickyBehavior.searchSticky || stickyBehavior.tabsSticky;
+  
+  // Get dynamic classes for responsive behavior  
+  const searchClasses = getScrollClasses('search');
+  const tabsClasses = getScrollClasses('tabs');
 
   // Enhanced dynamic tab sizing based on available space with better precision
   const calculateTabLayout = useCallback(() => {
@@ -213,15 +241,10 @@ export const CombinedSearchTabs = ({
     onSearchActiveChange?.(true);
   };
 
-  const { isSticky, isSearchActive: stickySearchActive, searchInputRef, activateSearch, deactivateSearch } = useStickySearchHeader({
-    threshold: 100,
-    hideKeyboardOnScroll: true
-  });
-
   return (
     <div className={`bg-background border-b transition-all duration-200 ${
-      isSticky || stickySearchActive || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
-    }`}>
+      isSticky || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
+    } ${condensed ? 'py-2' : 'py-3'}`}>
       {/* Desktop Layout */}
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
@@ -345,21 +368,21 @@ export const CombinedSearchTabs = ({
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'
                 }}
-                onScroll={() => {
-                  if (isMobile) {
-                    hideKeyboard();
-                    // Force immediate blur of any active input
-                    const activeEl = document.activeElement;
-                    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-                      (activeEl as HTMLElement).blur();
-                    }
-                  }
-                }}
-                onTouchStart={() => {
-                  if (isMobile) {
-                    hideKeyboard();
-                  }
-                }}
+                 onScroll={() => {
+                   if (isMobileDevice) {
+                     unifiedHideKeyboard();
+                     // Force immediate blur of any active input
+                     const activeEl = document.activeElement;
+                     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                       (activeEl as HTMLElement).blur();
+                     }
+                   }
+                 }}
+                 onTouchStart={() => {
+                   if (isMobileDevice) {
+                     unifiedHideKeyboard();
+                   }
+                 }}
               >
                 {tabs.map((tab, index) => (
                   <Button

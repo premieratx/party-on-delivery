@@ -22,15 +22,18 @@ export function useImmediateKeyboardHiding() {
       }
     };
 
-    // Hide keyboard on ANY touch movement
+    let startY = 0;
+    
+    // Hide keyboard on ANY touch movement that's a scroll gesture
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+    
     const handleTouchMove = (e: TouchEvent) => {
-      if (Math.abs(e.touches[0].clientY - (e.target as any).initialY) > 5) {
+      const deltaY = Math.abs(e.touches[0].clientY - startY);
+      if (deltaY > 10) { // 10px threshold for scroll detection
         hideKeyboardImmediately();
       }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      (e.target as any).initialY = e.touches[0].clientY;
     };
 
     // Hide keyboard on scroll (immediate)

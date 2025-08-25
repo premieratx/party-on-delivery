@@ -28,6 +28,7 @@ import { UniversalQuantityControls } from '@/components/common/UniversalQuantity
 import { useUniversalSearch } from '@/hooks/useUniversalSearch';
 import { useAllProductsLoader } from '@/hooks/useAllProductsLoader';
 import { useImmediateKeyboardHiding } from '@/hooks/useImmediateKeyboardHiding';
+import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -104,7 +105,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const { preloadMultipleCollections } = useProductPreloader();
   const { triggerCartFeedback } = useHapticFeedback();
 
+  // Use both keyboard hiding and unified scroll behavior
   const { hideKeyboard: forceHideKeyboard } = useImmediateKeyboardHiding();
+  const { 
+    getStickyBehavior, 
+    shouldCondense, 
+    isMobile,
+    hideKeyboard: unifiedHideKeyboard 
+  } = useUnifiedScrollBehavior({
+    hideKeyboardOnScroll: true,
+    mobileSticky: 'auto',
+    threshold: 100
+  });
   
   // Pull-to-refresh functionality
   const { 
