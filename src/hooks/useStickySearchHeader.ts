@@ -1,64 +1,51 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useUnifiedScrollBehavior } from './useUnifiedScrollBehavior';
 
 interface StickySearchOptions {
   threshold?: number;
   hideKeyboardOnScroll?: boolean;
 }
 
+/**
+ * LEGACY HOOK - Now uses unified scroll behavior
+ * Maintains backward compatibility while enforcing new rules
+ */
 export function useStickySearchHeader(options: StickySearchOptions = {}) {
-  const { threshold = 50, hideKeyboardOnScroll = true } = options;
-  const [isSticky, setIsSticky] = useState(false);
-  const [isSearchActive, setIsSearchActive] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const lastScrollY = useRef(0);
-  const isScrollingDown = useRef(false);
+  const { threshold = 50 } = options;
+  
+  const scrollBehavior = useUnifiedScrollBehavior({
+    hideKeyboardOnScroll: true,
+    mobileSticky: 'auto', // Auto-switch between search and tabs
+    desktopSticky: true,
+    threshold
+  });
 
-  const hideKeyboard = useCallback(() => {
-    if (searchInputRef.current && document.activeElement === searchInputRef.current) {
-      searchInputRef.current.blur();
-    }
-  }, []);
+  const {
+    isScrollingDown,
+    scrollY,
+    keyboardVisible,
+    getStickyBehavior,
+    shouldCondense,
+    hideKeyboard,
+    isMobile
+  } = scrollBehavior;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrollY(currentScrollY);
-      
-      // Determine scroll direction
-      isScrollingDown.current = currentScrollY > lastScrollY.current;
-      lastScrollY.current = currentScrollY;
-
-      // Make header sticky when scrolled past threshold
-      const shouldBeSticky = currentScrollY > threshold;
-      setIsSticky(shouldBeSticky);
-
-      // Hide keyboard when scrolling during active search on mobile
-      if (hideKeyboardOnScroll && isSearchActive && Math.abs(currentScrollY - lastScrollY.current) > 10) {
-        hideKeyboard();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [threshold, isSearchActive, hideKeyboardOnScroll, hideKeyboard]);
-
-  const activateSearch = useCallback(() => {
-    setIsSearchActive(true);
-  }, []);
-
-  const deactivateSearch = useCallback(() => {
-    setIsSearchActive(false);
-    hideKeyboard();
-  }, [hideKeyboard]);
+  const { searchSticky } = getStickyBehavior();
 
   return {
-    isSticky,
-    isSearchActive,
+    // Legacy API compatibility
+    isSticky: searchSticky && scrollY > threshold,
+    isSearchActive: keyboardVisible,
     scrollY,
-    searchInputRef,
-    activateSearch,
-    deactivateSearch,
-    hideKeyboard
+    searchInputRef: { current: null }, // Placeholder for compatibility
+    
+    // Enhanced functionality
+    getSearchClasses: () => scrollBehavior.getScrollClasses('search'),
+    getTabsClasses: () => scrollBehavior.getScrollClasses('tabs'),
+    hideKeyboard,
+    isMobile,
+    
+    // Legacy methods for compatibility
+    activateSearch: () => {},
+    deactivateSearch: () => hideKeyboard()
   };
 }

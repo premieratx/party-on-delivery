@@ -86,9 +86,12 @@ class PerformanceAnalytics {
   private async sendToSupabase(metric: PerformanceMetric, additionalData?: any): Promise<void> {
     try {
       await supabase.from('system_audit_log').insert({
-        operation: 'performance_metric',
+        event_type: 'performance_metric',
+        service_name: 'delivery_app',
+        operation: 'performance_tracking',
         request_data: {
           ...metric,
+          timestamp: metric.timestamp.toISOString(),
           ...additionalData
         },
         created_at: metric.timestamp.toISOString()
@@ -108,8 +111,13 @@ class PerformanceAnalytics {
 
     try {
       await supabase.from('system_audit_log').insert({
-        operation: 'user_interaction',
-        request_data: interaction,
+        event_type: 'user_interaction',
+        service_name: 'delivery_app',
+        operation: 'user_tracking',
+        request_data: {
+          ...interaction,
+          timestamp: interaction.timestamp.toISOString()
+        },
         created_at: interaction.timestamp.toISOString()
       });
     } catch (error) {
@@ -233,7 +241,9 @@ class PerformanceAnalytics {
     // Store report
     try {
       await supabase.from('system_audit_log').insert({
-        operation: 'performance_report',
+        event_type: 'performance_report',
+        service_name: 'delivery_app',
+        operation: 'performance_summary',
         request_data: report,
         created_at: report.timestamp
       });

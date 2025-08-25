@@ -64,7 +64,7 @@ export const CombinedSearchTabs = ({
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [tabLayout, setTabLayout] = useState<'full' | 'compact' | 'minimal' | 'icon-only'>('full');
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const { headerCompressed } = useSearchInterface();
+  const { getSearchClasses, getTabsClasses, hideKeyboard, isMobile } = useStickySearchHeader();
 
   // Enhanced dynamic tab sizing based on available space with better precision
   const calculateTabLayout = useCallback(() => {
@@ -301,44 +301,73 @@ export const CombinedSearchTabs = ({
         </div>
       </div>
 
-        {/* Mobile Layout with Dynamic Responsive Tabs - Optimized Space Usage */}
-      <div className="block md:hidden sticky top-0 z-40 bg-background">
-        {/* Dynamic Tabs - Show 4.5 tabs with horizontal scroll */}
-        <div className="container mx-auto px-2 py-1.5">
-          <div className="flex items-center">
-            {/* Enhanced Responsive Tabs - Show 4.5 tabs with scrolling */}
-            <div 
-              ref={tabsContainerRef}
-              className="flex gap-1 overflow-x-auto scrollbar-hide"
-              style={{ 
-                scrollSnapType: 'x mandatory',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              {tabs.map((tab, index) => (
-                <Button
-                  key={tab.id}
-                  className={getTabClasses(selectedCategory === index)}
-                  onClick={() => onTabSelect(index)}
-                  title={tab.title}
-                  style={{ 
-                    flex: '0 0 calc(22.5% - 3px)', // Show 4.5 tabs (100% / 4.5 = ~22.2%)
-                    minWidth: 'calc(22.5% - 3px)',
-                    scrollSnapAlign: 'start'
-                  }}
-                >
-                  {/* Icon and full text - no truncation */}
-                  <span className="text-xs mr-1 flex-shrink-0" style={{ fontSize: '10px' }}>
-                    {tab.icon || '📦'}
-                  </span>
-                  <span className="font-medium text-xs leading-tight whitespace-nowrap">
-                    {tab.title}
-                  </span>
-                </Button>
-              ))}
+        {/* MOBILE Layout - Only one sticky element at a time */}
+      <div className={`block md:hidden transition-all duration-200 ${
+        searchClasses.sticky ? 'sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b' : 
+        tabsClasses.sticky ? 'sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b' : ''
+      }`}>
+        
+        {/* Search Bar Section - Mobile Priority */}
+        {showSearch && searchClasses.sticky && (
+          <div className="container mx-auto px-2 py-2">
+            <div className="flex items-center justify-center">
+              <AdvancedSearchBar
+                value={searchQuery}
+                onChange={(newValue) => {
+                  onSearchChange(newValue);
+                  if (newValue.trim()) {
+                    setTimeout(() => onSearchSubmit(), 300);
+                  }
+                }}
+                onSubmit={onSearchSubmit}
+                placeholder="Search products..."
+                className="flex-1 max-w-md"
+                allProducts={allProducts}
+                autoFocus={true}
+              />
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Tabs Section - Mobile Default */}
+        {tabsClasses.sticky && (
+          <div className="container mx-auto px-2 py-1.5">
+            <div className="flex items-center">
+              {/* Enhanced Responsive Tabs - Show 4.5 tabs with scrolling */}
+              <div 
+                ref={tabsContainerRef}
+                className="flex gap-1 overflow-x-auto scrollbar-hide"
+                style={{ 
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+                onScroll={isMobile ? hideKeyboard : undefined}
+              >
+                {tabs.map((tab, index) => (
+                  <Button
+                    key={tab.id}
+                    className={getTabClasses(selectedCategory === index)}
+                    onClick={() => onTabSelect(index)}
+                    title={tab.title}
+                    style={{ 
+                      flex: '0 0 calc(22.5% - 3px)', // Show 4.5 tabs (100% / 4.5 = ~22.2%)
+                      minWidth: 'calc(22.5% - 3px)',
+                      scrollSnapAlign: 'start'
+                    }}
+                  >
+                    {/* Icon and full text - no truncation */}
+                    <span className="text-xs mr-1 flex-shrink-0" style={{ fontSize: '10px' }}>
+                      {tab.icon || '📦'}
+                    </span>
+                    <span className="font-medium text-xs leading-tight whitespace-nowrap">
+                      {tab.title}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Second Row - Cart & Checkout Icons (Clean Layout) */}
         <div className="container mx-auto px-4 pb-2">
