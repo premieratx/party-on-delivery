@@ -890,29 +890,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       />
                     </div>
 
-                    {/* Device Preview */}
-                    <div>
-                      <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
-                          const IconComponent = device.icon;
-                          return (
-                            <Button
-                              key={key}
-                              variant={activeDevice === key ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                              className="justify-start"
-                            >
-                              <IconComponent className="w-4 h-4 mr-2" />
-                              {device.name}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Size Controls ({DEVICE_CONFIGS[activeDevice].name})</h4>
+                      <h4 className="text-sm font-semibold text-muted-foreground">Size Controls</h4>
                       
                       <div>
                         <Label className="text-sm font-medium">Title Size: {titleSize}px</Label>
@@ -951,9 +930,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
                     </div>
 
-                    {/* Positioning Controls - Device Specific */}
+                    {/* Positioning Controls - Universal */}
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning ({DEVICE_CONFIGS[activeDevice].name})</h4>
+                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning</h4>
                       
                       <div>
                         <Label className="text-sm font-medium">Logo Position: {logoOffsetY}px</Label>
@@ -1118,7 +1097,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         <div className="h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-sm font-medium text-muted-foreground">
-              Live Preview • {DEVICE_CONFIGS[activeDevice].name}
+              Live Preview • Universal Cover
             </h4>
             <div className="flex items-center gap-2">
               <Badge variant={previewMode ? "default" : "secondary"} className="text-xs">
@@ -1128,43 +1107,28 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center bg-black/5 rounded-lg p-4">
-            <div className="relative">
+          <div className="flex-1 flex items-center justify-center min-h-0">
+            <div className="flex items-center justify-center bg-black/5 rounded-lg p-4 w-full h-full">
               <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
-                <div className="absolute inset-0 pt-10 pb-6 overflow-hidden">
-                  <CoverStartScreen
-                    title={title}
-                    subtitle={subtitle}
-                    logoUrl={logoUrl}
-                    logoHeight={logoHeight}
-                    backgroundImageUrl={bgImageUrl}
-                    backgroundVideoUrl={bgVideoUrl}
-                    checklistItems={checklist}
-                    buttons={buttons}
-                    titleSize={titleSize}
-                    subtitleSize={subtitleSize}
-                    checklistSize={checklistSize}
-                    titleOffsetY={titleOffsetY}
-                    subtitleOffsetY={subtitleOffsetY}
-                    checklistOffsetY={checklistOffsetY}
-                    buttonsOffsetY={buttonsOffsetY}
-                    logoOffsetY={logoOffsetY}
-                  />
-                </div>
-                
-                {/* Status bar */}
-                <div className="absolute top-0 left-0 right-0 h-10 flex items-center justify-between px-6 text-white text-xs z-50 bg-black/30 backdrop-blur-sm">
-                  <span className="font-medium">9:41</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-4 h-2 bg-white/70 rounded-sm"></div>
-                    <div className="w-6 h-3 border border-white/70 rounded-sm relative">
-                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-1 bg-white/70 rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Home indicator */}
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-28 h-1 bg-white/50 rounded-full"></div>
+                <CoverStartScreen
+                  title={title}
+                  subtitle={subtitle}
+                  logoUrl={logoUrl}
+                  logoHeight={logoHeight}
+                  backgroundImageUrl={bgImageUrl}
+                  backgroundVideoUrl={bgVideoUrl}
+                  checklistItems={checklist}
+                  buttons={buttons}
+                  titleSize={titleSize}
+                  subtitleSize={subtitleSize}
+                  checklistSize={checklistSize}
+                  titleOffsetY={titleOffsetY}
+                  subtitleOffsetY={subtitleOffsetY}
+                  checklistOffsetY={checklistOffsetY}
+                  buttonsOffsetY={buttonsOffsetY}
+                  logoOffsetY={logoOffsetY}
+                  backgroundColor={COVER_THEMES[selectedTheme]?.background}
+                />
               </div>
             </div>
           </div>
@@ -1221,6 +1185,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 checklistOffsetY={checklistOffsetY}
                 buttonsOffsetY={buttonsOffsetY}
                 logoOffsetY={logoOffsetY}
+                backgroundColor={COVER_THEMES[selectedTheme]?.background}
               />
             </div>
           </div>
