@@ -289,10 +289,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
             Create and manage delivery applications and configure homepage settings
           </p>
         </div>
-        <Button onClick={() => setShowEditor(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Delivery App
-        </Button>
+        {/* Button removed - AdminDashboard tab has the main create button */}
       </div>
 
       {/* Status Banner */}

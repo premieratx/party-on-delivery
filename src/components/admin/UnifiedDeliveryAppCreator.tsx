@@ -341,20 +341,30 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log('🔄 Starting logo upload for file:', file.name, 'Size:', file.size);
+
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
+      
+      console.log('📂 Uploading to app-assets bucket with filename:', fileName);
       
       const { error: uploadError } = await supabase.storage
         .from('app-assets')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('✅ Upload successful, getting public URL...');
 
       const { data: urlData } = supabase.storage
         .from('app-assets')
         .getPublicUrl(fileName);
 
+      console.log('🔗 Public URL generated:', urlData.publicUrl);
       setLogoUrl(urlData.publicUrl);
       
       toast({
@@ -362,10 +372,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         description: "Your logo has been updated in the preview."
       });
     } catch (error) {
-      console.error('Error uploading logo:', error);
+      console.error('💥 Error uploading logo:', error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload logo. Please try again.",
+        description: `Failed to upload logo. Error: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }
