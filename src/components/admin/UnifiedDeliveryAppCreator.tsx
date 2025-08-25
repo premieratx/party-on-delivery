@@ -767,7 +767,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                             <SelectTrigger>
                               <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
                             </SelectTrigger>
-                            <SelectContent className="max-h-[200px] overflow-y-auto">
+                            <SelectContent className="max-h-[200px] overflow-y-auto bg-background border border-border shadow-lg z-50">
                               {(() => {
                                 console.log(`🎯 Tab ${index} dropdown rendering:`, collections.length, 'collections');
                                 if (collections.length > 0) {
@@ -782,6 +782,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                       <SelectItem 
                                         key={`${collection.handle}-${index}-${collectionIndex}`} 
                                         value={collection.handle}
+                                        className="bg-background hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                       >
                                         {collection.name}
                                       </SelectItem>
