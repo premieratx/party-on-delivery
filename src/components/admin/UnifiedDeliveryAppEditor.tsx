@@ -75,6 +75,17 @@ const DELIVERY_THEMES = {
   }
 };
 
+const FONT_OPTIONS = [
+  { value: 'Inter', label: 'Inter (Default)', family: 'Inter, sans-serif' },
+  { value: 'Roboto', label: 'Roboto', family: 'Roboto, sans-serif' },
+  { value: 'Open Sans', label: 'Open Sans', family: 'Open Sans, sans-serif' },
+  { value: 'Lato', label: 'Lato', family: 'Lato, sans-serif' },
+  { value: 'Montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif' },
+  { value: 'Poppins', label: 'Poppins', family: 'Poppins, sans-serif' },
+  { value: 'Playfair Display', label: 'Playfair Display', family: 'Playfair Display, serif' },
+  { value: 'Merriweather', label: 'Merriweather', family: 'Merriweather, serif' }
+];
+
 const DEVICE_CONFIGS = {
   mobile: { name: 'Mobile', width: 375, height: 667, className: 'w-[375px] h-[667px]' },
   tablet: { name: 'Tablet', width: 768, height: 1024, className: 'w-[450px] h-[600px]' },
@@ -135,6 +146,10 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
   const [backgroundImage, setBackgroundImage] = useState('');
   const [overlayOpacity, setOverlayOpacity] = useState(50);
   const [overlayColor, setOverlayColor] = useState('#000000');
+  const [headlineFont, setHeadlineFont] = useState('Inter');
+  const [headlineColor, setHeadlineColor] = useState('#000000');
+  const [subheadlineFont, setSubheadlineFont] = useState('Inter');
+  const [subheadlineColor, setSubheadlineColor] = useState('#666666');
 
   // Collections state
   const [collections, setCollections] = useState([
@@ -177,6 +192,10 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setBackgroundImage(styles.backgroundImage || '');
       setOverlayOpacity(styles.overlayOpacity || 50);
       setOverlayColor(styles.overlayColor || '#000000');
+      setHeadlineFont(styles.headlineFont || 'Inter');
+      setHeadlineColor(styles.headlineColor || '#000000');
+      setSubheadlineFont(styles.subheadlineFont || 'Inter');
+      setSubheadlineColor(styles.subheadlineColor || '#666666');
       
       if (initial.collections_config?.tabs) {
         setCollections(initial.collections_config.tabs);
@@ -200,6 +219,10 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setBackgroundImage('');
       setOverlayOpacity(50);
       setOverlayColor('#000000');
+      setHeadlineFont('Inter');
+      setHeadlineColor('#000000');
+      setSubheadlineFont('Inter');
+      setSubheadlineColor('#666666');
     }
   }, [open, initial]);
 
@@ -312,7 +335,11 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
           subheadlineSize: subheadlineSize,
           backgroundImage: backgroundImage,
           overlayOpacity: overlayOpacity,
-          overlayColor: overlayColor
+          overlayColor: overlayColor,
+          headlineFont: headlineFont,
+          headlineColor: headlineColor,
+          subheadlineFont: subheadlineFont,
+          subheadlineColor: subheadlineColor
         }
       };
 
@@ -419,8 +446,9 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
               <h1 
                 className="font-bold mb-2" 
                 style={{ 
-                  color: theme.colors.primary,
-                  fontSize: `${headlineSize}px`
+                  color: headlineColor,
+                  fontSize: `${headlineSize}px`,
+                  fontFamily: FONT_OPTIONS.find(f => f.value === headlineFont)?.family || 'Inter, sans-serif'
                 }}
               >
                 {heroHeading || 'Welcome to Our Store'}
@@ -429,7 +457,8 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                 className="opacity-80"
                 style={{ 
                   fontSize: `${subheadlineSize}px`,
-                  color: backgroundImage ? '#ffffff' : theme.colors.text
+                  color: subheadlineColor,
+                  fontFamily: FONT_OPTIONS.find(f => f.value === subheadlineFont)?.family || 'Inter, sans-serif'
                 }}
               >
                 {heroSubheading || 'Premium delivery service'}
@@ -726,6 +755,77 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                           </div>
                         </>
                       )}
+                    </div>
+
+                    {/* Typography Controls */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Headline Font</Label>
+                        <Select value={headlineFont} onValueChange={setHeadlineFont}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FONT_OPTIONS.map((font) => (
+                              <SelectItem key={font.value} value={font.value}>
+                                <span style={{ fontFamily: font.family }}>{font.label}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Headline Color</Label>
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            type="color"
+                            value={headlineColor}
+                            onChange={(e) => setHeadlineColor(e.target.value)}
+                            className="w-12 h-10 p-1"
+                          />
+                          <Input
+                            value={headlineColor}
+                            onChange={(e) => setHeadlineColor(e.target.value)}
+                            className="flex-1"
+                            placeholder="#000000"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Subheadline Font</Label>
+                        <Select value={subheadlineFont} onValueChange={setSubheadlineFont}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FONT_OPTIONS.map((font) => (
+                              <SelectItem key={font.value} value={font.value}>
+                                <span style={{ fontFamily: font.family }}>{font.label}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Subheadline Color</Label>
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            type="color"
+                            value={subheadlineColor}
+                            onChange={(e) => setSubheadlineColor(e.target.value)}
+                            className="w-12 h-10 p-1"
+                          />
+                          <Input
+                            value={subheadlineColor}
+                            onChange={(e) => setSubheadlineColor(e.target.value)}
+                            className="flex-1"
+                            placeholder="#666666"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </TabsContent>
 
