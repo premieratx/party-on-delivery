@@ -76,37 +76,48 @@ export const AdminLogin: React.FC = () => {
       // Clear any existing session first
       await supabase.auth.signOut({ scope: 'global' });
       
+      console.log('🔐 Attempting Google OAuth with config:', {
+        redirectTo: `${window.location.origin}/affiliate/admin-login`,
+        origin: window.location.origin
+      });
+      
       // Force fresh Google OAuth with account selection
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/affiliate/admin-login`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account consent', // Force account selection
-            hd: '', // Allow any domain
           },
           skipBrowserRedirect: false,
         },
       });
       
+      console.log('🔐 OAuth Response:', { data, error });
+      
       if (error) {
         console.error('🚨 SECURITY: OAuth error:', error);
         toast({
-          title: "Authentication Error",
-          description: error.message || "Failed to authenticate with Google. Please try again.",
+          title: "OAuth Configuration Error",
+          description: `Google OAuth failed: ${error.message}. Please check Supabase Google provider configuration.`,
           variant: "destructive",
         });
+      } else {
+        console.log('🔐 OAuth initiated successfully, redirecting to Google...');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('🚨 SECURITY: Unexpected error during OAuth:', error);
       toast({
         title: "Authentication Error", 
-        description: "An unexpected error occurred. Please try again.",
+        description: `Unexpected error: ${error.message}. Check console for details.`,
         variant: "destructive",
       });
     } finally {
-      setIsProcessingAuth(false);
+      // Reset loading state after a delay if no redirect happened
+      setTimeout(() => {
+        setIsProcessingAuth(false);
+      }, 3000);
     }
   };
 
@@ -252,7 +263,7 @@ export const AdminLogin: React.FC = () => {
             {isProcessingAuth ? (
               <>
                 <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Connecting...
+                Connecting to Google...
               </>
             ) : (
               <>
@@ -266,6 +277,12 @@ export const AdminLogin: React.FC = () => {
               </>
             )}
           </Button>
+
+          {/* Debug info for troubleshooting */}
+          <div className="text-xs text-muted-foreground text-center">
+            <p>Debug: {window.location.origin}</p>
+            <p>Redirect: /affiliate/admin-login</p>
+          </div>
 
           <div className="mt-6 text-center">
             <a 
