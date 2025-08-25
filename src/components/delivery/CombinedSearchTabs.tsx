@@ -345,7 +345,21 @@ export const CombinedSearchTabs = ({
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'
                 }}
-                onScroll={isMobile ? hideKeyboard : undefined}
+                onScroll={() => {
+                  if (isMobile) {
+                    hideKeyboard();
+                    // Force immediate blur of any active input
+                    const activeEl = document.activeElement;
+                    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                      (activeEl as HTMLElement).blur();
+                    }
+                  }
+                }}
+                onTouchStart={() => {
+                  if (isMobile) {
+                    hideKeyboard();
+                  }
+                }}
               >
                 {tabs.map((tab, index) => (
                   <Button

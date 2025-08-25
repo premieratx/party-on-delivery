@@ -27,6 +27,7 @@ import { ThemeColorToggle } from '@/components/delivery/ThemeColorToggle';
 import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
 import { useUniversalSearch } from '@/hooks/useUniversalSearch';
 import { useAllProductsLoader } from '@/hooks/useAllProductsLoader';
+import { useImmediateKeyboardHiding } from '@/hooks/useImmediateKeyboardHiding';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -103,6 +104,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const { preloadMultipleCollections } = useProductPreloader();
   const { triggerCartFeedback } = useHapticFeedback();
 
+  const { hideKeyboard: forceHideKeyboard } = useImmediateKeyboardHiding();
+  
   // Pull-to-refresh functionality
   const { 
     isPulling, 

@@ -48,7 +48,7 @@ export function useUnifiedScrollBehavior(options: ScrollBehaviorOptions = {}) {
     return window.innerWidth < 768; // md breakpoint
   }, []);
 
-  // Handle scroll events with throttling
+  // Handle scroll events with immediate keyboard hiding
   const handleScroll = useCallback(() => {
     if (!ticking.current) {
       requestAnimationFrame(() => {
@@ -58,12 +58,14 @@ export function useUnifiedScrollBehavior(options: ScrollBehaviorOptions = {}) {
         setScrollY(currentScrollY);
         setIsScrollingDown(scrollDirection === 'down' && currentScrollY > threshold);
         
-        // Hide keyboard on mobile when scrolling down
-        if (hideKeyboardOnScroll && isMobile() && scrollDirection === 'down') {
+        // IMMEDIATE keyboard hiding on ANY scroll movement on mobile
+        if (hideKeyboardOnScroll && isMobile() && Math.abs(currentScrollY - lastScrollYRef.current) > 1) {
           const activeEl = document.activeElement;
           if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
             (activeEl as HTMLElement).blur();
             setKeyboardVisible(false);
+            // Force viewport reset
+            window.scrollTo({ top: currentScrollY, behavior: 'instant' });
           }
         }
         
@@ -74,7 +76,7 @@ export function useUnifiedScrollBehavior(options: ScrollBehaviorOptions = {}) {
     }
   }, [hideKeyboardOnScroll, threshold, isMobile]);
 
-  // Track keyboard visibility
+  // Track keyboard visibility with immediate hiding on touch start
   useEffect(() => {
     const handleFocus = (e: FocusEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -98,14 +100,40 @@ export function useUnifiedScrollBehavior(options: ScrollBehaviorOptions = {}) {
       }, 100);
     };
 
+    // Immediate keyboard hiding on touch start if scrolling
+    const handleTouchStart = () => {
+      if (isMobile() && keyboardVisible) {
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+          (activeEl as HTMLElement).blur();
+          setKeyboardVisible(false);
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isMobile() && keyboardVisible) {
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+          (activeEl as HTMLElement).blur();
+          setKeyboardVisible(false);
+          e.preventDefault(); // Prevent scroll fighting
+        }
+      }
+    };
+
     document.addEventListener('focusin', handleFocus);
     document.addEventListener('focusout', handleBlur);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     
     return () => {
       document.removeEventListener('focusin', handleFocus);
       document.removeEventListener('focusout', handleBlur);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
     };
-  }, []);
+  }, [isMobile, keyboardVisible]);
 
   // Setup scroll listener
   useEffect(() => {
