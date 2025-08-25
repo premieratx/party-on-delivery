@@ -21,11 +21,13 @@ import {
   Palette,
   Monitor,
   Smartphone,
-  Tablet
+  Tablet,
+  ShoppingCart
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UNIFIED_THEMES, getThemeCSS, migrateLegacyTheme } from '@/lib/themeSystem';
+import { DeliveryAppLiveEditor } from './DeliveryAppLiveEditor';
 
 interface DeliveryAppTab {
   name: string;
@@ -70,18 +72,37 @@ const ICON_OPTIONS = [
   { value: '🍿', label: '🍿 Snacks' }
 ];
 
-// Pixel-Perfect Preview Component
-const DeliveryAppPreview: React.FC<{
+// Real-time Preview Component - Exact Replica of DirectDeliveryApp
+const DeliveryAppLivePreview: React.FC<{
   appName: string;
   heroHeading: string;
   heroSubheading: string;
   logoUrl?: string;
+  logoSize: number;
+  headlineSize: number;
+  logoVerticalPos: number;
+  headlineVerticalPos: number;
+  subheadlineVerticalPos: number;
+  backgroundImageUrl?: string;
   tabs: DeliveryAppTab[];
   theme: 'original' | 'gold' | 'platinum';
   device: 'mobile' | 'tablet' | 'desktop';
-}> = ({ appName, heroHeading, heroSubheading, logoUrl, tabs, theme, device }) => {
+}> = ({ 
+  appName, 
+  heroHeading, 
+  heroSubheading, 
+  logoUrl, 
+  logoSize,
+  headlineSize,
+  logoVerticalPos,
+  headlineVerticalPos,
+  subheadlineVerticalPos,
+  backgroundImageUrl,
+  tabs, 
+  theme, 
+  device 
+}) => {
   const themeConfig = UNIFIED_THEMES[theme];
-  const cssVars = getThemeCSS(themeConfig);
   
   const deviceClasses = {
     mobile: 'w-[375px] h-[667px]',
@@ -90,70 +111,93 @@ const DeliveryAppPreview: React.FC<{
   };
   
   return (
-    <div 
-      className={`${deviceClasses[device]} border rounded-xl overflow-hidden bg-gradient-to-br shadow-xl`}
-      style={cssVars as React.CSSProperties}
-    >
-      <div 
-        className="h-full flex flex-col"
-        style={{ 
-          background: themeConfig.colors.gradient,
-          color: themeConfig.colors.text
-        }}
-      >
-        {/* Header */}
-        <header className="p-4 backdrop-blur-sm border-b" style={{ backgroundColor: `${themeConfig.colors.overlay}` }}>
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{appName}</h1>
-            <button className="px-3 py-1 rounded text-sm" style={{ backgroundColor: themeConfig.colors.secondary }}>
-              Admin
-            </button>
-          </div>
-        </header>
-        
-        {/* Hero Section */}
-        <div className="flex-1 p-6 text-center">
-          <div className="max-w-md mx-auto space-y-6">
+    <div className={`${deviceClasses[device]} border rounded-xl overflow-hidden shadow-xl`}>
+      <div className="h-full flex flex-col bg-background">
+        {/* EXACT REPLICA: Hero Section like DirectDeliveryApp */}
+        <div 
+          className="relative bg-gradient-to-r from-primary to-secondary text-white py-12"
+          style={{
+            backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {backgroundImageUrl && <div className="absolute inset-0 bg-black/50" />}
+          <div className="relative container mx-auto px-4 text-center">
             {logoUrl && (
-              <img src={logoUrl} alt="Logo" className="h-16 w-auto mx-auto" />
+              <img 
+                src={logoUrl} 
+                alt={appName} 
+                className="mx-auto mb-6 object-contain" 
+                style={{ 
+                  height: `${logoSize}px`,
+                  transform: `translateY(${logoVerticalPos}px)`
+                }}
+              />
             )}
-            <h2 className="text-3xl font-bold" style={{ fontFamily: themeConfig.fonts.heading }}>
-              {heroHeading || 'Austin\'s Premier Party Supply Delivery'}
-            </h2>
-            <p className="text-lg opacity-90">
-              {heroSubheading || 'Satisfaction Guaranteed, On-Time Delivery'}
+            <h1 
+              className="font-bold mb-4 text-white"
+              style={{ 
+                fontSize: `${headlineSize}px`,
+                transform: `translateY(${headlineVerticalPos}px)`
+              }}
+            >
+              {heroHeading || appName}
+            </h1>
+            <p 
+              className="text-blue-100 mb-6"
+              style={{ 
+                fontSize: `${Math.max(14, headlineSize * 0.6)}px`,
+                transform: `translateY(${subheadlineVerticalPos}px)`
+              }}
+            >
+              {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
             </p>
             
-            {/* Category Tabs Preview */}
-        <div className="grid grid-cols-3 gap-3 mt-8">
-          {tabs.slice(0, 6).map((tab, index) => (
-            <div 
-              key={index}
-              className="p-4 rounded-xl text-center cursor-pointer transform hover:scale-105 transition-transform"
-              style={{ 
-                backgroundColor: themeConfig.colors.cardBackground,
-                border: `1px solid ${themeConfig.colors.border}`,
-                boxShadow: themeConfig.shadows.card
-              }}
-            >
-              <div className="text-2xl mb-2">{tab.icon || '📦'}</div>
-              <h3 className="font-medium text-sm">{tab.name}</h3>
-            </div>
-          ))}
-            </div>
-            
-            {/* CTA Button */}
-            <button 
-              className="px-8 py-3 rounded-xl font-semibold text-lg transition-all hover:scale-105"
-              style={{ 
-                backgroundColor: themeConfig.colors.primary,
-                color: themeConfig.colors.background,
-                boxShadow: themeConfig.shadows.button
-              }}
-            >
-              Start Your Order
-            </button>
+            {/* Cart Button */}
+            <Button className="bg-white text-primary hover:bg-white/90" size="lg">
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Cart (0)
+            </Button>
           </div>
+        </div>
+
+        {/* EXACT REPLICA: Tab Navigation */}
+        <div className="container mx-auto px-4 py-8 flex-1">
+          {tabs.length > 0 && (
+            <div className="mb-8 border-b pb-4">
+              <div className="flex overflow-x-auto gap-2 scrollbar-hide">
+                {tabs.map((tab: any, index: number) => (
+                  <Button
+                    key={tab.collection_handle || index}
+                    variant={index === 0 ? "default" : "outline"}
+                    className="flex-shrink-0 text-sm px-4 py-2 whitespace-nowrap"
+                  >
+                    {tab.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* EXACT REPLICA: Product Grid Placeholder */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[1,2,3,4,5,6].map((i) => (
+              <div key={i} className="bg-card rounded-lg border p-4 hover:shadow-lg transition-shadow">
+                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
+                <h3 className="font-semibold mb-2 text-sm">Sample Product {i}</h3>
+                <p className="text-lg font-bold text-primary mb-4">$12.99</p>
+                <Button className="w-full text-sm">Add to Cart</Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* EXACT REPLICA: Fixed Action Buttons */}
+        <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+          <Button variant="outline" size="sm" className="bg-background/90 backdrop-blur-sm">
+            Admin
+          </Button>
         </div>
       </div>
     </div>
@@ -182,12 +226,11 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   // Size and positioning controls
   const [logoSize, setLogoSize] = useState(64);
-  const [headlineSize, setHeadlineSize] = useState(24);
+  const [headlineSize, setHeadlineSize] = useState(32);
   const [logoVerticalPos, setLogoVerticalPos] = useState(0);
   const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
   const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(0);
-  const [tabsVerticalPos, setTabsVerticalPos] = useState(0);
-  const [buttonsVerticalPos, setButtonsVerticalPos] = useState(0);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
 
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -325,32 +368,40 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     }
   };
 
-  // Initialize form
+  // Initialize form - FIXED PERSISTENCE
   useEffect(() => {
     if (!open) return;
 
     loadShopifyCollections();
     loadHomepageTemplate();
 
-    if (initial) {
+    // Only initialize once when dialog opens
+    if (initial && initial.id) {
+      console.log('📝 Loading existing delivery app:', initial);
       setAppName(initial.app_name || '');
       setAppSlug(initial.app_slug || '');
       setHeroHeading(initial.main_app_config?.hero_heading || '');
       setHeroSubheading(initial.main_app_config?.hero_subheading || '');
       setLogoUrl(initial.logo_url || '');
       setTheme(initial.theme || migrateLegacyTheme('gold'));
-      setTabs(initial.collections_config?.tabs || []);
+      
+      // CRITICAL: Ensure tabs are preserved exactly as saved
+      const savedTabs = initial.collections_config?.tabs || [];
+      console.log('🔄 Restoring saved tabs:', savedTabs);
+      setTabs(savedTabs);
+      
       setIsActive(initial.is_active ?? true);
       setIsHomepage(initial.is_homepage ?? false);
-    } else {
-      // Reset for new app - use homepage template as default
+    } else if (!initial) {
+      // Only reset for completely new apps
+      console.log('🆕 Creating new delivery app');
       setAppName('');
       setAppSlug('');
-      setHeroHeading(homepageTemplate?.main_app_config?.hero_heading || 'Austin\'s Premier Party Supply Delivery');
-      setHeroSubheading(homepageTemplate?.main_app_config?.hero_subheading || 'Satisfaction Guaranteed, On-Time Delivery');
+      setHeroHeading('Austin\'s Premier Party Supply Delivery');
+      setHeroSubheading('Satisfaction Guaranteed, On-Time Delivery');
       setLogoUrl('');
       setTheme('gold');
-      setTabs(homepageTemplate?.collections_config?.tabs || [
+      setTabs([
         { name: 'Beer', collection_handle: 'tailgate-beer', icon: '🍺' },
         { name: 'Seltzers', collection_handle: 'seltzer-collection', icon: '🥤' },
         { name: 'Cocktails', collection_handle: 'cocktail-kits', icon: '🍸' },
@@ -360,7 +411,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       setIsActive(true);
       setIsHomepage(false);
     }
-  }, [open, initial, homepageTemplate]);
+  }, [open, initial?.id]); // Only depend on open and initial.id to prevent unnecessary resets
 
   // Auto-generate slug
   useEffect(() => {
@@ -482,14 +533,12 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     const file = event.target.files?.[0];
     if (!file) return;
     
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      toast({ title: 'Invalid file type', description: 'Please upload a valid image file (JPG, PNG, GIF, or WebP)', variant: 'destructive' });
+      toast({ title: 'Invalid file type', description: 'Please upload a valid image file', variant: 'destructive' });
       return;
     }
     
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({ title: 'File too large', description: 'File size must be less than 5MB', variant: 'destructive' });
       return;
@@ -499,7 +548,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
       const fileName = `delivery-app-logo-${Date.now()}.${ext}`;
       
-      // Check if bucket exists, create if not
       const { data: buckets } = await supabase.storage.listBuckets();
       if (!buckets?.find(bucket => bucket.name === 'delivery-app-assets')) {
         await supabase.storage.createBucket('delivery-app-assets', { public: true });
@@ -520,6 +568,44 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       toast({ title: 'Logo uploaded successfully!' });
     } catch (error: any) {
       console.error('Upload failed:', error);
+      toast({ title: 'Upload failed', description: error.message || 'Unknown error occurred', variant: 'destructive' });
+    }
+  };
+
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: 'Invalid file type', description: 'Please upload a valid image file', variant: 'destructive' });
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: 'File too large', description: 'File size must be less than 10MB', variant: 'destructive' });
+      return;
+    }
+    
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const fileName = `delivery-app-bg-${Date.now()}.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('delivery-app-assets')
+        .upload(fileName, file, { 
+          cacheControl: '3600', 
+          upsert: false,
+          contentType: file.type
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('delivery-app-assets').getPublicUrl(fileName);
+      setBackgroundImageUrl(data.publicUrl);
+      toast({ title: 'Background uploaded successfully!' });
+    } catch (error: any) {
+      console.error('Background upload failed:', error);
       toast({ title: 'Upload failed', description: error.message || 'Unknown error occurred', variant: 'destructive' });
     }
   };
@@ -556,9 +642,13 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden">
-            <Tabs defaultValue="content" className="h-full flex flex-col">
+            <Tabs defaultValue="editor" className="h-full flex flex-col">
               <div className="px-6 pt-4 border-b">
                 <TabsList className="grid w-full grid-cols-3 max-w-md">
+                  <TabsTrigger value="editor" className="flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Live Editor
+                  </TabsTrigger>
                   <TabsTrigger value="content" className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
                     Content
@@ -567,12 +657,34 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                     <Palette className="w-4 h-4" />
                     Theme
                   </TabsTrigger>
-                  <TabsTrigger value="preview" className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Preview
-                  </TabsTrigger>
                 </TabsList>
               </div>
+
+              <TabsContent value="editor" className="flex-1 overflow-hidden">
+                <DeliveryAppLiveEditor
+                  appName={appName}
+                  heroHeading={heroHeading}
+                  heroSubheading={heroSubheading}
+                  logoUrl={logoUrl}
+                  backgroundImageUrl={backgroundImageUrl}
+                  tabs={tabs}
+                  theme={theme}
+                  logoSize={logoSize}
+                  headlineSize={headlineSize}
+                  logoVerticalPos={logoVerticalPos}
+                  headlineVerticalPos={headlineVerticalPos}
+                  subheadlineVerticalPos={subheadlineVerticalPos}
+                  onLogoSizeChange={(value) => setLogoSize(value[0])}
+                  onHeadlineSizeChange={(value) => setHeadlineSize(value[0])}
+                  onLogoVerticalChange={(value) => setLogoVerticalPos(value[0])}
+                  onHeadlineVerticalChange={(value) => setHeadlineVerticalPos(value[0])}
+                  onSubheadlineVerticalChange={(value) => setSubheadlineVerticalPos(value[0])}
+                  onHeroHeadingChange={setHeroHeading}
+                  onHeroSubheadingChange={setHeroSubheading}
+                  onLogoUpload={handleLogoUpload}
+                  onBackgroundUpload={handleBackgroundUpload}
+                />
+              </TabsContent>
 
               <TabsContent value="content" className="flex-1 overflow-y-auto p-6">
                 <div className="max-w-2xl mx-auto space-y-6">
@@ -801,30 +913,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                         <Slider
                           value={[subheadlineVerticalPos]}
                           onValueChange={(value) => setSubheadlineVerticalPos(value[0])}
-                          min={-3}
-                          max={3}
-                          step={0.5}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Tabs Position: {tabsVerticalPos}rem</Label>
-                        <Slider
-                          value={[tabsVerticalPos]}
-                          onValueChange={(value) => setTabsVerticalPos(value[0])}
-                          min={-3}
-                          max={3}
-                          step={0.5}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Buttons Position: {buttonsVerticalPos}rem</Label>
-                        <Slider
-                          value={[buttonsVerticalPos]}
-                          onValueChange={(value) => setButtonsVerticalPos(value[0])}
                           min={-3}
                           max={3}
                           step={0.5}
