@@ -69,27 +69,26 @@ export default function AdminDashboard() {
       console.log('🔄 Loading admin dashboard data...');
       setLoading(true);
 
-      // Load data directly from database instead of using problematic edge function
-      const [ordersResult, customersResult, productsResult] = await Promise.all([
-        supabase.from('customer_orders').select('total_amount, created_at').eq('status', 'completed'),
-        supabase.from('customers').select('id').limit(1000),
-        // Use a static product count since we know it from the logs
-        Promise.resolve({ count: 1052 })
-      ]);
+      // Use the existing dashboard function that works
+      const { data: dashboardData, error: dashboardError } = await supabase.rpc('get_dashboard_data_fixed', {
+        dashboard_type: 'admin'
+      });
 
-      // Calculate totals
-      const totalRevenue = ordersResult.data?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-      const totalOrders = ordersResult.data?.length || 0;
-      const totalCustomers = customersResult.data?.length || 0;
-      
-      console.log('📊 Dashboard data loaded:', { totalRevenue, totalOrders, totalCustomers });
+      if (dashboardError) {
+        console.error('Dashboard function error:', dashboardError);
+        throw dashboardError;
+      }
 
-      setTotalRevenue(totalRevenue);
-      setTotalOrders(totalOrders);
-      setTotalCustomers(totalCustomers);
+      // Use the returned dashboard data
+      console.log('📊 Dashboard data loaded:', dashboardData);
+
+      const data = typeof dashboardData === 'object' ? dashboardData as any : {};
+      setTotalRevenue(data?.totalRevenue || 0);
+      setTotalOrders(data?.totalOrders || 0);
+      setTotalCustomers(data?.customers?.length || 0);
       setTotalProducts(1052); // From console logs, we know there are 1052 products
-      setRecentOrders(ordersResult.data?.slice(0, 10) || []);
-      setAffiliates([]);
+      setRecentOrders(data?.orders || []);
+      setAffiliates(data?.affiliates || []);
       setAbandonedOrders([]);
 
     } catch (error) {

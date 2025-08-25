@@ -35,13 +35,13 @@ interface OccasionButton {
 }
 
 interface DeliveryApp {
-  id: number;
-  name: string;
-  slug: string;
+  id: string;
+  app_name: string;
+  app_slug: string;
   description?: string;
   logo_url?: string;
-  active: boolean;
-  collections: any;
+  is_active: boolean;
+  tab_config?: any;
   custom_branding?: any;
   created_at: string;
   updated_at: string;
@@ -75,7 +75,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('delivery_apps')
+        .from('delivery_app_variations')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -102,11 +102,11 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     // Convert DeliveryApp to DeliveryAppConfig format for the editor
     const deliveryAppConfig = {
       id: app.id.toString(),
-      app_name: app.name,
-      app_slug: app.slug,
+      app_name: app.app_name,
+      app_slug: app.app_slug,
       logo_url: app.logo_url || '',
       main_app_config: {
-        hero_heading: app.name,
+        hero_heading: app.app_name,
         hero_subheading: app.description || 'Premium delivery service'
       },
       collections_config: {
@@ -119,7 +119,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       },
       theme: 'gold' as const,
       is_homepage: false,
-      is_active: app.active
+      is_active: app.is_active
     };
     
     setEditingApp(deliveryAppConfig);
@@ -127,14 +127,14 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
   };
 
   const handleDelete = async (app: DeliveryApp) => {
-    if (!confirm(`Are you sure you want to delete "${app.name}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete "${app.app_name}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_apps')
+        .from('delivery_app_variations')
         .delete()
         .eq('id', app.id);
 
@@ -156,13 +156,13 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       
       // Just activate this app for now (no homepage concept in current schema)
       const { error } = await supabase
-        .from('delivery_apps')
-        .update({ active: true })
+        .from('delivery_app_variations')
+        .update({ is_active: true })
         .eq('id', app.id);
 
       if (error) throw error;
 
-      toast.success(`"${app.name}" is now active`);
+      toast.success(`"${app.app_name}" is now active`);
       loadDeliveryApps();
     } catch (error) {
       console.error('Error setting active app:', error);
@@ -176,13 +176,13 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_apps')
-        .update({ active: !app.active })
+        .from('delivery_app_variations')
+        .update({ is_active: !app.is_active })
         .eq('id', app.id);
 
       if (error) throw error;
 
-      toast.success(`Delivery app ${!app.active ? 'activated' : 'deactivated'}`);
+      toast.success(`Delivery app ${!app.is_active ? 'activated' : 'deactivated'}`);
       loadDeliveryApps();
     } catch (error) {
       console.error('Error toggling delivery app status:', error);
@@ -196,15 +196,15 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_apps')  
+        .from('delivery_app_variations')  
         .insert([{
-          name: `${app.name} (Copy)`,
-          slug: `${app.slug}-copy-${Date.now()}`,
+          app_name: `${app.app_name} (Copy)`,
+          app_slug: `${app.app_slug}-copy-${Date.now()}`,
           description: app.description,
           logo_url: app.logo_url,
-          collections: app.collections,
+          tab_config: app.tab_config,
           custom_branding: app.custom_branding,
-          active: false
+          is_active: false
         }]);
 
       if (error) throw error;
@@ -220,10 +220,10 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
   };
 
   const copyAppUrl = async (app: DeliveryApp) => {
-    const url = `${window.location.origin}/app/${app.slug}`;
+    const url = `${window.location.origin}/app/${app.app_slug}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success(`Copied URL for ${app.name}`);
+      toast.success(`Copied URL for ${app.app_name}`);
     } catch (error) {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
@@ -232,12 +232,12 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      toast.success(`Copied URL for ${app.name}`);
+      toast.success(`Copied URL for ${app.app_name}`);
     }
   };
 
   const openAppUrl = (app: DeliveryApp) => {
-    window.open(`/app/${app.slug}`, '_blank');
+    window.open(`/app/${app.app_slug}`, '_blank');
   };
 
   const hasDeliveryApps = deliveryApps.length > 0;
@@ -322,9 +322,9 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold">{app.name}</h4>
-                            <Badge variant={app.active ? 'default' : 'secondary'}>
-                              {app.active ? 'Active' : 'Inactive'}
+                            <h4 className="font-semibold">{app.app_name}</h4>
+                            <Badge variant={app.is_active ? 'default' : 'secondary'}>
+                              {app.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
                           {app.description && (
@@ -334,7 +334,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                           {/* App URL with copy functionality */}
                           <div className="flex items-center gap-2 mb-2">
                             <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
-                              {window.location.origin}/app/{app.slug}
+                              {window.location.origin}/app/{app.app_slug}
                             </p>
                             <Button
                               size="sm"
@@ -357,7 +357,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                           </div>
                           
                           <div className="flex gap-4 text-xs text-muted-foreground">
-                            <span>Collections: {Array.isArray(app.collections) ? app.collections.length : 0}</span>
+                            <span>Tabs: {Array.isArray(app.tab_config) ? app.tab_config.length : 0}</span>
                             <span>Created: {new Date(app.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
