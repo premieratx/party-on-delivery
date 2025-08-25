@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { UNIFIED_THEMES, getThemeCSS, migrateLegacyTheme } from '@/lib/themeSystem';
+import { UNIFIED_THEMES, getThemeCSS } from '@/lib/themeSystem';
 
 interface DeliveryAppTab {
   name: string;
@@ -394,346 +394,352 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full h-[90vh] p-0 !z-[100] bg-background border-0">
-        <div className="h-full flex flex-col">
-          {/* Header */}
-          <DialogHeader className="flex-shrink-0 p-4 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-xl font-semibold">
-                  {initial ? 'Edit Delivery App' : 'Create Delivery App'}
-                </DialogTitle>
-                <DialogDescription id="dialog-description">
-                  Build and customize your delivery app with live preview
-                </DialogDescription>
-              </div>
-              <Button
-                onClick={handleSave}
-                disabled={saving || !appName || !appSlug}
-                size="sm"
-                className="min-w-[100px]"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? 'Saving...' : 'Save App'}
-              </Button>
+      <DialogContent className="max-w-7xl w-full p-0 !z-[100] bg-background border-0" style={{ maxHeight: 'none', height: 'auto' }}>
+        {/* Header - Sticky at top */}
+        <DialogHeader className="sticky top-0 z-10 p-4 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-xl font-semibold">
+                {initial ? 'Edit Delivery App' : 'Create Delivery App'}
+              </DialogTitle>
+              <DialogDescription id="dialog-description">
+                Build and customize your delivery app with live preview
+              </DialogDescription>
             </div>
-          </DialogHeader>
+            <Button
+              onClick={handleSave}
+              disabled={saving || !appName || !appSlug}
+              size="sm"
+              className="min-w-[100px]"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save App'}
+            </Button>
+          </div>
+        </DialogHeader>
 
-          {/* Main Content - Two Panel Layout with Proper Scrolling */}
-          <div className="flex-1 min-h-0 flex">
-            {/* Left Panel - Controls with Full Scrolling */}
-            <div className="w-[420px] border-r bg-muted/20 overflow-y-auto">
-              <div className="p-4 space-y-4">
-                    
-                    {/* Device Selector */}
+        {/* Main Content - Natural scrolling grid layout */}
+        <div className="grid grid-cols-2 gap-0 min-h-[600px]">
+          {/* Left Panel - Configuration */}
+          <div className="border-r bg-muted/20">
+            <div className="p-6 space-y-6">
+              {/* Device Selector */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={previewDevice === 'mobile' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewDevice('mobile')}
+                    className="flex flex-col items-center gap-1 h-auto py-2"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    <span className="text-xs">Mobile</span>
+                  </Button>
+                  <Button
+                    variant={previewDevice === 'tablet' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewDevice('tablet')}
+                    className="flex flex-col items-center gap-1 h-auto py-2"
+                  >
+                    <Tablet className="w-4 h-4" />
+                    <span className="text-xs">Tablet</span>
+                  </Button>
+                  <Button
+                    variant={previewDevice === 'desktop' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className="flex flex-col items-center gap-1 h-auto py-2"
+                  >
+                    <Monitor className="w-4 h-4" />
+                    <span className="text-xs">Desktop</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* App Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">App Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <Button
-                          variant={previewDevice === 'mobile' ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setPreviewDevice('mobile')}
-                          className="flex flex-col items-center gap-1 h-auto py-2"
+                      <Label htmlFor="app-name">App Name *</Label>
+                      <Input
+                        id="app-name"
+                        value={appName}
+                        onChange={(e) => setAppName(e.target.value)}
+                        placeholder="My Delivery App"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="app-slug">App Slug *</Label>
+                      <Input
+                        id="app-slug"
+                        value={appSlug}
+                        onChange={(e) => setAppSlug(e.target.value)}
+                        placeholder="my-delivery-app"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Hero Content */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Hero Content</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="headline">Headline</Label>
+                    <Input
+                      id="headline"
+                      value={heroHeading}
+                      onChange={(e) => setHeroHeading(e.target.value)}
+                      placeholder="Austin's Premier Party"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="subheadline">Subheadline</Label>
+                    <Input
+                      id="subheadline"
+                      value={heroSubheading}
+                      onChange={(e) => setHeroSubheading(e.target.value)}
+                      placeholder="Satisfaction Guaranteed"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Branding */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Branding</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Logo Upload</Label>
+                      <Button
+                        variant="outline"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="w-full"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Logo
+                      </Button>
+                    </div>
+                    <div>
+                      <Label>Background Image</Label>
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('background-upload')?.click()}
+                        className="w-full"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Background
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Text Sizing & Position */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Text Sizing & Position</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Logo Size: {logoSize}px</Label>
+                      <Slider
+                        value={[logoSize]}
+                        onValueChange={(value) => setLogoSize(value[0])}
+                        max={120}
+                        min={40}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Label>Headline Size: {headlineSize}px</Label>
+                      <Slider
+                        value={[headlineSize]}
+                        onValueChange={(value) => setHeadlineSize(value[0])}
+                        max={48}
+                        min={16}
+                        step={2}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Theme */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Theme</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={theme} onValueChange={(value: 'original' | 'gold' | 'platinum') => setTheme(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="original">Original (Purple)</SelectItem>
+                      <SelectItem value="gold">Gold (Dark)</SelectItem>
+                      <SelectItem value="platinum">Platinum (Blue)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              {/* Collections/Tabs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    Collections & Tabs
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addTab}
+                      disabled={tabs.length >= 6}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Tab
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {tabs.map((tab, index) => (
+                    <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                      <div className="flex-1 grid grid-cols-3 gap-2">
+                        <Input
+                          placeholder="Tab Name"
+                          value={tab.name}
+                          onChange={(e) => updateTab(index, 'name', e.target.value)}
+                        />
+                        <Select
+                          value={tab.collection_handle}
+                          onValueChange={(value) => updateTab(index, 'collection_handle', value)}
                         >
-                          <Smartphone className="w-4 h-4" />
-                          <span className="text-xs">Mobile</span>
-                        </Button>
-                        <Button
-                          variant={previewDevice === 'tablet' ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setPreviewDevice('tablet')}
-                          className="flex flex-col items-center gap-1 h-auto py-2"
+                          <SelectTrigger>
+                            <SelectValue placeholder="Collection" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {collections.map((collection) => (
+                              <SelectItem key={collection.id} value={collection.handle}>
+                                {collection.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={tab.icon || '📦'}
+                          onValueChange={(value) => updateTab(index, 'icon', value)}
                         >
-                          <Tablet className="w-4 h-4" />
-                          <span className="text-xs">Tablet</span>
-                        </Button>
-                        <Button
-                          variant={previewDevice === 'desktop' ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setPreviewDevice('desktop')}
-                          className="flex flex-col items-center gap-1 h-auto py-2"
-                        >
-                          <Monitor className="w-4 h-4" />
-                          <span className="text-xs">Desktop</span>
-                        </Button>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Icon" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ICON_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </div>
-
-                    {/* App Details */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">App Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="app-name">App Name *</Label>
-                          <Input
-                            id="app-name"
-                            value={appName}
-                            onChange={(e) => setAppName(e.target.value)}
-                            placeholder="My Delivery App"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="app-slug">App Slug *</Label>
-                          <Input
-                            id="app-slug"
-                            value={appSlug}
-                            onChange={(e) => setAppSlug(e.target.value)}
-                            placeholder="my-delivery-app"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Hero Content */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Hero Content</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="hero-heading">Headline</Label>
-                          <Input
-                            id="hero-heading"
-                            value={heroHeading}
-                            onChange={(e) => setHeroHeading(e.target.value)}
-                            placeholder="Austin's Premier Party Supply Delivery"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="hero-subheading">Subheadline</Label>
-                          <Input
-                            id="hero-subheading"
-                            value={heroSubheading}
-                            onChange={(e) => setHeroSubheading(e.target.value)}
-                            placeholder="Satisfaction Guaranteed, On-Time Delivery"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Logo Upload */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Branding</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Logo Upload</Label>
-                          <Button
-                            variant="outline"
-                            onClick={() => logoInputRef.current?.click()}
-                            className="w-full justify-start h-10"
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            {logoUrl ? 'Change Logo' : 'Upload Logo'}
-                          </Button>
-                        </div>
-                        <div>
-                          <Label>Background Image</Label>
-                          <Button
-                            variant="outline"
-                            onClick={() => document.getElementById('background-upload')?.click()}
-                            className="w-full justify-start h-10"
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            {backgroundImageUrl ? 'Change Background' : 'Upload Background'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Size Controls */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Text Sizing & Position</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium">
-                            Logo Size: {logoSize}px
-                          </Label>
-                          <Slider
-                            value={[logoSize]}
-                            onValueChange={([value]) => setLogoSize(value)}
-                            max={120}
-                            min={30}
-                            step={5}
-                            className="mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium">
-                            Headline Size: {headlineSize}px
-                          </Label>
-                          <Slider
-                            value={[headlineSize]}
-                            onValueChange={([value]) => setHeadlineSize(value)}
-                            max={48}
-                            min={16}
-                            step={2}
-                            className="mt-2"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Theme Selection */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Theme</h4>
-                      <Select value={theme} onValueChange={(value: 'original' | 'gold' | 'platinum') => setTheme(value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select theme" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="original">Original</SelectItem>
-                          <SelectItem value="gold">Gold</SelectItem>
-                          <SelectItem value="platinum">Platinum</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Tabs Configuration */}
-                    <div className="space-y-4 border-t pt-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-muted-foreground">Tabs ({tabs.length}/6)</h4>
+                      {tabs.length > 1 && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={addTab}
-                          disabled={tabs.length >= 6}
+                          onClick={() => removeTab(index)}
                         >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add Tab
+                          <Trash2 className="w-4 h-4" />
                         </Button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {tabs.map((tab, index) => (
-                          <div key={index} className="border rounded-lg p-3 space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="font-medium text-xs">Tab Name</Label>
-                                <Input
-                                  value={tab.name}
-                                  onChange={(e) => updateTab(index, 'name', e.target.value)}
-                                  placeholder="Tab Name"
-                                  className="text-sm"
-                                />
-                              </div>
-                              <div>
-                                <Label className="font-medium text-xs">Collection</Label>
-                                <Select
-                                  value={tab.collection_handle}
-                                  onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                                >
-                                  <SelectTrigger className="text-sm">
-                                    <SelectValue placeholder="Select collection" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {collections.map((collection) => (
-                                      <SelectItem key={collection.id} value={collection.handle}>
-                                        {collection.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <Select
-                                value={tab.icon}
-                                onValueChange={(value) => updateTab(index, 'icon', value)}
-                              >
-                                <SelectTrigger className="w-32 text-sm">
-                                  <SelectValue placeholder="Icon" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {ICON_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeTab(index)}
-                                disabled={tabs.length <= 1}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      )}
                     </div>
+                  ))}
+                </CardContent>
+              </Card>
 
-                    {/* Status Controls */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Status</h4>
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="is-active"
-                            checked={isActive}
-                            onCheckedChange={setIsActive}
-                          />
-                          <Label htmlFor="is-active" className="text-sm">Active</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="is-homepage"
-                            checked={isHomepage}
-                            onCheckedChange={setIsHomepage}
-                          />
-                          <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
-                        </div>
-                      </div>
+              {/* Status Controls */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="is-active"
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                      />
+                      <Label htmlFor="is-active" className="text-sm">Active</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="is-homepage"
+                        checked={isHomepage}
+                        onCheckedChange={setIsHomepage}
+                      />
+                      <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
                     </div>
                   </div>
-                </div>
-
-            {/* Right Panel - Preview */}
-            <div className="flex-1 bg-muted/10">
-              <div className="h-full flex flex-col">
-                <div className="p-3 border-b flex-shrink-0">
-                  <h4 className="text-sm font-semibold">Live Preview</h4>
-                </div>
-                <div className="flex-1 p-4 flex items-center justify-center overflow-auto">
-                  <DeliveryAppLivePreview
-                    appName={appName}
-                    heroHeading={heroHeading}
-                    heroSubheading={heroSubheading}
-                    logoUrl={logoUrl}
-                    logoSize={logoSize}
-                    headlineSize={headlineSize}
-                    subheadlineSize={subheadlineSize}
-                    logoVerticalPos={logoVerticalPos}
-                    headlineVerticalPos={headlineVerticalPos}
-                    subheadlineVerticalPos={subheadlineVerticalPos}
-                    backgroundImageUrl={backgroundImageUrl}
-                    backgroundOpacity={backgroundOpacity}
-                    overlayColor={overlayColor}
-                    tabs={tabs}
-                    theme={theme}
-                    device={previewDevice}
-                  />
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
-          {/* Hidden File Inputs */}
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleLogoUpload}
-            className="hidden"
-          />
-          <input
-            id="background-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleBackgroundUpload}
-            className="hidden"
-          />
+          {/* Right Panel - Preview */}
+          <div className="bg-muted/10">
+            <div className="p-6">
+              <h4 className="text-lg font-semibold mb-4">Live Preview</h4>
+              <div className="flex items-center justify-center">
+                <DeliveryAppLivePreview
+                  appName={appName}
+                  heroHeading={heroHeading}
+                  heroSubheading={heroSubheading}
+                  logoUrl={logoUrl}
+                  logoSize={logoSize}
+                  headlineSize={headlineSize}
+                  subheadlineSize={subheadlineSize}
+                  logoVerticalPos={logoVerticalPos}
+                  headlineVerticalPos={headlineVerticalPos}
+                  subheadlineVerticalPos={subheadlineVerticalPos}
+                  backgroundImageUrl={backgroundImageUrl}
+                  backgroundOpacity={backgroundOpacity}
+                  overlayColor={overlayColor}
+                  tabs={tabs}
+                  theme={theme}
+                  device={previewDevice}
+                />
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Hidden File Inputs */}
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+          className="hidden"
+        />
+        <input
+          id="background-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleBackgroundUpload}
+          className="hidden"
+        />
       </DialogContent>
     </Dialog>
   );
