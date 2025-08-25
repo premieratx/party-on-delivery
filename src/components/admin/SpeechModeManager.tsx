@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Mic, Volume2, MessageSquare, Settings, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,12 +31,22 @@ export const SpeechModeManager = () => {
     setConfig(prev => ({ ...prev, [key]: value }));
   };
 
-  const saveConfig = () => {
-    // TODO: Save to database
-    toast({
-      title: "Configuration Saved",
-      description: "Speech Mode settings have been updated.",
-    });
+  const saveConfig = async () => {
+    try {
+      // Save speech mode configuration locally for now
+      localStorage.setItem('speech_mode_config', JSON.stringify(config));
+
+      toast({
+        title: "Configuration Saved",
+        description: "Speech Mode settings have been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Could not save speech mode settings.",
+        variant: "destructive"
+      });
+    }
   };
 
   const testSpeechMode = () => {

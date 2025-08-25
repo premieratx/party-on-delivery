@@ -8,7 +8,7 @@ export const QuickSync = () => {
   const syncProducts = async () => {
     setSyncing(true);
     try {
-      console.log('🚀 Starting product sync...');
+      
       
       // First try the bulk sync for comprehensive update
       const { data: bulkData, error: bulkError } = await supabase.functions.invoke('shopify-bulk-sync', {
@@ -26,20 +26,20 @@ export const QuickSync = () => {
           console.error('Sync error:', error);
           throw error;
         }
-        console.log('✅ Trigger sync completed:', data);
+        
       } else {
-        console.log('✅ Bulk sync initiated:', bulkData);
+        
       }
       
       // Force refresh the instant cache
-      console.log('🔄 Refreshing instant cache...');
+      
       await supabase.functions.invoke('instant-product-cache', { 
         body: { forceRefresh: true } 
       });
       
       // Reload page after successful sync
       setTimeout(() => {
-        console.log('🔄 Reloading page to show new products...');
+        
         window.location.reload();
       }, 5000);
       

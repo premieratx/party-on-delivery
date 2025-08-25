@@ -52,7 +52,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
     if (shareToken) {
       const shareLink = buildJoinUrl(shareToken);
       setShareUrl(shareLink);
-      console.log('🔗 Generated share link:', shareLink, 'with token:', shareToken);
+      
     }
   }, [shareToken]);
 

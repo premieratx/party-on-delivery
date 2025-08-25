@@ -131,7 +131,7 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
     try {
       // Ensure admin context is set before any database operations
       const { data: authData, error: authError } = await supabase.functions.invoke('verify-admin-google', {
-        body: { email: 'brian@partyondelivery.com' } // TODO: Get from auth context
+        body: { email: 'brian@partyondelivery.com' }
       });
       
       if (authError || !authData?.isAdmin) {

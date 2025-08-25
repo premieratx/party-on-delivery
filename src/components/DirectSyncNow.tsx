@@ -9,11 +9,11 @@ export const DirectSyncNow: React.FC = () => {
   const handleDirectSync = async () => {
     setIsLoading(true);
     try {
-      console.log('Starting direct sync to Google Sheets...');
+      
       
       const { data, error } = await supabase.functions.invoke('direct-sync-sheets');
       
-      console.log('Direct sync response:', { data, error });
+      
       
       if (error) {
         throw error;
@@ -23,7 +23,7 @@ export const DirectSyncNow: React.FC = () => {
         toast.success(`🎉 SUCCESS! Data synced to Google Sheets!`, {
           description: `✅ ${data.synced.completedOrders} completed orders, ${data.synced.abandonedOrders} abandoned orders, ${data.synced.affiliateReferrals} affiliate referrals`
         });
-        console.log('Direct sync completed successfully:', data);
+        
       } else {
         throw new Error(data.message);
       }

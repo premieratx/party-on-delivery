@@ -7,21 +7,21 @@ export const ManualSync = () => {
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
   
-  console.log('🔧 ManualSync: Component rendering');
+  
   
   const testCache = async () => {
     setTesting(true);
-    console.log('🧪 Starting cache test...');
+    
     
     try {
       alert('Testing cache - check console');
-      console.log('📞 Calling instant-product-cache...');
+      
       
       const result = await supabase.functions.invoke('instant-product-cache', {
         body: { forceRefresh: true }
       });
       
-      console.log('📞 Cache result:', result);
+      
       alert(`Cache result: ${JSON.stringify(result)}`);
       
     } catch (error) {
@@ -34,17 +34,17 @@ export const ManualSync = () => {
 
   const forceBulkSync = async () => {
     setSyncing(true);
-    console.log('🚀 Starting bulk sync...');
+    
     
     try {
       alert('Starting bulk sync - check console');
-      console.log('📞 Calling shopify-bulk-sync...');
+      
       
       const result = await supabase.functions.invoke('shopify-bulk-sync', {
         body: { forceRefresh: true }
       });
       
-      console.log('📞 Sync result:', result);
+      
       alert(`Sync result: ${JSON.stringify(result)}`);
       
       if (result.data?.success) {

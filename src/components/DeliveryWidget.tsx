@@ -81,7 +81,7 @@ export const DeliveryWidget: React.FC = () => {
     const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
     
     if (addToOrderFlag === 'true' && validLastOrderInfo) {
-      console.log('Processing add to order flag with lastOrderInfo:', validLastOrderInfo);
+      
       setIsAddingToOrder(true);
       localStorage.setItem('partyondelivery_bundle_ready', 'true');
       handleAddToRecentOrder();
@@ -89,7 +89,7 @@ export const DeliveryWidget: React.FC = () => {
   }, [validLastOrderInfo?.deliveryDate, validLastOrderInfo?.deliveryTime]);
 
   const handleStartNewOrder = () => {
-    console.log('=== handleStartNewOrder ===');
+    
     
     // Keep existing cart and delivery info - just start a standard new order flow
     setIsAddingToOrder(false);
@@ -103,7 +103,7 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleResumeOrder = () => {
-    console.log('=== handleResumeOrder ===');
+    
     
     // Resume order works exactly like start new order now - keep everything
     setIsAddingToOrder(false);
@@ -118,8 +118,6 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleAddToRecentOrder = () => {
-    console.log('=== handleAddToRecentOrder ===');
-    console.log('validLastOrderInfo:', validLastOrderInfo);
     
     // If no valid last order (new customer), behave like new order
     if (!validLastOrderInfo) {
@@ -148,7 +146,7 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleAddToCart = (item: Omit<UnifiedCartItem, 'quantity'>) => {
-    console.log('🛒 DeliveryWidget: Adding product to cart:', item);
+    
     // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
     const currentQty = cartItems.find(cartItem => {
       const itemId = cartItem.productId || cartItem.id;
@@ -173,7 +171,7 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleEmptyCart = () => {
-    console.log('=== emptyCart ===');
+    
     emptyCart();
     // Show confirmation message
     import('@/hooks/use-toast').then(({ useToast }) => {
@@ -191,9 +189,6 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleCheckout = () => {
     try {
-      console.log('=== CHECKOUT BUTTON CLICKED ===');
-      console.log('cartItems length:', cartItems.length);
-      
       // Ensure we have items in cart before proceeding
       if (cartItems.length === 0) {
         console.warn('Cannot proceed to checkout with empty cart');
@@ -208,8 +203,6 @@ export const DeliveryWidget: React.FC = () => {
         return;
       }
       
-      console.log('Cart has items, proceeding to main checkout...');
-      
       // Close cart if open
       setIsCartOpen(false);
       
@@ -218,7 +211,6 @@ export const DeliveryWidget: React.FC = () => {
       try {
         localStorage.setItem('last-delivery-app-url', currentUrl);
         localStorage.setItem('deliveryAppReferrer', currentUrl);
-        console.log('Stored delivery app referrer:', currentUrl);
       } catch (error) {
         console.warn('Failed to store delivery app referrer:', error);
       }

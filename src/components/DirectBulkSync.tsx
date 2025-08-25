@@ -16,7 +16,7 @@ export const DirectBulkSync = () => {
       
       if (data) {
         setProductCount(data.length);
-        console.log('📊 Current product count in cache:', data.length);
+        
       }
       if (error) {
         console.error('❌ Error checking products:', error);
@@ -31,21 +31,16 @@ export const DirectBulkSync = () => {
     setResult(null);
     
     try {
-      console.log('🚀 Starting direct bulk sync...');
-      console.log('📡 Calling supabase.functions.invoke with shopify-bulk-sync');
       
       // Call the bulk sync function directly
       const { data, error } = await supabase.functions.invoke('shopify-bulk-sync', {
         body: { forceRefresh: true }
       });
       
-      console.log('📥 Received response:', { data, error });
-      
       if (error) {
         console.error('❌ Bulk sync error:', error);
         setResult({ success: false, error: error.message || JSON.stringify(error) });
       } else {
-        console.log('✅ Bulk sync completed:', data);
         setResult(data);
         
         // Recheck product count after sync
@@ -56,7 +51,7 @@ export const DirectBulkSync = () => {
           
           if (products) {
             setProductCount(products.length);
-            console.log('📊 Products after sync:', products.length);
+            
           }
         }, 2000);
       }
