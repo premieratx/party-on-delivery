@@ -1606,45 +1606,6 @@ export type Database = {
         }
         Relationships: []
       }
-      daily_analytics: {
-        Row: {
-          avg_session_duration: number | null
-          bounce_rate: number | null
-          created_at: string
-          date: string
-          id: string
-          new_visitors: number | null
-          returning_visitors: number | null
-          total_page_views: number | null
-          unique_visitors: number | null
-          updated_at: string
-        }
-        Insert: {
-          avg_session_duration?: number | null
-          bounce_rate?: number | null
-          created_at?: string
-          date: string
-          id?: string
-          new_visitors?: number | null
-          returning_visitors?: number | null
-          total_page_views?: number | null
-          unique_visitors?: number | null
-          updated_at?: string
-        }
-        Update: {
-          avg_session_duration?: number | null
-          bounce_rate?: number | null
-          created_at?: string
-          date?: string
-          id?: string
-          new_visitors?: number | null
-          returning_visitors?: number | null
-          total_page_views?: number | null
-          unique_visitors?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       data_integrity_checks: {
         Row: {
           actual_result: Json | null
