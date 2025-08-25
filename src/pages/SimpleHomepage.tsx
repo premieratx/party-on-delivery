@@ -26,6 +26,16 @@ const SimpleHomepage = () => {
       onOpenCart={openCart}
       onUpdateQuantity={updateQuantity}
       onProceedToCheckout={handleCheckout}
+      collectionsConfig={{
+        tab_count: 5,
+        tabs: [
+          { name: "Beer", collection_handle: "tailgate-beer" },
+          { name: "Seltzers", collection_handle: "seltzer-collection" },
+          { name: "Cocktails", collection_handle: "cocktail-kits" },
+          { name: "Mixers & N/A", collection_handle: "mixers-non-alcoholic" },
+          { name: "Spirits", collection_handle: "spirits" }
+        ]
+      }}
       customSiteSlug="main-delivery-app"
       maxProducts={50}
       forceRefresh={true}
