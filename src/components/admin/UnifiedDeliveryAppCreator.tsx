@@ -239,26 +239,15 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Monitor open state to load collections
   useEffect(() => {
     if (open) {
-      console.log('🚪 Dialog opened, loading collections...');
       loadCollections();
-    } else {
-      console.log('🚪 Dialog closed');
     }
   }, [open]);
 
-  // Debug effect to monitor collections state
-  useEffect(() => {
-    console.log('📊 Collections state changed:', collections.length);
-    if (collections.length > 0) {
-      console.log('📋 Current collections:', collections.slice(0, 5).map(c => ({ handle: c.handle, name: c.name })));
-    }
-  }, [collections]);
-
   const loadCollections = async () => {
     try {
-      console.log('🔄 Loading real Shopify collections...');
       setCollections([]); // Clear existing collections while loading
       
       const { data, error } = await supabase.functions.invoke('get-all-collections', {
@@ -276,10 +265,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       }
 
       if (data && data.collections && Array.isArray(data.collections)) {
-        console.log('✅ Loaded real collections:', data.collections.length);
-        console.log('📋 First 3 real collections:', data.collections.slice(0, 3));
-        console.log('🔍 Raw collection data structure:', data.collections[0]);
-        
         // Transform and filter collections - only include ones with valid handles
         const transformedCollections = data.collections
           .filter((collection: any) => {
@@ -300,16 +285,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
             return transformed;
           });
         
-        console.log('🔄 Setting transformed collections:', transformedCollections.length);
-        console.log('🔍 First 3 transformed collections:', transformedCollections.slice(0, 3));
-        console.log('📊 Collection handles available:', transformedCollections.map(c => c.handle).slice(0, 10));
-        
         setCollections(transformedCollections);
-        
-        // Force component re-render
-        setTimeout(() => {
-          console.log('🔄 Collections in state should be:', transformedCollections.length);
-        }, 200);
         
       } else {
         console.warn('⚠️ No collections data received or invalid format:', data);
