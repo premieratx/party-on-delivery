@@ -69,9 +69,11 @@ export default function AdminDashboard() {
       console.log('🔄 Loading admin dashboard data...');
       setLoading(true);
 
-      // Use the existing dashboard function that works
-      const { data: dashboardData, error: dashboardError } = await supabase.rpc('get_dashboard_data_fixed', {
-        dashboard_type: 'admin'
+      // Use the working edge function that's already returning data
+      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
+        body: {
+          type: 'admin'
+        }
       });
 
       if (dashboardError) {
@@ -79,16 +81,15 @@ export default function AdminDashboard() {
         throw dashboardError;
       }
 
-      // Use the returned dashboard data
+      // Use the returned dashboard data from edge function
       console.log('📊 Dashboard data loaded:', dashboardData);
 
-      const data = typeof dashboardData === 'object' ? dashboardData as any : {};
-      setTotalRevenue(data?.totalRevenue || 0);
-      setTotalOrders(data?.totalOrders || 0);
-      setTotalCustomers(data?.customers?.length || 0);
+      setTotalRevenue(dashboardData?.totalRevenue || 0);
+      setTotalOrders(dashboardData?.totalOrders || dashboardData?.ordersCount || 0);
+      setTotalCustomers(dashboardData?.totalCustomers || 0);
       setTotalProducts(1052); // From console logs, we know there are 1052 products
-      setRecentOrders(data?.orders || []);
-      setAffiliates(data?.affiliates || []);
+      setRecentOrders(dashboardData?.orders || []);
+      setAffiliates(dashboardData?.affiliates || []);
       setAbandonedOrders([]);
 
     } catch (error) {
@@ -355,9 +356,9 @@ export default function AdminDashboard() {
         </Tabs>
       </div>
 
-      {/* Creator Modals - Cover page creation moved to standalone implementation */}
+      {/* Creator Modals */}
       {showCoverCreator && (
-        <div>Cover page creation disabled - using standalone implementation</div>
+        <div>Cover page creation moved to EnhancedCoverPageManager</div>
       )}
       
       {showDeliveryCreator && (
