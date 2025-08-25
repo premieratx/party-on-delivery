@@ -38,19 +38,15 @@ export interface CoverStartScreenProps {
   logoBgMode?: 'auto' | 'rectangle' | 'none';
 }
 
-const defaultChecklist = [
-  'Locally Owned',
-  'Same Day Delivery',
-  'Cocktail Kits on Demand',
-];
+// No default checklist - must be provided via props
 
 export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
-  appName = 'Party On Delivery',
+  appName,
   logoUrl,
   logoHeight,
-  title = 'Exclusive Concierge Delivery',
-  subtitle = "Austin's favorite alcohol delivery service",
-  checklistItems = defaultChecklist,
+  title,
+  subtitle,
+  checklistItems,
   backgroundImageUrl,
   backgroundVideoUrl,
   buttons,
@@ -194,7 +190,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             {/* Auto-shrinking checklist area */}
             <div className="w-full mx-auto my-5" style={{ marginTop: (checklistOffsetY || 0) }}>
               <div className="flex flex-col items-center gap-1 max-h-[20vh] overflow-hidden">
-                {(checklistItems?.filter(Boolean).slice(0, 5) || defaultChecklist).map((item, idx, arr) => (
+                {(checklistItems?.filter(Boolean).slice(0, 5) || []).map((item, idx, arr) => (
                   <React.Fragment key={idx}>
                     <p
                       className="text-white/90 font-semibold leading-tight animate-fade-in my-5"
