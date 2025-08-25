@@ -730,19 +730,19 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                             <SelectTrigger>
                               <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
                             </SelectTrigger>
-                            <SelectContent>
-                              {collections.length > 0 ? (
-                                collections.map((collection) => (
-                                  <SelectItem key={collection.handle} value={collection.handle}>
-                                    {collection.name}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="" disabled>
-                                  {collections.length === 0 ? "Loading collections..." : "No collections found"}
+                          <SelectContent>
+                            {collections.length > 0 ? (
+                              collections.map((collection) => (
+                                <SelectItem key={collection.handle} value={collection.handle}>
+                                  {collection.name}
                                 </SelectItem>
-                              )}
-                            </SelectContent>
+                              ))
+                            ) : (
+                              <SelectItem value="loading" disabled>
+                                Loading collections...
+                              </SelectItem>
+                            )}
+                          </SelectContent>
                           </Select>
                           <Select
                             value={tab.icon || '📦'}
