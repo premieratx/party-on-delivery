@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CoverPageCreator } from './CoverPageCreator';
+import { UnifiedCoverPageEditor } from './UnifiedCoverPageEditor';
 
 interface CoverPage {
   id: string;
@@ -43,12 +43,20 @@ interface CoverPageConfig {
   title: string;
   subtitle?: string;
   logo_url?: string;
+  logo_height?: number;
   bg_image_url?: string;
   bg_video_url?: string;
   checklist: string[];
   buttons: any[];
   is_active: boolean;
-  theme?: string;
+  affiliate_id?: string;
+  affiliate_slug?: string;
+  theme?: 'gold' | 'original' | 'platinum' | 'ocean' | 'sunset' | 'forest';
+  styles?: any;
+  is_default_homepage?: boolean;
+  flow_name?: string;
+  is_multi_flow?: boolean;
+  free_shipping_enabled?: boolean;
 }
 
 export const EnhancedCoverPageManager: React.FC = () => {
@@ -92,12 +100,17 @@ export const EnhancedCoverPageManager: React.FC = () => {
       title: page.title,
       subtitle: page.subtitle || '',
       logo_url: page.logo_url || '',
+      logo_height: page.logo_height || 160,
       bg_image_url: page.bg_image_url || '',
       bg_video_url: page.bg_video_url || '',
       checklist: Array.isArray(page.checklist) ? page.checklist : [],
       buttons: Array.isArray(page.buttons) ? page.buttons : [],
       is_active: page.is_active,
-      theme: page.styles?.theme || 'gold'
+      theme: (page.styles?.theme || 'gold') as 'gold' | 'original' | 'platinum' | 'ocean' | 'sunset' | 'forest',
+      styles: page.styles,
+      is_default_homepage: page.is_default_homepage,
+      affiliate_slug: page.affiliate_slug,
+      free_shipping_enabled: false
     };
     
     setEditingPage(coverPageConfig);
@@ -287,18 +300,12 @@ export const EnhancedCoverPageManager: React.FC = () => {
       )}
 
       {/* Cover Page Creator */}
-      {showEditor && (
-        <CoverPageCreator
-          open={showEditor}
-          onOpenChange={setShowEditor}
-          initial={editingPage}
-          onSaved={() => {
-            setShowEditor(false);
-            setEditingPage(null);
-            loadCoverPages();
-          }}
-        />
-      )}
+      <UnifiedCoverPageEditor
+        open={showEditor}
+        onOpenChange={setShowEditor}
+        initial={editingPage}
+        onSaved={handleEditorSave}
+      />
 
       {/* Cover Pages List */}
       <Card>
