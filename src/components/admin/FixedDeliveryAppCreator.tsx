@@ -219,7 +219,8 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   };
 
   const removeTab = (index: number) => {
-    setTabs(tabs.filter((_, i) => i !== index));
+    const newTabs = tabs.filter((_, i) => i !== index);
+    setTabs(newTabs);
   };
 
   const handleSave = async () => {
@@ -242,7 +243,12 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
           hero_subheading: heroSubheading
         } as any,
         collections_config: {
-          tabs: tabs
+          tab_count: tabs.length,
+          tabs: tabs.map(tab => ({
+            name: tab.name,
+            collection_handle: tab.shopify_collection_handle,
+            icon: tab.icon
+          }))
         } as any,
         logo_url: logoUrl,
         is_active: isActive,
