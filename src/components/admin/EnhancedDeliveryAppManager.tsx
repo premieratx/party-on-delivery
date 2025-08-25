@@ -35,26 +35,16 @@ interface OccasionButton {
 }
 
 interface DeliveryApp {
-  id: string;
-  app_name: string;
-  app_slug: string;
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
   logo_url?: string;
-  is_active: boolean;
-  is_homepage: boolean;
-  business_name?: string;
-  hero_title?: string;
-  hero_subtitle?: string;
-  hero_image_url?: string;
-  primary_color?: string;
-  secondary_color?: string;
-  theme_color?: string;
-  delivery_radius?: number;
-  delivery_fee?: number;
-  announcement_text?: string;
+  active: boolean;
+  collections: any;
+  custom_branding?: any;
   created_at: string;
   updated_at: string;
-  collections_config?: any;
-  main_app_config?: any;
 }
 
 interface DeliveryAppConfig {
@@ -85,7 +75,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('delivery_app_variations')
+        .from('delivery_apps')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -111,25 +101,25 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
   const handleEdit = (app: DeliveryApp) => {
     // Convert DeliveryApp to DeliveryAppConfig format for the editor
     const deliveryAppConfig = {
-      id: app.id,
-      app_name: app.app_name,
-      app_slug: app.app_slug,
+      id: app.id.toString(),
+      app_name: app.name,
+      app_slug: app.slug,
       logo_url: app.logo_url || '',
       main_app_config: {
-        hero_heading: app.main_app_config?.hero_heading || app.hero_title || app.app_name,
-        hero_subheading: app.main_app_config?.hero_subheading || app.hero_subtitle || 'Premium delivery service'
+        hero_heading: app.name,
+        hero_subheading: app.description || 'Premium delivery service'
       },
       collections_config: {
-        tab_count: app.collections_config?.tab_count || 3,
-        tabs: app.collections_config?.tabs || [
+        tab_count: 3,
+        tabs: [
           { name: 'Beer', collection_handle: 'beer', icon: '🍺' },
           { name: 'Wine', collection_handle: 'wine', icon: '🍷' },
           { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
         ]
       },
       theme: 'gold' as const,
-      is_homepage: app.is_homepage,
-      is_active: app.is_active
+      is_homepage: false,
+      is_active: app.active
     };
     
     setEditingApp(deliveryAppConfig);
@@ -137,19 +127,14 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
   };
 
   const handleDelete = async (app: DeliveryApp) => {
-    if (app.is_homepage) {
-      toast.error('Cannot delete the homepage app. Set another app as homepage first.');
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete "${app.app_name}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete "${app.name}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_app_variations')
+        .from('delivery_apps')
         .delete()
         .eq('id', app.id);
 
@@ -169,46 +154,35 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       
-      // First remove homepage status from all apps
-      await supabase
-        .from('delivery_app_variations')
-        .update({ is_homepage: false })
-        .neq('id', app.id);
-
-      // Then set this app as homepage
+      // Just activate this app for now (no homepage concept in current schema)
       const { error } = await supabase
-        .from('delivery_app_variations')
-        .update({ is_homepage: true, is_active: true })
+        .from('delivery_apps')
+        .update({ active: true })
         .eq('id', app.id);
 
       if (error) throw error;
 
-      toast.success(`"${app.app_name}" is now the homepage delivery app`);
+      toast.success(`"${app.name}" is now active`);
       loadDeliveryApps();
     } catch (error) {
-      console.error('Error setting homepage app:', error);
-      toast.error('Failed to set homepage app');
+      console.error('Error setting active app:', error);
+      toast.error('Failed to update app');
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleActive = async (app: DeliveryApp) => {
-    if (app.is_homepage && app.is_active) {
-      toast.error('Cannot deactivate the homepage app. Set another app as homepage first.');
-      return;
-    }
-
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_app_variations')
-        .update({ is_active: !app.is_active })
+        .from('delivery_apps')
+        .update({ active: !app.active })
         .eq('id', app.id);
 
       if (error) throw error;
 
-      toast.success(`Delivery app ${!app.is_active ? 'activated' : 'deactivated'}`);
+      toast.success(`Delivery app ${!app.active ? 'activated' : 'deactivated'}`);
       loadDeliveryApps();
     } catch (error) {
       console.error('Error toggling delivery app status:', error);
@@ -222,25 +196,15 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_app_variations')  
+        .from('delivery_apps')  
         .insert([{
-          app_name: `${app.app_name} (Copy)`,
-          app_slug: `${app.app_slug}-copy-${Date.now()}`,
+          name: `${app.name} (Copy)`,
+          slug: `${app.slug}-copy-${Date.now()}`,
+          description: app.description,
           logo_url: app.logo_url,
-          business_name: app.business_name,
-          hero_title: app.hero_title,
-          hero_subtitle: app.hero_subtitle,
-          hero_image_url: app.hero_image_url,
-          primary_color: app.primary_color,
-          secondary_color: app.secondary_color,
-          theme_color: app.theme_color,
-          delivery_radius: app.delivery_radius,
-          delivery_fee: app.delivery_fee,
-          announcement_text: app.announcement_text,
-          collections_config: app.collections_config,
-          main_app_config: app.main_app_config,
-          is_active: false,
-          is_homepage: false
+          collections: app.collections,
+          custom_branding: app.custom_branding,
+          active: false
         }]);
 
       if (error) throw error;
@@ -256,10 +220,10 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
   };
 
   const copyAppUrl = async (app: DeliveryApp) => {
-    const url = `${window.location.origin}/app/${app.app_slug}`;
+    const url = `${window.location.origin}/app/${app.slug}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success(`Copied URL for ${app.app_name}`);
+      toast.success(`Copied URL for ${app.name}`);
     } catch (error) {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
@@ -268,15 +232,14 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      toast.success(`Copied URL for ${app.app_name}`);
+      toast.success(`Copied URL for ${app.name}`);
     }
   };
 
   const openAppUrl = (app: DeliveryApp) => {
-    window.open(`/app/${app.app_slug}`, '_blank');
+    window.open(`/app/${app.slug}`, '_blank');
   };
 
-  const homepageApp = deliveryApps.find(app => app.is_homepage);
   const hasDeliveryApps = deliveryApps.length > 0;
 
   return (
@@ -294,29 +257,16 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
       {/* Status Banner */}
       {hasDeliveryApps ? (
-        homepageApp ? (
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-green-800">
-                  Homepage app is <strong>configured</strong>. Current: "{homepageApp.app_name}"
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-orange-600" />
-                <span className="text-orange-800">
-                  No homepage app set. Please designate one app as the homepage.
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        )
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="text-green-800">
+                Delivery apps are <strong>configured</strong>. You have {deliveryApps.length} active app(s).
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-4">
@@ -367,30 +317,24 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
             <ScrollArea className="h-[400px]">
               <div className="space-y-4">
                 {deliveryApps.map((app) => (
-                  <Card key={app.id} className={`${app.is_homepage ? 'border-primary' : ''}`}>
+                  <Card key={app.id} className="border">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold">{app.app_name}</h4>
-                            {app.is_homepage && (
-                              <Badge variant="default" className="gap-1">
-                                <Home className="h-3 w-3" />
-                                Homepage
-                              </Badge>
-                            )}
-                            <Badge variant={app.is_active ? 'default' : 'secondary'}>
-                              {app.is_active ? 'Active' : 'Inactive'}
+                            <h4 className="font-semibold">{app.name}</h4>
+                            <Badge variant={app.active ? 'default' : 'secondary'}>
+                              {app.active ? 'Active' : 'Inactive'}
                             </Badge>
                           </div>
-                          {app.business_name && (
-                            <p className="text-sm text-muted-foreground mb-1">Business: {app.business_name}</p>
+                          {app.description && (
+                            <p className="text-sm text-muted-foreground mb-1">Description: {app.description}</p>
                           )}
                           
                           {/* App URL with copy functionality */}
                           <div className="flex items-center gap-2 mb-2">
                             <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
-                              {window.location.origin}/app/{app.app_slug}
+                              {window.location.origin}/app/{app.slug}
                             </p>
                             <Button
                               size="sm"
@@ -413,8 +357,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                           </div>
                           
                           <div className="flex gap-4 text-xs text-muted-foreground">
-                            <span>Fee: ${app.delivery_fee || 0}</span>
-                            <span>Radius: {app.delivery_radius || 0}mi</span>
+                            <span>Collections: {Array.isArray(app.collections) ? app.collections.length : 0}</span>
                             <span>Created: {new Date(app.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
@@ -443,21 +386,19 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
-                          {!app.is_homepage && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleSetHomepage(app)}
-                              disabled={loading}
-                            >
-                              <Home className="h-3 w-3" />
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSetHomepage(app)}
+                            disabled={loading}
+                          >
+                            <Home className="h-3 w-3" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleDelete(app)}
-                            disabled={loading || app.is_homepage}
+                            disabled={loading}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>

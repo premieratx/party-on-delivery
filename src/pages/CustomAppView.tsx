@@ -27,10 +27,10 @@ const CustomAppView = () => {
         console.log(`🚀 Loading custom delivery app: ${appSlug}`);
         
         const { data: apps, error: appsError } = await supabase
-          .from('delivery_app_variations')
+          .from('delivery_apps')
           .select('*')
-          .eq('app_slug', appSlug)
-          .eq('is_active', true)
+          .eq('slug', appSlug)
+          .eq('active', true)
           .limit(1);
 
         if (appsError) {
@@ -46,7 +46,7 @@ const CustomAppView = () => {
         }
 
         const app = apps[0];
-        console.log(`✅ Loaded delivery app: ${app.app_name}`);
+        console.log(`✅ Loaded delivery app: ${app.name}`);
         setAppConfig(app);
         
       } catch (err) {
@@ -67,8 +67,8 @@ const CustomAppView = () => {
       localStorage.setItem('last-delivery-app-url', currentUrl);
       localStorage.setItem('deliveryAppReferrer', currentUrl);
       localStorage.setItem('app-context', JSON.stringify({
-        appSlug: appConfig?.app_slug || appSlug,
-        appName: appConfig?.app_name || appSlug
+        appSlug: appConfig?.slug || appSlug,
+        appName: appConfig?.name || appSlug
       }));
       console.log('Stored delivery app referrer:', currentUrl);
     } catch (error) {
@@ -133,11 +133,11 @@ const CustomAppView = () => {
 
   return (
     <ProductCategories
-      appName={appConfig.app_name}
-      heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
-      heroSubheading={appConfig.main_app_config?.hero_subheading || "Premium Curated Experience"}
+      appName={appConfig.name}
+      heroHeading={appConfig.name}
+      heroSubheading={appConfig.description || "Premium Curated Experience"}
       logoUrl={appConfig.logo_url}
-      collectionsConfig={appConfig.collections_config}
+      collectionsConfig={appConfig.collections}
       cartItemCount={getTotalItems()}
       cartItems={cartItems}
       onAddToCart={handleAddToCart}
