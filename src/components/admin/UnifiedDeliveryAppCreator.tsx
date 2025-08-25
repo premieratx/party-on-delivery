@@ -256,9 +256,12 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const loadShopifyCollections = async () => {
     try {
       console.log('🔍 Loading ALL collections for delivery app creator...');
+      console.log('📊 Current collections state:', shopifyCollections);
       
       // Use the fixed get-all-collections edge function
       const { data, error } = await supabase.functions.invoke('get-all-collections');
+      
+      console.log('📊 Edge function response:', { data, error });
       
       if (!error && data?.success && data?.collections && Array.isArray(data.collections)) {
         const collections = data.collections
@@ -272,6 +275,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           .sort((a: any, b: any) => b.products_count - a.products_count); // Sort by product count
         
         console.log(`✅ Loaded ${collections.length} collections from edge function`);
+        console.log('📋 Sample collections:', collections.slice(0, 3));
         setShopifyCollections(collections);
         return;
       }
@@ -806,13 +810,28 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
-                                 <SelectContent className="z-[9999]">
-                                   {shopifyCollections.map((collection) => (
-                                     <SelectItem key={collection.handle} value={collection.handle}>
-                                       {collection.title || collection.name} ({collection.products_count})
-                                     </SelectItem>
-                                   ))}
-                                </SelectContent>
+                                 <SelectContent className="z-[9999] bg-background border">
+                                    {shopifyCollections.length === 0 ? (
+                                      <SelectItem value="" disabled>
+                                        No collections available
+                                      </SelectItem>
+                                    ) : (
+                                      shopifyCollections.map((collection) => (
+                                        <SelectItem 
+                                          key={collection.handle} 
+                                          value={collection.handle}
+                                          className="bg-background hover:bg-muted"
+                                        >
+                                          <span className="font-medium">
+                                            {collection.title || collection.name || collection.handle}
+                                          </span>
+                                          <span className="ml-2 text-muted-foreground">
+                                            ({collection.products_count} products)
+                                          </span>
+                                        </SelectItem>
+                                      ))
+                                    )}
+                                 </SelectContent>
                               </Select>
                             </div>
                             <div>

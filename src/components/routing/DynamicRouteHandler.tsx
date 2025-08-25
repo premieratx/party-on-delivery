@@ -5,15 +5,18 @@ import { StandaloneCoverPage } from '@/components/cover-pages/StandaloneCoverPag
 import DynamicHomepage from '@/pages/DynamicHomepage';
 
 export const DynamicRouteHandler: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { "*": slug } = useParams<{ "*": string }>();
   const location = useLocation();
   const [routeType, setRouteType] = useState<'cover' | 'homepage' | 'notfound'>('notfound');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const determineRouteType = async () => {
-      if (!slug) {
-        // Root path - use homepage
+      const pathname = location.pathname.slice(1); // Remove leading slash
+      console.log('🔍 DYNAMIC ROUTE HANDLER - Processing:', pathname);
+
+      if (!pathname || pathname === '') {
+        console.log('✅ Root path - redirecting to homepage');
         setRouteType('homepage');
         setLoading(false);
         return;
@@ -21,23 +24,25 @@ export const DynamicRouteHandler: React.FC = () => {
 
       // Check if it's a cover page first
       try {
-        console.log('🔍 Checking if slug is a cover page:', slug);
+        console.log('🔍 Checking if slug is a cover page:', pathname);
         
         const { data: coverPageData, error } = await supabase
           .from('cover_pages')
-          .select('slug')
-          .eq('slug', slug)
+          .select('slug, title, is_active')
+          .eq('slug', pathname)
           .eq('is_active', true)
           .maybeSingle();
 
+        console.log('📊 Cover page query result:', { data: coverPageData, error });
+
         if (!error && coverPageData) {
-          console.log('✅ Found cover page for slug:', slug);
+          console.log('✅ Found active cover page for slug:', pathname);
           setRouteType('cover');
           setLoading(false);
           return;
         }
 
-        console.log('❌ No cover page found for slug:', slug);
+        console.log('❌ No active cover page found for slug:', pathname);
         setRouteType('notfound');
       } catch (err) {
         console.error('❌ Error checking cover page:', err);
@@ -48,36 +53,38 @@ export const DynamicRouteHandler: React.FC = () => {
     };
 
     determineRouteType();
-  }, [slug, location.pathname]);
+  }, [location.pathname, slug]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Loading page...</p>
         </div>
       </div>
     );
   }
 
-  if (routeType === 'cover' && slug) {
-    // Render the cover page with the slug
+  if (routeType === 'cover') {
+    console.log('🎯 Rendering cover page for:', location.pathname);
     return <StandaloneCoverPage />;
   }
 
   if (routeType === 'homepage') {
+    console.log('🏠 Rendering homepage');
     return <DynamicHomepage />;
   }
 
   // Not found
+  console.log('❌ Page not found:', location.pathname);
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center">
       <div className="text-center p-8 max-w-md mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h2 className="text-2xl font-bold mb-4 text-foreground">Page Not Found</h2>
           <p className="text-muted-foreground mb-6">
-            The page "{slug}" could not be found.
+            The page "{location.pathname}" could not be found.
           </p>
           <div className="space-y-3">
             <button 

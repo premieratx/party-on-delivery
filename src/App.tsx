@@ -75,7 +75,7 @@ const App = () => {
                     {/* DYNAMIC HOMEPAGE ROUTE */}
                     <Route path="/" element={<DynamicHomepage />} />
                     
-                    {/* Core app routes */}
+                    {/* Core app routes - MUST come before catch-all */}
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
@@ -114,8 +114,8 @@ const App = () => {
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
-                    {/* Catch-all route for dynamic cover pages */}
-                    <Route path="/:slug" element={<DynamicRouteHandler />} />
+                    {/* CRITICAL: Catch-all route for dynamic cover pages - MUST BE LAST */}
+                    <Route path="*" element={<DynamicRouteHandler />} />
                   </Routes>
                 </Suspense>
               </div>
