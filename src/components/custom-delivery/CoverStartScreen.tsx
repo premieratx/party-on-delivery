@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { PhoneFrameLayout } from '@/components/layout/PhoneFrameLayout';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
 // Removed imports for disabled preloading systems
@@ -100,9 +101,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   }, [buttons]);
 
   return (
-    <article className="relative w-full">
+    <PhoneFrameLayout>
       {/* Background */}
-      <div className="relative h-full rounded-2xl overflow-hidden" style={{ backgroundColor: backgroundColor || undefined }}>
+      <div className="relative h-full overflow-hidden" style={{ backgroundColor: backgroundColor || undefined }}>
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -131,13 +132,13 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content - Improved Responsive and Centered Layout */}
-        <div className="relative z-10 flex h-full flex-col justify-center items-center px-4 sm:px-6 py-6">
+        {/* Content - Phone Frame Optimized Layout */}
+        <div className="relative z-10 flex h-full flex-col justify-center items-center px-6 py-4">
           
-          {/* Top Section: Logo and Title - Centered */}
-          <div className="text-center flex flex-col items-center flex-shrink-0 w-full max-w-4xl">
-            {/* Logo with better responsive handling */}
-            <div className="mb-6 sm:mb-8" style={{ marginTop: (logoOffsetY || 0) }}>
+          {/* Top Section: Logo and Title */}
+          <div className="text-center flex flex-col items-center flex-shrink-0 w-full">
+            {/* Logo */}
+            <div className="mb-4" style={{ marginTop: (logoOffsetY || 0) }}>
               <div className="relative inline-block mx-auto">
                 {logoBgColor && logoBgMode !== 'none' && (
                   logoBgMode === 'rectangle' ? (
@@ -169,34 +170,31 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                   alt={`${appName} logo`}
                   className="relative w-auto object-contain drop-shadow-lg mx-auto"
                   style={{ 
-                    height: Math.min(
-                      (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160),
-                      window.innerHeight * 0.15
-                    ), 
-                    maxHeight: '160px' 
+                    height: Math.min((logoHeight || 100), 120),
+                    maxHeight: '120px' 
                   }}
                   loading="eager"
                 />
               </div>
             </div>
 
-            {/* Title with responsive sizing */}
+            {/* Title */}
             <h1
-              className="font-bold tracking-tight text-white mb-4 px-2 leading-tight"
+              className="font-bold tracking-tight text-white mb-3 px-2 leading-tight"
               style={{ 
-                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, window.innerWidth < 640 ? 32 : titleSizeProp)}px` : 'clamp(24px,4vw,40px)', 
+                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, 32)}px` : '28px', 
                 marginTop: (titleOffsetY || 0) 
               }}
             >
               {title}
             </h1>
 
-            {/* Subtitle with responsive sizing */}
+            {/* Subtitle */}
             {subtitle && (
               <p
-                className="text-white/90 mb-6 sm:mb-8 px-2 leading-relaxed"
+                className="text-white/90 mb-4 px-2 leading-relaxed"
                 style={{ 
-                  fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, window.innerWidth < 640 ? 16 : subtitleSizeProp)}px` : 'clamp(14px,2.5vw,20px)', 
+                  fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, 18)}px` : '16px', 
                   marginTop: (subtitleOffsetY || 0) 
                 }}
               >
@@ -205,22 +203,22 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Middle Section: Checklist - Responsive with scroll */}
+          {/* Middle Section: Checklist */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className="w-full max-w-4xl mx-auto flex-1 overflow-y-auto px-2 my-4"
+              className="w-full flex-1 overflow-y-auto px-2 my-4"
               style={{ marginTop: (checklistOffsetY || 0) }}
             >
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {checklistItems.filter(Boolean).slice(0, 8).map((item, idx) => (
+              <div className="space-y-3">
+                {checklistItems.filter(Boolean).slice(0, 6).map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 animate-fade-in"
+                    className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-3 animate-fade-in"
                     style={{ animationDelay: `${idx * 80}ms` }}
                   >
                     <div className="flex-shrink-0">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -228,7 +226,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                     <span 
                       className="text-white font-medium flex-1"
                       style={{ 
-                        fontSize: checklistSizeProp ? `${Math.min(checklistSizeProp, window.innerWidth < 640 ? 14 : checklistSizeProp)}px` : 'clamp(12px,2.8vw,16px)',
+                        fontSize: checklistSizeProp ? `${Math.min(checklistSizeProp, 14)}px` : '14px',
                         lineHeight: '1.4'
                       }}
                     >
@@ -240,70 +238,28 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Bottom Section: Buttons - Always visible and centered */}
+          {/* Bottom Section: Buttons */}
           <div 
-            className="w-full max-w-lg mx-auto flex-shrink-0 pb-safe"
+            className="w-full flex-shrink-0"
             style={{ marginTop: (buttonsOffsetY || 0) }}
           >
-            {/* Responsive Button Layout */}
-            {buttons.length <= 2 ? (
-              <div className="flex flex-col gap-3 sm:gap-4">
-                {buttons.map((b, i) => (
-                  <Button
-                    key={`${b.text}-${i}`}
-                    size="lg"
-                    className={`w-full h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                    style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                    onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
-                  >
-                    {b.text}
-                  </Button>
-                ))}
-              </div>
-            ) : buttons.length === 3 ? (
-              <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col gap-3">
+              {buttons.slice(0, 3).map((b, i) => (
                 <Button
-                  key={`${buttons[0].text}-0`}
+                  key={`${b.text}-${i}`}
                   size="lg"
-                  className={`w-full h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                  style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
-                  onClick={(e) => { e.stopPropagation(); buttons[0].onClick?.(); }}
+                  className={`w-full h-12 rounded-full text-base font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                  style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+                  onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
                 >
-                  {buttons[0].text}
+                  {b.text}
                 </Button>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  {buttons.slice(1).map((b, i) => (
-                    <Button
-                      key={`${b.text}-${i + 1}`}
-                      size="lg"
-                      className={`h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                      onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
-                    >
-                      {b.text}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {buttons.map((b, i) => (
-                  <Button
-                    key={`${b.text}-${i}`}
-                    size="lg"
-                    className={`h-12 sm:h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                    style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                    onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
-                  >
-                    {b.text}
-                  </Button>
-                ))}
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </article>
+    </PhoneFrameLayout>
   );
 };
 

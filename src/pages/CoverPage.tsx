@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { PhoneFrameLayout } from '@/components/layout/PhoneFrameLayout';
 import { TEMPLATE_VARIANTS } from '@/components/templates/CoverPageTemplates';
 
 export default function CoverPage() {
@@ -116,134 +117,136 @@ export default function CoverPage() {
   const themeColors = savedStyles.customColors || themeVariant.styles.customColors;
 
   return (
-    <div 
-      className="min-h-screen flex flex-col"
-      style={{
-        background: `linear-gradient(135deg, ${themeColors.primary}15, ${themeColors.secondary}10, ${themeColors.accent}05)`
-      }}
-    >
-      {/* MOBILE VIEWPORT: Fit everything on one screen */}
-      <div className="flex-1 flex flex-col justify-between p-4 max-h-screen overflow-hidden">
-        
-        {/* TOP SECTION: Logo + Title */}
-        <div className="flex-shrink-0 text-center">
-          {/* Logo with YOUR EXACT positioning and sizing */}
-          {logoUrl && (
-            <div 
-              className="mb-4"
-              style={{ transform: `translateY(${logoVerticalPos * 0.5}px)` }}
-            >
-              <img 
-                src={logoUrl} 
-                alt="Logo" 
+    <PhoneFrameLayout>
+      {/* Background with theme colors */}
+      <div 
+        className="relative h-full overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${themeColors.primary}20, ${themeColors.secondary}15, ${themeColors.accent}10)`
+        }}
+      >
+        {/* Content - Phone Frame Optimized Layout */}
+        <div className="relative z-10 flex h-full flex-col justify-center items-center px-6 py-4">
+          
+          {/* TOP SECTION: Logo + Title */}
+          <div className="flex-shrink-0 text-center w-full">
+            {/* Logo with YOUR EXACT positioning and sizing */}
+            {logoUrl && (
+              <div 
+                className="mb-4"
+                style={{ transform: `translateY(${logoVerticalPos * 0.3}px)` }}
+              >
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  style={{ 
+                    width: `${Math.min(logoSize, 100)}px`, 
+                    height: `${Math.min(logoSize, 100)}px` 
+                  }}
+                  className="mx-auto object-contain"
+                  onError={(e) => {
+                    console.error('Logo failed to load:', logoUrl);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Title with YOUR EXACT styling */}
+            <div style={{ transform: `translateY(${headlineVerticalPos * 0.2}px)` }}>
+              <h1 
+                className="font-bold mb-2 px-4 leading-tight"
                 style={{ 
-                  width: `${Math.min(logoSize, 120)}px`, 
-                  height: `${Math.min(logoSize, 120)}px` 
+                  fontSize: `${Math.min(headlineSize, 24)}px`,
+                  color: themeColors.primary || '#F5B800'
                 }}
-                className="mx-auto object-contain"
-                onError={(e) => {
-                  console.error('Logo failed to load:', logoUrl);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              >
+                {title}
+              </h1>
+            </div>
+            
+            {/* Subtitle with YOUR EXACT styling */}
+            {subtitle && (
+              <div style={{ transform: `translateY(${subtitleVerticalPos * 0.2}px)` }}>
+                <p 
+                  className="text-white/80 mb-4 px-4"
+                  style={{ 
+                    fontSize: `${Math.min(subtitleSize, 14)}px`,
+                    lineHeight: '1.4'
+                  }}
+                >
+                  {subtitle}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* MIDDLE SECTION: Features (scrollable if needed) */}
+          {features.length > 0 && (
+            <div 
+              className="flex-1 overflow-y-auto px-2 my-4 w-full"
+              style={{ transform: `translateY(${featuresVerticalPos * 0.2}px)` }}
+            >
+              <div className="space-y-3">
+                {features.slice(0, 4).map((feature: any, index: number) => (
+                  <div 
+                    key={index} 
+                    className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20"
+                  >
+                    <div className="flex items-center mb-2">
+                      <span className="text-lg mr-3">{feature.emoji || '⭐'}</span>
+                      <h3 className="text-sm font-bold text-white">{feature.title || 'Feature'}</h3>
+                    </div>
+                    <p className="text-xs text-white/70 leading-relaxed pl-8">
+                      {feature.description || ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Title with YOUR EXACT styling */}
-          <div style={{ transform: `translateY(${headlineVerticalPos * 0.3}px)` }}>
-            <h1 
-              className="font-bold text-foreground mb-2 px-4 leading-tight"
-              style={{ 
-                fontSize: `${Math.min(headlineSize, 28)}px`,
-                color: themeColors.primary 
-              }}
+          {/* BOTTOM SECTION: Buttons (always visible) */}
+          {buttons.length > 0 && (
+            <div 
+              className="flex-shrink-0 flex flex-col gap-3 w-full"
+              style={{ transform: `translateY(${buttonsVerticalPos * 0.2}px)` }}
             >
-              {title}
-            </h1>
-          </div>
-          
-          {/* Subtitle with YOUR EXACT styling */}
-          {subtitle && (
-            <div style={{ transform: `translateY(${subtitleVerticalPos * 0.3}px)` }}>
-              <p 
-                className="text-muted-foreground mb-4 px-4"
-                style={{ 
-                  fontSize: `${Math.min(subtitleSize, 16)}px`,
-                  lineHeight: '1.4'
-                }}
-              >
-                {subtitle}
-              </p>
+              {buttons.slice(0, 3).map((button: any, index: number) => (
+                <Button
+                  key={index}
+                  onClick={() => {
+                    try {
+                      console.log('🔘 Button clicked:', button);
+                      if (button.url) {
+                        console.log('🔗 Opening URL:', button.url);
+                        window.open(button.url, '_blank');
+                      } else if (button.assignment_type === 'delivery_app') {
+                        console.log('🚚 Going to delivery page');
+                        window.location.href = '/delivery';
+                      } else {
+                        console.log('⚠️ No action defined for button');
+                      }
+                    } catch (err) {
+                      console.error('Button click error:', err);
+                    }
+                  }}
+                  variant={button.type === 'primary' ? 'default' : 'outline'}
+                  size="lg"
+                  className="w-full text-base font-semibold h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+                  style={{
+                    backgroundColor: button.type === 'primary' ? (themeColors.primary || '#F5B800') : 'transparent',
+                    borderColor: button.type !== 'primary' ? (themeColors.primary || '#F5B800') : undefined,
+                    color: button.type === 'primary' ? '#000000' : (themeColors.primary || '#F5B800')
+                  }}
+                >
+                  {button.text || 'Button'}
+                </Button>
+              ))}
             </div>
           )}
         </div>
-
-        {/* MIDDLE SECTION: Features (scrollable if needed) */}
-        {features.length > 0 && (
-          <div 
-            className="flex-1 overflow-y-auto px-4 my-4"
-            style={{ transform: `translateY(${featuresVerticalPos * 0.3}px)` }}
-          >
-            <div className="space-y-3 max-w-2xl mx-auto">
-              {features.map((feature: any, index: number) => (
-                <div 
-                  key={index} 
-                  className="bg-card/90 backdrop-blur-sm rounded-lg p-3 shadow-md border"
-                  style={{ borderColor: `${themeColors.primary}30` }}
-                >
-                  <div className="flex items-center mb-2">
-                    <span className="text-xl mr-3">{feature.emoji || '⭐'}</span>
-                    <h3 className="text-sm font-bold text-foreground">{feature.title || 'Feature'}</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed pl-8">
-                    {feature.description || ''}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* BOTTOM SECTION: Buttons (always visible) */}
-        {buttons.length > 0 && (
-          <div 
-            className="flex-shrink-0 flex flex-col gap-3 px-4 pb-safe"
-            style={{ transform: `translateY(${buttonsVerticalPos * 0.3}px)` }}
-          >
-            {buttons.map((button: any, index: number) => (
-              <Button
-                key={index}
-                onClick={() => {
-                  try {
-                    console.log('🔘 Button clicked:', button);
-                    if (button.url) {
-                      console.log('🔗 Opening URL:', button.url);
-                      window.open(button.url, '_blank');
-                    } else if (button.assignment_type === 'delivery_app') {
-                      console.log('🚚 Going to delivery page');
-                      window.location.href = '/delivery';
-                    } else {
-                      console.log('⚠️ No action defined for button');
-                    }
-                  } catch (err) {
-                    console.error('Button click error:', err);
-                  }
-                }}
-                variant={button.type === 'primary' ? 'default' : 'outline'}
-                size="lg"
-                className="w-full text-base font-semibold py-4"
-                style={{
-                  backgroundColor: button.type === 'primary' ? themeColors.primary : 'transparent',
-                  borderColor: button.type !== 'primary' ? themeColors.primary : undefined,
-                  color: button.type === 'primary' ? '#000000' : themeColors.primary
-                }}
-              >
-                {button.text || 'Button'}
-              </Button>
-            ))}
-          </div>
-        )}
       </div>
-    </div>
+    </PhoneFrameLayout>
   );
 }
