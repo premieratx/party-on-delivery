@@ -12,6 +12,7 @@ import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
 import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
 // Simple, bulletproof homepage
+import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
 import DynamicHomepage from "./pages/DynamicHomepage";
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
@@ -112,6 +113,9 @@ const App = () => {
                     
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
+                    
+                    {/* Catch-all route for dynamic cover pages */}
+                    <Route path="/:slug" element={<DynamicRouteHandler />} />
                   </Routes>
                 </Suspense>
               </div>
