@@ -564,15 +564,15 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           </DialogHeader>
 
           {/* Consolidated Single-Tab Interface */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <div className="h-full flex">
                {/* Left Panel - All Controls with Proper Scrolling */}
-               <div className="w-80 border-r bg-muted/20 h-full flex flex-col">
+               <div className="w-80 border-r bg-muted/20 flex flex-col">
                  <div className="p-4 flex-shrink-0 border-b">
                    <h3 className="text-lg font-semibold">Delivery App Creator</h3>
                  </div>
-                 <div className="flex-1 min-h-0">
-                   <ScrollArea className="h-full w-full">
+                 <div className="flex-1 overflow-hidden">
+                   <ScrollArea className="h-full">
                      <div className="p-4 space-y-6 pb-8">
                    
                    {/* Device Selector */}
@@ -906,30 +906,32 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                   </div>
                      </div>
                    </ScrollArea>
-                 </div>
-               </div>
+                  </div>
+                </div>
 
-              {/* Right Panel - Live Preview */}
+              {/* Right Panel - Smaller Live Preview */}
               <div className="flex-1 bg-muted/10 overflow-auto">
-                <div className="h-full flex justify-center items-start p-6">
-                  <DeliveryAppLivePreview
-                    appName={appName}
-                    heroHeading={heroHeading}
-                    heroSubheading={heroSubheading}
-                    logoUrl={logoUrl}
-                    logoSize={logoSize}
-                    headlineSize={headlineSize}
-                    subheadlineSize={subheadlineSize}
-                    logoVerticalPos={logoVerticalPos}
-                    headlineVerticalPos={headlineVerticalPos}
-                    subheadlineVerticalPos={subheadlineVerticalPos}
-                    backgroundImageUrl={backgroundImageUrl}
-                    backgroundOpacity={backgroundOpacity}
-                    overlayColor={overlayColor}
-                    tabs={tabs}
-                    theme={theme}
-                    device={previewDevice}
-                  />
+                <div className="p-4">
+                  <div className="w-[280px] h-[580px] mx-auto">
+                    <DeliveryAppLivePreview
+                      appName={appName}
+                      heroHeading={heroHeading}
+                      heroSubheading={heroSubheading}
+                      logoUrl={logoUrl}
+                      logoSize={logoSize}
+                      headlineSize={headlineSize}
+                      subheadlineSize={subheadlineSize}
+                      logoVerticalPos={logoVerticalPos}
+                      headlineVerticalPos={headlineVerticalPos}
+                      subheadlineVerticalPos={subheadlineVerticalPos}
+                      backgroundImageUrl={backgroundImageUrl}
+                      backgroundOpacity={backgroundOpacity}
+                      overlayColor={overlayColor}
+                      tabs={tabs}
+                      theme={theme}
+                      device={previewDevice}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -1107,9 +1107,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto">
-            <div className="w-full h-full flex justify-start items-start pt-4">
-            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
+          <div className="flex-1 overflow-auto p-4">
+            <div className="w-[360px] h-[740px] mx-auto transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
               <CoverStartScreen
                 title={title}
                 subtitle={subtitle}
@@ -1129,7 +1128,6 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 logoOffsetY={logoOffsetY}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
               />
-            </div>
             </div>
           </div>
         </div>
