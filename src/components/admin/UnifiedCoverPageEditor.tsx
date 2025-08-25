@@ -285,6 +285,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const [dragMode, setDragMode] = useState(false);
   const [fullscreenPreview, setFullscreenPreview] = useState(false);
   const [controlsExpanded, setControlsExpanded] = useState(true);
+  const [currentDevice, setCurrentDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // Form state
   const [slug, setSlug] = useState(initial?.slug || "");
@@ -850,7 +851,42 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       />
                     </div>
 
-                    {/* Size Controls */}
+                    {/* Device Selector */}
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Device View ({currentDevice})</h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          variant={currentDevice === 'desktop' ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentDevice('desktop')}
+                          className="text-xs"
+                        >
+                          <Monitor className="w-3 h-3 mr-1" />
+                          Desktop
+                        </Button>
+                        <Button
+                          variant={currentDevice === 'tablet' ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentDevice('tablet')}
+                          className="text-xs"
+                        >
+                          <Tablet className="w-3 h-3 mr-1" />
+                          Tablet
+                        </Button>
+                        <Button
+                          variant={currentDevice === 'mobile' ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentDevice('mobile')}
+                          className="text-xs"
+                        >
+                          <Smartphone className="w-3 h-3 mr-1" />
+                          Mobile
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Adjust positioning for {currentDevice} view independently
+                      </p>
+                    </div>
                     <div className="space-y-4 border-t pt-4">
                       <h4 className="text-sm font-semibold text-muted-foreground">Size Controls</h4>
                       
@@ -891,9 +927,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
                     </div>
 
-                    {/* Positioning Controls */}
+                    {/* Positioning Controls - Device Specific */}
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning</h4>
+                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning ({currentDevice})</h4>
                       
                       <div>
                         <Label className="text-sm font-medium">Logo Position: {logoOffsetY}px</Label>

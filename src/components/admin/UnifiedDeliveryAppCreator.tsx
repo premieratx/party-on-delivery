@@ -803,12 +803,12 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="z-[9999]">
-                                  {shopifyCollections.map((collection) => (
-                                    <SelectItem key={collection.handle} value={collection.handle}>
-                                      {collection.title || collection.name} ({collection.products_count})
-                                    </SelectItem>
-                                  ))}
+                                 <SelectContent className="z-[9999]">
+                                   {shopifyCollections.map((collection) => (
+                                     <SelectItem key={collection.handle} value={collection.handle}>
+                                       {collection.name} ({collection.products_count})
+                                     </SelectItem>
+                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>
