@@ -66,6 +66,10 @@ export const CombinedSearchTabs = ({
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const { getSearchClasses, getTabsClasses, hideKeyboard, isMobile } = useStickySearchHeader();
 
+  // Get dynamic classes for responsive behavior
+  const searchClasses = getSearchClasses();
+  const tabsClasses = getTabsClasses();
+
   // Enhanced dynamic tab sizing based on available space with better precision
   const calculateTabLayout = useCallback(() => {
     if (!tabsContainerRef.current || tabs.length === 0) return;
