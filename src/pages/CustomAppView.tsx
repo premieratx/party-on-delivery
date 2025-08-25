@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useGlobalCart } from '@/components/common/GlobalCartProvider';
 
-const CustomAppView = () => {
+const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
   const { appSlug } = useParams<{ appSlug: string }>();
   const navigate = useNavigate();
   const [appConfig, setAppConfig] = useState<any>(null);
@@ -17,20 +17,45 @@ const CustomAppView = () => {
 
   useEffect(() => {
     const loadDeliveryApp = async () => {
-      if (!appSlug) {
-        setError('No app specified');
-        setLoading(false);
-        return;
-      }
-
       try {
-        console.log(`🚀 Loading custom delivery app: ${appSlug}`);
+        let targetSlug = appSlug;
+        
+        // If this is homepage, find the default delivery app
+        if (isHomepage) {
+          console.log('🏠 Loading homepage - finding default delivery app...');
+          const { data: homepageApp, error: homepageError } = await supabase
+            .from('delivery_app_variations')
+            .select('app_slug')
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
+            .limit(1);
+            
+          if (homepageError) {
+            console.error('Error finding homepage app:', homepageError);
+            throw homepageError;
+          }
+          
+          if (homepageApp && homepageApp.length > 0) {
+            targetSlug = homepageApp[0].app_slug;
+            console.log(`🏠 Using default delivery app: ${targetSlug}`);
+          } else {
+            throw new Error('No active delivery apps found');
+          }
+        }
+
+        if (!targetSlug) {
+          setError('No app specified');
+          setLoading(false);
+          return;
+        }
+
+        console.log(`🚀 Loading custom delivery app: ${targetSlug}`);
         
         const { data: apps, error: appsError } = await supabase
-          .from('delivery_apps')
+          .from('delivery_app_variations')
           .select('*')
-          .eq('slug', appSlug)
-          .eq('active', true)
+          .eq('app_slug', targetSlug)
+          .eq('is_active', true)
           .limit(1);
 
         if (appsError) {
@@ -39,14 +64,14 @@ const CustomAppView = () => {
         }
 
         if (!apps || apps.length === 0) {
-          console.warn(`No delivery app found for slug: ${appSlug}`);
-          setError(`Delivery app "${appSlug}" not found`);
+          console.warn(`No delivery app found for slug: ${targetSlug}`);
+          setError(`Delivery app "${targetSlug}" not found`);
           setLoading(false);
           return;
         }
 
         const app = apps[0];
-        console.log(`✅ Loaded delivery app: ${app.name}`);
+        console.log(`✅ Loaded delivery app: ${app.app_name}`);
         setAppConfig(app);
         
       } catch (err) {
@@ -58,17 +83,17 @@ const CustomAppView = () => {
     };
 
     loadDeliveryApp();
-  }, [appSlug]);
+  }, [appSlug, isHomepage]);
 
   const handleCheckout = () => {
     // Enhanced referrer tracking for proper "Back to Cart" functionality
-    const currentUrl = `/app/${appSlug}`;
+    const currentUrl = isHomepage ? '/' : `/app/${appSlug}`;
     try {
       localStorage.setItem('last-delivery-app-url', currentUrl);
       localStorage.setItem('deliveryAppReferrer', currentUrl);
       localStorage.setItem('app-context', JSON.stringify({
-        appSlug: appConfig?.slug || appSlug,
-        appName: appConfig?.name || appSlug
+        appSlug: appConfig?.app_slug || appSlug,
+        appName: appConfig?.app_name || appSlug
       }));
       console.log('Stored delivery app referrer:', currentUrl);
     } catch (error) {
@@ -98,7 +123,7 @@ const CustomAppView = () => {
         <div className="text-center space-y-4">
           <LoadingSpinner />
           <div>
-            <h3 className="text-lg font-semibold">Loading {appSlug}</h3>
+            <h3 className="text-lg font-semibold">Loading {isHomepage ? 'Homepage' : appSlug}</h3>
             <p className="text-muted-foreground">Setting up your custom experience...</p>
           </div>
         </div>
@@ -133,18 +158,18 @@ const CustomAppView = () => {
 
   return (
     <ProductCategories
-      appName={appConfig.name}
-      heroHeading={appConfig.name}
+      appName={appConfig.app_name}
+      heroHeading={appConfig.app_name}
       heroSubheading={appConfig.description || "Premium Curated Experience"}
       logoUrl={appConfig.logo_url}
-      collectionsConfig={appConfig.collections}
+      collectionsConfig={appConfig.collections_config}
       cartItemCount={getTotalItems()}
       cartItems={cartItems}
       onAddToCart={handleAddToCart}
       onUpdateQuantity={handleUpdateQuantity}
       onOpenCart={handleOpenCart}
       onProceedToCheckout={handleCheckout}
-      customSiteSlug={appSlug}
+      customSiteSlug={appConfig.app_slug}
       maxProducts={50}
       forceRefresh={true}
       onCheckout={handleCheckout}
