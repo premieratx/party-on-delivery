@@ -328,15 +328,12 @@ export const CombinedSearchTabs = ({
         </div>
       </div>
 
-        {/* MOBILE Layout - Only one sticky element at a time */}
-      <div className={`block md:hidden transition-all duration-200 ${
-        searchClasses.sticky ? 'sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b' : 
-        tabsClasses.sticky ? 'sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b' : ''
-      }`}>
+      {/* MOBILE Layout - Always show tabs, conditionally show search */}
+      <div className="block md:hidden">
         
-        {/* Search Bar Section - Mobile Priority */}
-        {showSearch && searchClasses.sticky && (
-          <div className="container mx-auto px-2 py-2">
+        {/* Search Bar Section - Only when search is active/expanded */}
+        {showSearch && (isSearchExpanded || isSearchActive) && (
+          <div className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b">
             <div className="flex items-center justify-center">
               <AdvancedSearchBar
                 value={searchQuery}
@@ -356,14 +353,13 @@ export const CombinedSearchTabs = ({
           </div>
         )}
 
-        {/* Tabs Section - Mobile Default */}
-        {tabsClasses.sticky && (
-          <div className="container mx-auto px-2 py-1.5">
-            <div className="flex items-center">
+        {/* Tabs Section - Always visible on mobile */}
+        <div className="container mx-auto px-2 py-1.5 bg-background border-b">
+          <div className="flex items-center">
               {/* Enhanced Responsive Tabs - Show 4.5 tabs with scrolling */}
               <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide"
+                className="flex gap-1 overflow-x-auto scrollbar-hide w-full"
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'
@@ -405,18 +401,17 @@ export const CombinedSearchTabs = ({
                     </span>
                   </Button>
                 ))}
-              </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Second Row - Cart & Checkout Icons (Clean Layout) */}
-        <div className="container mx-auto px-4 pb-2">
+        {/* Bottom Row - Search/Cart/Checkout Actions (Always visible) */}
+        <div className="container mx-auto px-4 py-2 bg-background border-b">
           <div className="flex items-center justify-center gap-4">
-            {/* Search Icon - Compact */}
-            {showSearch && !isSearchExpanded && (
+            {/* Search Icon - Toggle search bar */}
+            {showSearch && (
               <Button
-                variant="ghost"
+                variant={isSearchExpanded || isSearchActive ? "default" : "ghost"}
                 size="sm"
                 onClick={handleSearchIconClick}
                 className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
