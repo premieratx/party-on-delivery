@@ -1107,7 +1107,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center min-h-0 overflow-auto">
+          <div className="flex-1 flex justify-start items-start min-h-0 overflow-auto pt-4">
             <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
               <CoverStartScreen
                 title={title}

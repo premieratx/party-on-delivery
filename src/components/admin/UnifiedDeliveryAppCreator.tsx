@@ -566,13 +566,14 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           {/* Consolidated Single-Tab Interface */}
           <div className="flex-1 overflow-hidden h-full">
             <div className="h-full flex">
-              {/* Left Panel - All Controls with Proper Scrolling */}
-              <div className="w-80 border-r bg-muted/20 flex flex-col h-full">
-                <div className="p-4 flex-shrink-0">
-                  <h3 className="text-lg font-semibold">Delivery App Creator</h3>
-                </div>
-                <ScrollArea className="flex-1 px-4">
-                  <div className="space-y-6 pb-8">
+               {/* Left Panel - All Controls with Proper Scrolling */}
+               <div className="w-80 border-r bg-muted/20 flex flex-col">
+                 <div className="p-4 flex-shrink-0 border-b">
+                   <h3 className="text-lg font-semibold">Delivery App Creator</h3>
+                 </div>
+                 <div className="flex-1 overflow-hidden">
+                   <ScrollArea className="h-full">
+                     <div className="p-4 space-y-6 pb-8">
                    
                    {/* Device Selector */}
                   <div>
@@ -903,9 +904,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                       </div>
                     </div>
                   </div>
-                  </div>
-                </ScrollArea>
-              </div>
+                     </div>
+                   </ScrollArea>
+                 </div>
+               </div>
 
               {/* Right Panel - Live Preview with Fixed Positioning */}
               <div className="flex-1 flex justify-center items-start bg-muted/10 p-6 overflow-auto">
