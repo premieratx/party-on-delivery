@@ -489,17 +489,20 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full p-0 !z-[100]">
-        <div className="max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-7xl w-full p-0 max-h-[90vh] overflow-hidden"
+        aria-describedby="dialog-description"
+      >
+        <div className="flex flex-col h-full max-h-[90vh]">
           {/* Header */}
-          <DialogHeader className="sticky top-0 z-20 p-4 border-b bg-background">
+          <DialogHeader className="flex-shrink-0 p-4 border-b bg-background">
             <div className="flex items-center justify-between">
               <div>
                 <DialogTitle className="text-xl font-semibold">
                   {initial ? 'Edit Delivery App' : 'Create Delivery App'}
                 </DialogTitle>
-                <DialogDescription id="dialog-description">
-                  Build and customize your delivery app with live preview
+                <DialogDescription id="dialog-description" className="text-sm text-muted-foreground mt-1">
+                  Build and customize your delivery app with live preview. Configure collections, themes, and branding.
                 </DialogDescription>
               </div>
               <Button
@@ -514,314 +517,316 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
             </div>
           </DialogHeader>
 
-        {/* Main Content - Natural scrolling grid layout */}
-        <div className="grid grid-cols-2 gap-0 min-h-[600px]">
-          {/* Left Panel - Configuration */}
-          <div className="border-r bg-muted/20">
-            <div className="p-6 space-y-6">
-              {/* Device Selector */}
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    variant={previewDevice === 'mobile' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPreviewDevice('mobile')}
-                    className="flex flex-col items-center gap-1 h-auto py-2"
-                  >
-                    <Smartphone className="w-4 h-4" />
-                    <span className="text-xs">Mobile</span>
-                  </Button>
-                  <Button
-                    variant={previewDevice === 'tablet' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPreviewDevice('tablet')}
-                    className="flex flex-col items-center gap-1 h-auto py-2"
-                  >
-                    <Tablet className="w-4 h-4" />
-                    <span className="text-xs">Tablet</span>
-                  </Button>
-                  <Button
-                    variant={previewDevice === 'desktop' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setPreviewDevice('desktop')}
-                    className="flex flex-col items-center gap-1 h-auto py-2"
-                  >
-                    <Monitor className="w-4 h-4" />
-                    <span className="text-xs">Desktop</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* App Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">App Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="app-name">App Name *</Label>
-                      <Input
-                        id="app-name"
-                        value={appName}
-                        onChange={(e) => setAppName(e.target.value)}
-                        placeholder="My Delivery App"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="app-slug">App Slug *</Label>
-                      <Input
-                        id="app-slug"
-                        value={appSlug}
-                        onChange={(e) => setAppSlug(e.target.value)}
-                        placeholder="my-delivery-app"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Hero Content */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Hero Content</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="headline">Headline</Label>
-                    <Input
-                      id="headline"
-                      value={heroHeading}
-                      onChange={(e) => setHeroHeading(e.target.value)}
-                      placeholder="Austin's Premier Party"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="subheadline">Subheadline</Label>
-                    <Input
-                      id="subheadline"
-                      value={heroSubheading}
-                      onChange={(e) => setHeroSubheading(e.target.value)}
-                      placeholder="Satisfaction Guaranteed"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Branding */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Branding</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Logo Upload</Label>
-                      <Button
-                        variant="outline"
-                        onClick={() => logoInputRef.current?.click()}
-                        className="w-full"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Logo
-                      </Button>
-                    </div>
-                    <div>
-                      <Label>Background Image</Label>
-                      <Button
-                        variant="outline"
-                        onClick={() => document.getElementById('background-upload')?.click()}
-                        className="w-full"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Background
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Text Sizing & Position */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Text Sizing & Position</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Logo Size: {logoSize}px</Label>
-                      <Slider
-                        value={[logoSize]}
-                        onValueChange={(value) => setLogoSize(value[0])}
-                        max={120}
-                        min={40}
-                        step={5}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <Label>Headline Size: {headlineSize}px</Label>
-                      <Slider
-                        value={[headlineSize]}
-                        onValueChange={(value) => setHeadlineSize(value[0])}
-                        max={48}
-                        min={16}
-                        step={2}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Theme */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Theme</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select value={theme} onValueChange={(value: 'original' | 'gold' | 'platinum') => setTheme(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="original">Original (Purple)</SelectItem>
-                      <SelectItem value="gold">Gold (Dark)</SelectItem>
-                      <SelectItem value="platinum">Platinum (Blue)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              {/* Collections/Tabs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    Collections & Tabs
+        {/* Main Content - Scrollable content area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-0 h-full min-h-[600px]">
+            {/* Left Panel - Configuration */}
+            <div className="border-r bg-muted/20">
+              <div className="p-6 space-y-6">
+                {/* Device Selector */}
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
-                      variant="outline"
+                      variant={previewDevice === 'mobile' ? "default" : "outline"}
                       size="sm"
-                      onClick={addTab}
-                      disabled={tabs.length >= 6}
+                      onClick={() => setPreviewDevice('mobile')}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
                     >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Tab
+                      <Smartphone className="w-4 h-4" />
+                      <span className="text-xs">Mobile</span>
                     </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {tabs.map((tab, index) => (
-                    <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
-                      <div className="flex-1 grid grid-cols-3 gap-2">
+                    <Button
+                      variant={previewDevice === 'tablet' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewDevice('tablet')}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <Tablet className="w-4 h-4" />
+                      <span className="text-xs">Tablet</span>
+                    </Button>
+                    <Button
+                      variant={previewDevice === 'desktop' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewDevice('desktop')}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <Monitor className="w-4 h-4" />
+                      <span className="text-xs">Desktop</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* App Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">App Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="app-name">App Name *</Label>
                         <Input
-                          placeholder="Tab Name"
-                          value={tab.name}
-                          onChange={(e) => updateTab(index, 'name', e.target.value)}
+                          id="app-name"
+                          value={appName}
+                          onChange={(e) => setAppName(e.target.value)}
+                          placeholder="My Delivery App"
                         />
-                        <Select
-                          value={tab.collection_handle}
-                          onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {collections.length > 0 ? (
-                              collections.map((collection) => (
-                                <SelectItem key={collection.handle} value={collection.handle}>
-                                  {collection.name}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="" disabled>
-                                {collections.length === 0 ? "Loading collections..." : "No collections found"}
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <Select
-                          value={tab.icon || '📦'}
-                          onValueChange={(value) => updateTab(index, 'icon', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Icon" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ICON_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                       </div>
-                      {tabs.length > 1 && (
+                      <div>
+                        <Label htmlFor="app-slug">App Slug *</Label>
+                        <Input
+                          id="app-slug"
+                          value={appSlug}
+                          onChange={(e) => setAppSlug(e.target.value)}
+                          placeholder="my-delivery-app"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Hero Content */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Hero Content</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="headline">Headline</Label>
+                      <Input
+                        id="headline"
+                        value={heroHeading}
+                        onChange={(e) => setHeroHeading(e.target.value)}
+                        placeholder="Austin's Premier Party"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="subheadline">Subheadline</Label>
+                      <Input
+                        id="subheadline"
+                        value={heroSubheading}
+                        onChange={(e) => setHeroSubheading(e.target.value)}
+                        placeholder="Satisfaction Guaranteed"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Branding */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Branding</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Logo Upload</Label>
                         <Button
                           variant="outline"
-                          size="sm"
-                          onClick={() => removeTab(index)}
+                          onClick={() => logoInputRef.current?.click()}
+                          className="w-full"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Logo
                         </Button>
-                      )}
+                      </div>
+                      <div>
+                        <Label>Background Image</Label>
+                        <Button
+                          variant="outline"
+                          onClick={() => document.getElementById('background-upload')?.click()}
+                          className="w-full"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Background
+                        </Button>
+                      </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Status Controls */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="is-active"
-                        checked={isActive}
-                        onCheckedChange={setIsActive}
-                      />
-                      <Label htmlFor="is-active" className="text-sm">Active</Label>
+                {/* Text Sizing & Position */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Text Sizing & Position</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Logo Size: {logoSize}px</Label>
+                        <Slider
+                          value={[logoSize]}
+                          onValueChange={(value) => setLogoSize(value[0])}
+                          max={120}
+                          min={40}
+                          step={5}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <Label>Headline Size: {headlineSize}px</Label>
+                        <Slider
+                          value={[headlineSize]}
+                          onValueChange={(value) => setHeadlineSize(value[0])}
+                          max={48}
+                          min={16}
+                          step={2}
+                          className="w-full"
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="is-homepage"
-                        checked={isHomepage}
-                        onCheckedChange={setIsHomepage}
-                      />
-                      <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
+                  </CardContent>
+                </Card>
+
+                {/* Theme */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Theme</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Select value={theme} onValueChange={(value: 'original' | 'gold' | 'platinum') => setTheme(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="original">Original (Purple)</SelectItem>
+                        <SelectItem value="gold">Gold (Dark)</SelectItem>
+                        <SelectItem value="platinum">Platinum (Blue)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+
+                {/* Collections/Tabs */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      Collections & Tabs
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={addTab}
+                        disabled={tabs.length >= 6}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Tab
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {tabs.map((tab, index) => (
+                      <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                        <div className="flex-1 grid grid-cols-3 gap-2">
+                          <Input
+                            placeholder="Tab Name"
+                            value={tab.name}
+                            onChange={(e) => updateTab(index, 'name', e.target.value)}
+                          />
+                          <Select
+                            value={tab.collection_handle}
+                            onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {collections.length > 0 ? (
+                                collections.map((collection) => (
+                                  <SelectItem key={collection.handle} value={collection.handle}>
+                                    {collection.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="" disabled>
+                                  {collections.length === 0 ? "Loading collections..." : "No collections found"}
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={tab.icon || '📦'}
+                            onValueChange={(value) => updateTab(index, 'icon', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Icon" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ICON_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {tabs.length > 1 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeTab(index)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Status Controls */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is-active"
+                          checked={isActive}
+                          onCheckedChange={setIsActive}
+                        />
+                        <Label htmlFor="is-active" className="text-sm">Active</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is-homepage"
+                          checked={isHomepage}
+                          onCheckedChange={setIsHomepage}
+                        />
+                        <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
 
-          {/* Right Panel - Preview */}
-          <div className="bg-muted/10">
-            <div className="p-6">
-              <h4 className="text-lg font-semibold mb-4">Live Preview</h4>
-              <div className="flex items-center justify-center">
-                <DeliveryAppLivePreview
-                  appName={appName}
-                  heroHeading={heroHeading}
-                  heroSubheading={heroSubheading}
-                  logoUrl={logoUrl}
-                  logoSize={logoSize}
-                  headlineSize={headlineSize}
-                  subheadlineSize={subheadlineSize}
-                  logoVerticalPos={logoVerticalPos}
-                  headlineVerticalPos={headlineVerticalPos}
-                  subheadlineVerticalPos={subheadlineVerticalPos}
-                  backgroundImageUrl={backgroundImageUrl}
-                  backgroundOpacity={backgroundOpacity}
-                  overlayColor={overlayColor}
-                  tabs={tabs}
-                  theme={theme}
-                  device={previewDevice}
-                />
+            {/* Right Panel - Preview */}
+            <div className="bg-muted/10">
+              <div className="p-6">
+                <h4 className="text-lg font-semibold mb-4">Live Preview</h4>
+                <div className="flex items-center justify-center">
+                  <DeliveryAppLivePreview
+                    appName={appName}
+                    heroHeading={heroHeading}
+                    heroSubheading={heroSubheading}
+                    logoUrl={logoUrl}
+                    logoSize={logoSize}
+                    headlineSize={headlineSize}
+                    subheadlineSize={subheadlineSize}
+                    logoVerticalPos={logoVerticalPos}
+                    headlineVerticalPos={headlineVerticalPos}
+                    subheadlineVerticalPos={subheadlineVerticalPos}
+                    backgroundImageUrl={backgroundImageUrl}
+                    backgroundOpacity={backgroundOpacity}
+                    overlayColor={overlayColor}
+                    tabs={tabs}
+                    theme={theme}
+                    device={previewDevice}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -841,9 +846,9 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           accept="image/*"
           onChange={handleBackgroundUpload}
           className="hidden"
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+        />
+      </div>
+    </DialogContent>
+  </Dialog>
   );
 };
