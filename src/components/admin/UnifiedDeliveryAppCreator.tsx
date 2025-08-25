@@ -268,14 +268,14 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           .filter((collection: any) => collection.products_count > 0)
           .map((collection: any) => ({
             handle: collection.handle,
-            title: collection.title,
-            name: collection.name || collection.title,
-            products_count: collection.products_count
+            title: collection.title || collection.name || collection.handle,
+            name: collection.title || collection.name || collection.handle,
+            products_count: collection.products_count || 0
           }))
           .sort((a: any, b: any) => b.products_count - a.products_count); // Sort by product count
         
         console.log(`✅ Loaded ${collections.length} collections from edge function`);
-        console.log('📋 Sample collections:', collections.slice(0, 3));
+        console.log('📋 Sample collections with proper titles:', collections.slice(0, 5));
         setShopifyCollections(collections);
         return;
       }
@@ -295,13 +295,13 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           .filter((collection: any) => collection.products && collection.products.length > 0)
           .map((collection: any) => ({
             handle: collection.handle,
-            title: collection.title,
-            name: collection.name || collection.title,
+            title: collection.title || collection.name || collection.handle,
+            name: collection.title || collection.name || collection.handle,
             products_count: collection.products?.length || 0
           }))
           .sort((a: any, b: any) => b.products_count - a.products_count);
         
-        console.log(`✅ Loaded ${collections.length} collections from unified products`);
+        console.log(`✅ Loaded ${collections.length} collections from unified products with titles:`, collections.slice(0, 3));
         setShopifyCollections(collections);
         return;
       }
@@ -310,59 +310,59 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       
       // Comprehensive fallback with all 53 real collections from edge function logs
       const fallbackCollections = [
-        { handle: 'spirits', name: 'Spirits', products_count: 134 },
-        { handle: 'mixers-non-alcoholic', name: 'Mixers & Non-Alcoholic', products_count: 113 },
-        { handle: 'all-party-supplies', name: 'All Party Supplies', products_count: 122 },
-        { handle: 'bachelorette-supplies', name: 'Bachelorette Supplies', products_count: 84 },
-        { handle: 'seltzers-wine-champagne', name: 'Seltzers, Wine, Champagne', products_count: 82 },
-        { handle: 'liqueurs-cordials-cocktail-ingredients', name: 'Liqueurs, Cordials, Cocktail Ingredients', products_count: 68 },
-        { handle: 'concierge-backyard-pool-toys', name: 'Concierge - Backyard & Pool Toys', products_count: 59 },
-        { handle: 'tailgate-beer', name: 'Tailgate Beer', products_count: 57 },
-        { handle: 'drinkware-bartending-tools', name: 'Drinkware, Openers, Coolers, Bar Accessories', products_count: 53 },
-        { handle: 'gin-rum', name: 'Vodka, Gin, & Rum', products_count: 51 },
-        { handle: 'bourbon-rye', name: 'Bourbon & Rye', products_count: 48 },
-        { handle: 'spirits-1', name: 'Spirits (Secondary)', products_count: 47 },
-        { handle: 'champagne', name: 'Wine and Champagne', products_count: 45 },
-        { handle: 'lake-packages-items', name: 'Lake Packages Items', products_count: 44 },
-        { handle: 'all-alcohol', name: 'All Alcohol', products_count: 43 },
-        { handle: 'tequila-mezcal', name: 'Tequila & Mezcal', products_count: 41 },
-        { handle: 'cocktail-kits', name: 'Cocktail Collection - ALL', products_count: 41 },
-        { handle: 'bachelorette-mixers-misc', name: 'Bachelorette (Mixers & Non-Alcoholic)', products_count: 38 },
-        { handle: 'party-supplies', name: 'Party Supplies', products_count: 38 },
-        { handle: 'bachelorette-party-supplies', name: 'Bachelorette (Party Supplies)', products_count: 37 },
-        { handle: 'disco-collection', name: 'Disco Collection', products_count: 36 },
-        { handle: 'bachelorette-booze', name: 'Bachelorette (Booze)', products_count: 35 },
-        { handle: 'beer-airbnb-craft', name: 'Beer - airbnb / craft', products_count: 32 },
-        { handle: 'rental-items', name: 'Rental Items', products_count: 32 },
-        { handle: 'decorations', name: 'Decorations', products_count: 30 },
-        { handle: 'bachelor-spirits-cocktails', name: 'Bachelor - Spirits & Cocktails', products_count: 28 },
-        { handle: 'concierge-backyard-parties', name: 'Concierge - Backyard Parties', products_count: 28 },
-        { handle: 'concierge-pool-toys', name: 'Concierge - Pool Toys', products_count: 27 },
-        { handle: 'hats-sunglasses', name: 'Hats, Headbands, Necklaces & Sunglasses', products_count: 27 },
-        { handle: 'tailgate-supplies-and-fun', name: 'Tailgate - NA + mixers', products_count: 26 },
-        { handle: 'tailgate-seltzers', name: 'Seltzers & Champagne', products_count: 25 },
-        { handle: 'hangover-management', name: 'Hangover Management', products_count: 24 },
-        { handle: 'chill-supplies', name: 'Chill Supplies', products_count: 23 },
-        { handle: 'wine-champagne-bnb-wedding', name: 'Wine & Champagne - Bnb / Wedding', products_count: 23 },
-        { handle: 'beer-light-beer-boat', name: 'Beer - Light Beer / Boat', products_count: 21 },
-        { handle: 'bachelor-seltzers-wine', name: 'Bachelor - Seltzers & Wine', products_count: 20 },
-        { handle: 'seltzer-collection', name: 'Seltzers - All', products_count: 19 },
-        { handle: 'bachelor-favorites', name: 'Bachelor Favorites', products_count: 19 },
-        { handle: 'spirits-cocktail-kits-boat-collection', name: 'Spirits & Cocktail Kits - Boat Collection', products_count: 17 },
-        { handle: 'concierge-household-items-toiletries', name: 'Concierge - Household Items/Toiletries', products_count: 17 },
-        { handle: 'non-alcoholic', name: 'Non Alcoholic', products_count: 17 },
-        { handle: 'pop-up-box', name: 'Pop Up Box', products_count: 16 },
-        { handle: 'party-pitcher-cocktails', name: 'Featured Cocktail Kits', products_count: 14 },
-        { handle: 'beer-kegs', name: 'Beer - kegs', products_count: 12 },
-        { handle: 'favorites-home-page', name: 'Favorites - Home Page', products_count: 10 },
-        { handle: 'tailgate-cocktail', name: 'Tailgate - Cocktail', products_count: 9 },
-        { handle: 'concierge-electronics', name: 'Concierge - Electronics', products_count: 9 },
-        { handle: 'live-on-the-lake-cocktail-kits', name: 'Live on the Lake Cocktail Kits', products_count: 7 },
-        { handle: 'costumes', name: 'Festive Attire & Costumes', products_count: 7 },
-        { handle: 'gift-baskets', name: 'Gift Baskets', products_count: 6 },
-        { handle: 'bachelor-weekend-essentials', name: 'Bachelor - Weekend Essentials', products_count: 6 },
-        { handle: 'july-4th-specials', name: 'July 4th specials', products_count: 4 },
-        { handle: 'cocktail-collection-singles-stirred', name: 'Cocktail Collection - Singles / Stirred', products_count: 4 }
+        { handle: 'spirits', title: 'Spirits', name: 'Spirits', products_count: 134 },
+        { handle: 'mixers-non-alcoholic', title: 'Mixers & Non-Alcoholic', name: 'Mixers & Non-Alcoholic', products_count: 113 },
+        { handle: 'all-party-supplies', title: 'All Party Supplies', name: 'All Party Supplies', products_count: 122 },
+        { handle: 'bachelorette-supplies', title: 'Bachelorette Supplies', name: 'Bachelorette Supplies', products_count: 84 },
+        { handle: 'seltzers-wine-champagne', title: 'Seltzers, Wine, Champagne', name: 'Seltzers, Wine, Champagne', products_count: 82 },
+        { handle: 'liqueurs-cordials-cocktail-ingredients', title: 'Liqueurs, Cordials, Cocktail Ingredients', name: 'Liqueurs, Cordials, Cocktail Ingredients', products_count: 68 },
+        { handle: 'concierge-backyard-pool-toys', title: 'Concierge - Backyard & Pool Toys', name: 'Concierge - Backyard & Pool Toys', products_count: 59 },
+        { handle: 'tailgate-beer', title: 'Tailgate Beer', name: 'Tailgate Beer', products_count: 57 },
+        { handle: 'drinkware-bartending-tools', title: 'Drinkware, Openers, Coolers, Bar Accessories', name: 'Drinkware, Openers, Coolers, Bar Accessories', products_count: 53 },
+        { handle: 'gin-rum', title: 'Vodka, Gin, & Rum', name: 'Vodka, Gin, & Rum', products_count: 51 },
+        { handle: 'bourbon-rye', title: 'Bourbon & Rye', name: 'Bourbon & Rye', products_count: 48 },
+        { handle: 'spirits-1', title: 'Spirits (Secondary)', name: 'Spirits (Secondary)', products_count: 47 },
+        { handle: 'champagne', title: 'Wine and Champagne', name: 'Wine and Champagne', products_count: 45 },
+        { handle: 'lake-packages-items', title: 'Lake Packages Items', name: 'Lake Packages Items', products_count: 44 },
+        { handle: 'all-alcohol', title: 'All Alcohol', name: 'All Alcohol', products_count: 43 },
+        { handle: 'tequila-mezcal', title: 'Tequila & Mezcal', name: 'Tequila & Mezcal', products_count: 41 },
+        { handle: 'cocktail-kits', title: 'Cocktail Collection - ALL', name: 'Cocktail Collection - ALL', products_count: 41 },
+        { handle: 'bachelorette-mixers-misc', title: 'Bachelorette (Mixers & Non-Alcoholic)', name: 'Bachelorette (Mixers & Non-Alcoholic)', products_count: 38 },
+        { handle: 'party-supplies', title: 'Party Supplies', name: 'Party Supplies', products_count: 38 },
+        { handle: 'bachelorette-party-supplies', title: 'Bachelorette (Party Supplies)', name: 'Bachelorette (Party Supplies)', products_count: 37 },
+        { handle: 'disco-collection', title: 'Disco Collection', name: 'Disco Collection', products_count: 36 },
+        { handle: 'bachelorette-booze', title: 'Bachelorette (Booze)', name: 'Bachelorette (Booze)', products_count: 35 },
+        { handle: 'beer-airbnb-craft', title: 'Beer - airbnb / craft', name: 'Beer - airbnb / craft', products_count: 32 },
+        { handle: 'rental-items', title: 'Rental Items', name: 'Rental Items', products_count: 32 },
+        { handle: 'decorations', title: 'Decorations', name: 'Decorations', products_count: 30 },
+        { handle: 'bachelor-spirits-cocktails', title: 'Bachelor - Spirits & Cocktails', name: 'Bachelor - Spirits & Cocktails', products_count: 28 },
+        { handle: 'concierge-backyard-parties', title: 'Concierge - Backyard Parties', name: 'Concierge - Backyard Parties', products_count: 28 },
+        { handle: 'concierge-pool-toys', title: 'Concierge - Pool Toys', name: 'Concierge - Pool Toys', products_count: 27 },
+        { handle: 'hats-sunglasses', title: 'Hats, Headbands, Necklaces & Sunglasses', name: 'Hats, Headbands, Necklaces & Sunglasses', products_count: 27 },
+        { handle: 'tailgate-supplies-and-fun', title: 'Tailgate - NA + mixers', name: 'Tailgate - NA + mixers', products_count: 26 },
+        { handle: 'tailgate-seltzers', title: 'Seltzers & Champagne', name: 'Seltzers & Champagne', products_count: 25 },
+        { handle: 'hangover-management', title: 'Hangover Management', name: 'Hangover Management', products_count: 24 },
+        { handle: 'chill-supplies', title: 'Chill Supplies', name: 'Chill Supplies', products_count: 23 },
+        { handle: 'wine-champagne-bnb-wedding', title: 'Wine & Champagne - Bnb / Wedding', name: 'Wine & Champagne - Bnb / Wedding', products_count: 23 },
+        { handle: 'beer-light-beer-boat', title: 'Beer - Light Beer / Boat', name: 'Beer - Light Beer / Boat', products_count: 21 },
+        { handle: 'bachelor-seltzers-wine', title: 'Bachelor - Seltzers & Wine', name: 'Bachelor - Seltzers & Wine', products_count: 20 },
+        { handle: 'seltzer-collection', title: 'Seltzers - All', name: 'Seltzers - All', products_count: 19 },
+        { handle: 'bachelor-favorites', title: 'Bachelor Favorites', name: 'Bachelor Favorites', products_count: 19 },
+        { handle: 'spirits-cocktail-kits-boat-collection', title: 'Spirits & Cocktail Kits - Boat Collection', name: 'Spirits & Cocktail Kits - Boat Collection', products_count: 17 },
+        { handle: 'concierge-household-items-toiletries', title: 'Concierge - Household Items/Toiletries', name: 'Concierge - Household Items/Toiletries', products_count: 17 },
+        { handle: 'non-alcoholic', title: 'Non Alcoholic', name: 'Non Alcoholic', products_count: 17 },
+        { handle: 'pop-up-box', title: 'Pop Up Box', name: 'Pop Up Box', products_count: 16 },
+        { handle: 'party-pitcher-cocktails', title: 'Featured Cocktail Kits', name: 'Featured Cocktail Kits', products_count: 14 },
+        { handle: 'beer-kegs', title: 'Beer - kegs', name: 'Beer - kegs', products_count: 12 },
+        { handle: 'favorites-home-page', title: 'Favorites - Home Page', name: 'Favorites - Home Page', products_count: 10 },
+        { handle: 'tailgate-cocktail', title: 'Tailgate - Cocktail', name: 'Tailgate - Cocktail', products_count: 9 },
+        { handle: 'concierge-electronics', title: 'Concierge - Electronics', name: 'Concierge - Electronics', products_count: 9 },
+        { handle: 'live-on-the-lake-cocktail-kits', title: 'Live on the Lake Cocktail Kits', name: 'Live on the Lake Cocktail Kits', products_count: 7 },
+        { handle: 'costumes', title: 'Festive Attire & Costumes', name: 'Festive Attire & Costumes', products_count: 7 },
+        { handle: 'gift-baskets', title: 'Gift Baskets', name: 'Gift Baskets', products_count: 6 },
+        { handle: 'bachelor-weekend-essentials', title: 'Bachelor - Weekend Essentials', name: 'Bachelor - Weekend Essentials', products_count: 6 },
+        { handle: 'july-4th-specials', title: 'July 4th specials', name: 'July 4th specials', products_count: 4 },
+        { handle: 'cocktail-collection-singles-stirred', title: 'Cocktail Collection - Singles / Stirred', name: 'Cocktail Collection - Singles / Stirred', products_count: 4 }
       ];
       
       console.log(`📝 Using comprehensive fallback with ${fallbackCollections.length} collections`);
