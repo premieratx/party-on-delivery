@@ -75,81 +75,30 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const loadCollections = async () => {
     setCollectionsLoading(true);
     try {
-      console.log('🔄 Loading ALL REAL Shopify collections for admin dropdown...');
+      const { getAllCollectionsCached } = await import('@/utils/instantCacheClient');
+      const collections = await getAllCollectionsCached();
       
-      // PRIORITY 1: Use the unified products endpoint with real cached data
-      const { data: unifiedData, error: unifiedError } = await supabase.functions.invoke('get-unified-products', {
-        body: { 
-          use_type: 'delivery',
-          lightweight: true,
-          admin_access: true 
-        }
-      });
-
-      if (!unifiedError && unifiedData?.collections && unifiedData.collections.length > 0) {
-        console.log(`✅ SUCCESS: Loaded ${unifiedData.collections.length} REAL Shopify collections with products!`);
-        
-        const formattedCollections = unifiedData.collections.map((collection: any) => ({
-          handle: collection.handle,
-          name: collection.name,
-          products_count: collection.product_count || collection.products_count || 0
-        }));
-        
-        console.log(`📋 REAL DATA: Admin has access to ALL ${formattedCollections.length} collections`);
-        setCollections(formattedCollections);
-        
-        toast({
-          title: "✅ Real Shopify Collections Loaded!",
-          description: `${formattedCollections.length} collections with actual products loaded successfully`,
-          variant: "default"
-        });
-        return;
-      }
-
-      // PRIORITY 2: Fallback to legacy collections endpoint
-      console.log('⚠️ Unified endpoint failed, trying legacy collections...');
-      const { data: response, error } = await supabase.functions.invoke('get-all-collections');
+      const formattedCollections = collections.map((collection: any) => ({
+        handle: collection.handle,
+        name: collection.title || collection.name || collection.handle,
+        products_count: collection.products_count || collection.product_count || 0
+      })).sort((a: any, b: any) => a.name.localeCompare(b.name));
       
-      if (!error && response?.success && response?.collections) {
-        console.log(`✅ BACKUP: Loaded ${response.collections.length} collections from legacy endpoint`);
-        
-        const formattedCollections = response.collections
-          .map((col: any) => ({
-            handle: col.handle,
-            name: col.title || col.handle.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-            products_count: col.products_count || 0
-          }))
-          .sort((a: any, b: any) => a.name.localeCompare(b.name));
-        
-        console.log(`📋 BACKUP DATA: Admin has access to ALL ${formattedCollections.length} collections`);
-        setCollections(formattedCollections);
-        
-        toast({
-          title: "Collections Loaded (Backup)",
-          description: `${formattedCollections.length} collections loaded from backup source`,
-          variant: "default"
-        });
-        return;
-      }
-
-      // Only reach here if BOTH real endpoints fail
-      throw new Error('Both real collection endpoints failed - check Shopify connection');
-      
-    } catch (error) {
-      console.error('❌ CRITICAL: All real collection sources failed:', error);
-      console.log('🆘 EMERGENCY FALLBACK - Limited fake collections in use');
-      
-      // Emergency fallback - VERY limited to make it obvious this is not real data
-      setCollections([
-        { handle: 'emergency-fallback', name: '🚨 EMERGENCY FALLBACK ONLY', products_count: 0 },
-        { handle: 'contact-admin', name: '⚠️ Contact Admin - Real Data Unavailable', products_count: 0 }
-      ]);
+      setCollections(formattedCollections);
       
       toast({
-        title: "🚨 CRITICAL: Emergency Fallback Active",
-        description: "Real Shopify collections unavailable - contact system admin immediately",
+        title: "✅ Collections Loaded",
+        description: `${formattedCollections.length} collections loaded`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error loading collections:', error);
+      toast({
+        title: "❌ Error Loading Collections", 
+        description: "Could not load collections",
         variant: "destructive"
       });
+      setCollections([]);
     } finally {
       setCollectionsLoading(false);
     }
