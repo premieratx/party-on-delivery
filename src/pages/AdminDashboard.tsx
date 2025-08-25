@@ -37,6 +37,7 @@ import {
 import { formatCurrency } from '@/utils/currency';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
+import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegrationTest';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -275,13 +276,14 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
             <TabsTrigger value="covers">Cover Pages</TabsTrigger>
             <TabsTrigger value="delivery">Delivery Apps</TabsTrigger>
             <TabsTrigger value="checkout">Post-Checkout</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="tests">Integration Tests</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -415,6 +417,13 @@ export default function AdminDashboard() {
               {/* Customer Flow Manager removed - standalone architecture */}
               <HomepageAppSwitcher />
             </div>
+          </TabsContent>
+
+          <TabsContent value="tests" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Integration Tests</h2>
+            </div>
+            <DeliveryAppIntegrationTest />
           </TabsContent>
         </Tabs>
       </div>
