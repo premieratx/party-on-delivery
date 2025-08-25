@@ -96,7 +96,7 @@ export const ProductManagement: React.FC = () => {
     try {
       setLoading(true);
       
-      console.log('🔧 DEBUG: Starting loadCollections, forceRefresh:', forceRefresh);
+      // Debug logging removed to reduce console noise
       
       // Use the fast instant cache with optional force refresh for bulk sorting
       const { data, error } = await supabase.functions.invoke('instant-product-cache', {

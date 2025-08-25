@@ -50,7 +50,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   const assignedFreeShipping = sessionStorage.getItem('shipping.free') === '1';
   const finalDeliveryFee = (appliedDiscount?.type === 'free_shipping' || assignedFreeShipping) ? 0 : deliveryFee;
   
-  console.log('DeliveryCart pricing:', { subtotal, deliveryFee, finalDeliveryFee, appliedDiscount, markupPercent });
+  // Removed console.log to reduce noise
   
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
