@@ -52,15 +52,16 @@ export const StandaloneCoverPage: React.FC = () => {
           .select('*')
           .eq('slug', slug)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (dbError) {
           console.error('❌ Database error:', dbError);
-          throw dbError;
+          throw new Error(`Database error: ${dbError.message}`);
         }
 
         if (!data) {
-          throw new Error('Cover page not found');
+          console.error('❌ Cover page not found for slug:', slug);
+          throw new Error(`Cover page not found: ${slug}`);
         }
 
         console.log('✅ Cover page loaded:', data);
