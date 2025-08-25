@@ -82,8 +82,8 @@ export const DynamicRouteHandler: React.FC = () => {
   }
 
   if (routeType === 'homepage') {
-    console.log('🏠 Redirecting to main delivery app');
-    return <Navigate to="/app/main-delivery-app" replace />;
+    console.log('🏠 Redirecting to active delivery app');
+    return <Navigate to="/app/party-on-delivery---concierge-" replace />;
   }
 
   // Not found

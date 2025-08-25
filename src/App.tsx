@@ -71,8 +71,8 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* SIMPLE HOMEPAGE - just redirect to the main delivery app */}
-                    <Route path="/" element={<Navigate to="/app/main-delivery-app" replace />} />
+                    {/* SIMPLE HOMEPAGE - redirect to the active delivery app */}
+                    <Route path="/" element={<Navigate to="/app/party-on-delivery---concierge-" replace />} />
                     
                     {/* Core app routes - MUST come before catch-all */}
                     <Route path="/checkout" element={<Checkout />} />
