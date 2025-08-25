@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RequireAdmin from "./components/admin/RequireAdmin";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -11,9 +11,7 @@ import { RobustErrorBoundary } from '@/components/common/RobustErrorBoundary';
 import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
 import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
-// Simple, bulletproof homepage
 import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
-import DynamicHomepage from "./pages/DynamicHomepage";
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -73,12 +71,11 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* DYNAMIC HOMEPAGE ROUTE */}
-                    <Route path="/" element={<DynamicHomepage />} />
+                    {/* SIMPLE HOMEPAGE - just redirect to the main delivery app */}
+                    <Route path="/" element={<Navigate to="/app/main-delivery-app" replace />} />
                     
                     {/* Core app routes - MUST come before catch-all */}
                     <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     

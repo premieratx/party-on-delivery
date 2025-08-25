@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { StandaloneCoverPage } from '@/components/cover-pages/StandaloneCoverPage';
-import DynamicHomepage from '@/pages/DynamicHomepage';
 
 export const DynamicRouteHandler: React.FC = () => {
   const location = useLocation();
@@ -83,8 +82,8 @@ export const DynamicRouteHandler: React.FC = () => {
   }
 
   if (routeType === 'homepage') {
-    console.log('🏠 Rendering DynamicHomepage');
-    return <DynamicHomepage />;
+    console.log('🏠 Redirecting to main delivery app');
+    return <Navigate to="/app/main-delivery-app" replace />;
   }
 
   // Not found
