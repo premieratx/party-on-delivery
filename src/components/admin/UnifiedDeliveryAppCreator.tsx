@@ -257,18 +257,49 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   }, [open]);
 
   const loadCollections = async () => {
-    // Mock collections data since collections table may not exist
-    const mockCollections = [
-      { id: '1', handle: 'beer', name: 'Beer & Ales' },
-      { id: '2', handle: 'wine', name: 'Wine Collection' },
-      { id: '3', handle: 'spirits', name: 'Premium Spirits' },
-      { id: '4', handle: 'seltzers', name: 'Hard Seltzers' },
-      { id: '5', handle: 'mixers', name: 'Mixers & Sodas' },
-      { id: '6', handle: 'cocktails', name: 'Ready-to-Drink Cocktails' },
-      { id: '7', handle: 'party-supplies', name: 'Party Supplies' },
-      { id: '8', handle: 'snacks', name: 'Snacks & Food' }
-    ];
-    setCollections(mockCollections);
+    try {
+      console.log('🔄 Loading real Shopify collections...');
+      
+      const { data, error } = await supabase.functions.invoke('get-all-collections', {
+        body: {}
+      });
+
+      if (error) {
+        console.error('❌ Error loading collections:', error);
+        toast({
+          title: "Failed to load collections",
+          description: "Could not load Shopify collections. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data && data.collections) {
+        console.log('✅ Loaded real collections:', data.collections.length);
+        
+        // Transform the collections to include product counts in the name
+        const transformedCollections = data.collections.map((collection: any) => ({
+          id: collection.id || collection.handle,
+          handle: collection.handle,
+          name: `${collection.title} (${collection.products_count || 0} products)`,
+          title: collection.title,
+          products_count: collection.products_count || 0
+        }));
+        
+        setCollections(transformedCollections);
+      } else {
+        console.warn('⚠️ No collections data received');
+        setCollections([]);
+      }
+    } catch (error) {
+      console.error('💥 Failed to load collections:', error);
+      toast({
+        title: "Error loading collections",
+        description: "Failed to connect to Shopify. Please check your connection.",
+        variant: "destructive"
+      });
+      setCollections([]);
+    }
   };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -370,9 +401,64 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     setSaving(true);
 
     try {
-      // For now, just simulate a successful save since the exact table structure may vary
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('💾 Saving delivery app...', { appName, appSlug, theme });
 
+      // Convert data to proper JSON format for Supabase
+      const appData = {
+        app_name: appName,
+        app_slug: appSlug,
+        logo_url: logoUrl,
+        main_app_config: JSON.parse(JSON.stringify({
+          hero_heading: heroHeading,
+          hero_subheading: heroSubheading,
+          logo_size: logoSize,
+          headline_size: headlineSize,
+          subheadline_size: subheadlineSize,
+          logo_vertical_pos: logoVerticalPos,
+          headline_vertical_pos: headlineVerticalPos,
+          subheadline_vertical_pos: subheadlineVerticalPos,
+          background_image_url: backgroundImageUrl,
+          background_opacity: backgroundOpacity,
+          overlay_color: overlayColor
+        })),
+        collections_config: JSON.parse(JSON.stringify({
+          tab_count: tabs.length,
+          tabs: tabs.map(tab => ({
+            name: tab.name,
+            collection_handle: tab.collection_handle,
+            icon: tab.icon || '📦'
+          }))
+        })),
+        theme: theme,
+        is_active: isActive,
+        is_homepage: isHomepage,
+        updated_at: new Date().toISOString()
+      };
+
+      let result;
+      
+      if (initial?.id) {
+        // Update existing app
+        result = await supabase
+          .from('delivery_app_variations')
+          .update(appData)
+          .eq('id', initial.id);
+      } else {
+        // Create new app
+        result = await supabase
+          .from('delivery_app_variations')
+          .insert({
+            ...appData,
+            created_at: new Date().toISOString()
+          });
+      }
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      console.log('✅ App saved successfully');
+      
       toast({
         title: "App saved successfully",
         description: initial?.id ? "Your delivery app has been updated." : "Your delivery app has been created."
@@ -380,11 +466,11 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
       onSaved?.();
       onOpenChange(false);
-    } catch (error) {
-      console.error('Error saving app:', error);
+    } catch (error: any) {
+      console.error('💥 Error saving app:', error);
       toast({
         title: "Save failed",
-        description: "Failed to save delivery app. Please try again.",
+        description: `Failed to save delivery app: ${error.message || 'Please try again.'}`,
         variant: "destructive"
       });
     } finally {
