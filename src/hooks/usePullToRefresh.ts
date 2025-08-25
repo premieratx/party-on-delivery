@@ -22,7 +22,7 @@ export function usePullToRefresh({
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   const isAtTop = useCallback(() => {
-    return window.scrollY === 0 || document.documentElement.scrollTop === 0;
+    return window.scrollY <= 5; // Small tolerance for scroll position
   }, []);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -30,6 +30,8 @@ export function usePullToRefresh({
     
     setCanPull(true);
     startYRef.current = e.touches[0].clientY;
+    setPullDistance(0); // Reset distance on touch start
+    setIsPulling(false); // Reset pulling state
   }, [enabled, isAtTop]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
@@ -38,11 +40,17 @@ export function usePullToRefresh({
     const currentY = e.touches[0].clientY;
     const diff = currentY - startYRef.current;
 
-    if (diff > 0) {
+    // Only prevent default and handle pull if it's a significant downward movement
+    // This allows normal upward scrolling to work
+    if (diff > 20) { // Require at least 20px downward movement before interfering
       e.preventDefault();
       const distance = Math.min(diff * 0.5, maxPull);
       setPullDistance(distance);
-      setIsPulling(distance > 10);
+      setIsPulling(distance > 30); // Require more movement to trigger pulling state
+    } else {
+      // Allow normal touch behavior for small movements or upward movements
+      setPullDistance(0);
+      setIsPulling(false);
     }
   }, [enabled, canPull, maxPull, isAtTop]);
 
@@ -73,8 +81,9 @@ export function usePullToRefresh({
   useEffect(() => {
     const element = elementRef.current || document.body;
 
-    element.addEventListener('touchstart', handleTouchStart, { passive: false });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    // Use passive listeners where possible to improve scroll performance
+    element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false }); // Need to be able to preventDefault
     element.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
