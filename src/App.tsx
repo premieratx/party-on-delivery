@@ -12,7 +12,6 @@ import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
 import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
 import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
-import SimpleHomepage from './pages/SimpleHomepage';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -73,7 +72,7 @@ const App = () => {
                 <Suspense fallback={<div />}>
                   <Routes>
                     {/* SIMPLE HOMEPAGE - just redirect to the main delivery app */}
-                    <Route path="/" element={<SimpleHomepage />} />
+                    <Route path="/" element={<Navigate to="/app/main-delivery-app" replace />} />
                     
                     {/* Core app routes - MUST come before catch-all */}
                     <Route path="/checkout" element={<Checkout />} />
