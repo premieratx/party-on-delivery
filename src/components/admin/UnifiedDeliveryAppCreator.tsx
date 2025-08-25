@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Save, 
   Upload, 
@@ -15,8 +16,7 @@ import {
   Package,
   Monitor,
   Smartphone,
-  Tablet,
-  ShoppingCart
+  Tablet
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -112,11 +112,11 @@ const DeliveryAppLivePreview: React.FC<{
     }
   };
 
-  // Proportions that match Lovable preview window
+  // Proportions that match Lovable preview window exactly
   const deviceClasses = {
-    mobile: 'w-[360px] h-[640px]',
-    tablet: 'w-[512px] h-[640px]', 
-    desktop: 'w-[800px] h-[600px]'
+    mobile: 'w-[375px] h-[667px]',
+    tablet: 'w-[768px] h-[1024px] scale-75', 
+    desktop: 'w-[1200px] h-[800px] scale-50'
   };
   
   return (
@@ -169,12 +169,6 @@ const DeliveryAppLivePreview: React.FC<{
             >
               {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
             </p>
-            
-            {/* Cart Button */}
-            <Button className="bg-white text-primary hover:bg-white/90" size="lg">
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Cart (0)
-            </Button>
           </div>
         </div>
 
@@ -572,9 +566,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           {/* Consolidated Single-Tab Interface */}
           <div className="flex-1 overflow-hidden">
             <div className="h-full flex">
-              {/* Left Panel - All Controls */}
-              <div className="w-80 border-r bg-muted/20 overflow-y-auto">
-                <div className="p-4 space-y-6">
+              {/* Left Panel - All Controls with Proper Scrolling */}
+              <div className="w-80 border-r bg-muted/20 flex flex-col">
+                <ScrollArea className="flex-1">
+                  <div className="p-4 space-y-6">
                   <h3 className="text-lg font-semibold">Delivery App Creator</h3>
                   
                   {/* Device Selector */}
@@ -906,12 +901,13 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                       </div>
                     </div>
                   </div>
-                </div>
+                  </div>
+                </ScrollArea>
               </div>
 
-              {/* Right Panel - Live Preview */}
-              <div className="flex-1 p-6 bg-gradient-to-br from-muted/20 to-background overflow-hidden">
-                <div className="h-full flex items-center justify-center">
+              {/* Right Panel - Live Preview with Fixed Positioning */}
+              <div className="flex-1 flex justify-center items-start bg-muted/10 p-6 overflow-auto">
+                <div className="flex justify-center">
                   <DeliveryAppLivePreview
                     appName={appName}
                     heroHeading={heroHeading}
