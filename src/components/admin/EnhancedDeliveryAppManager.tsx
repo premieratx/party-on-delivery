@@ -41,7 +41,7 @@ interface DeliveryApp {
   description?: string;
   logo_url?: string;
   is_active: boolean;
-  tab_config?: any;
+  collections_config?: any;
   custom_branding?: any;
   created_at: string;
   updated_at: string;
@@ -200,9 +200,8 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
         .insert([{
           app_name: `${app.app_name} (Copy)`,
           app_slug: `${app.app_slug}-copy-${Date.now()}`,
-          description: app.description,
           logo_url: app.logo_url,
-          tab_config: app.tab_config,
+          collections_config: app.collections_config,
           custom_branding: app.custom_branding,
           is_active: false
         }]);
@@ -357,7 +356,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                           </div>
                           
                           <div className="flex gap-4 text-xs text-muted-foreground">
-                            <span>Tabs: {Array.isArray(app.tab_config) ? app.tab_config.length : 0}</span>
+                            <span>Collections: {Array.isArray(app.collections_config) ? app.collections_config.length : 0}</span>
                             <span>Created: {new Date(app.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
