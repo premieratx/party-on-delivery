@@ -169,6 +169,15 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setIsHomepage(initial.is_homepage ?? false);
       setSelectedTheme(initial.theme || 'modern');
       
+      // Load styling controls from styles object
+      const styles = initial.styles || {};
+      setHeadlineSize(styles.headlineSize || 20);
+      setLogoSize(styles.logoSize || 64);
+      setSubheadlineSize(styles.subheadlineSize || 14);
+      setBackgroundImage(styles.backgroundImage || '');
+      setOverlayOpacity(styles.overlayOpacity || 50);
+      setOverlayColor(styles.overlayColor || '#000000');
+      
       if (initial.collections_config?.tabs) {
         setCollections(initial.collections_config.tabs);
       }
@@ -183,6 +192,14 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setIsActive(true);
       setIsHomepage(false);
       setSelectedTheme('modern');
+      
+      // Reset styling controls to defaults
+      setHeadlineSize(20);
+      setLogoSize(64);
+      setSubheadlineSize(14);
+      setBackgroundImage('');
+      setOverlayOpacity(50);
+      setOverlayColor('#000000');
     }
   }, [open, initial]);
 
@@ -289,7 +306,13 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
           text_color: '#000000'
         },
         styles: {
-          theme: selectedTheme
+          theme: selectedTheme,
+          headlineSize: headlineSize,
+          logoSize: logoSize,
+          subheadlineSize: subheadlineSize,
+          backgroundImage: backgroundImage,
+          overlayOpacity: overlayOpacity,
+          overlayColor: overlayColor
         }
       };
 
