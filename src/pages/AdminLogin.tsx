@@ -99,17 +99,6 @@ export const AdminLogin: React.FC = () => {
     setIsProcessingAuth(true);
     console.log('🔐 SECURITY: Forcing fresh Google OAuth for admin');
     
-    // First test if OAuth is configured
-    const oauthWorking = await testOAuthConfig();
-    if (!oauthWorking) {
-      setIsProcessingAuth(false);
-      toast({
-        title: "OAuth Not Configured",
-        description: "Google OAuth provider is not set up in Supabase. Check Authentication > Providers in Supabase dashboard.",
-        variant: "destructive",
-      });
-      return;
-    }
     
     try {
       // Clear any existing session first
