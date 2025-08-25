@@ -171,7 +171,7 @@ export const DeliveryAppLiveEditor: React.FC<DeliveryAppLiveEditorProps> = ({
   const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex bg-background relative z-10">
       {/* Left Panel - Controls */}
       <div className="w-80 border-r bg-muted/20 p-6 overflow-y-auto">
         <h3 className="text-lg font-semibold mb-6">Delivery App Editor</h3>
@@ -345,8 +345,8 @@ export const DeliveryAppLiveEditor: React.FC<DeliveryAppLiveEditorProps> = ({
         </div>
       </div>
 
-      {/* Right Panel - Live Preview */}
-      <div className="flex-1 p-6">
+      {/* Right Panel - Live Preview with proper backdrop */}
+      <div className="flex-1 p-6 bg-gradient-to-br from-muted/20 to-background relative">
         <div className="h-full flex items-center justify-center">
           <DeliveryAppHeroPreview
             appName={appName}

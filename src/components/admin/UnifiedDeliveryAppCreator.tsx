@@ -614,7 +614,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden" aria-describedby="dialog-description">
+      <div className="fixed inset-0 z-[99] bg-black/80 backdrop-blur-sm" />
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden !z-[100] bg-background border-0" aria-describedby="dialog-description">
         <div className="h-full flex flex-col">
           <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
             <DialogTitle className="flex items-center justify-between">
