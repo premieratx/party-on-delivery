@@ -90,15 +90,17 @@ export const StandaloneCoverPage: React.FC = () => {
           } else {
             window.open(button.url, '_blank', 'noopener,noreferrer');
           }
-        } else if (button.type === 'delivery_app' && button.app_slug) {
-          window.location.href = `/app/${button.app_slug}`;
+        } else if ((button.type === 'delivery_app' || button.assignment_type === 'delivery_app') && (button.app_slug || button.delivery_app_id)) {
+          // Handle both old (delivery_app_id) and new (app_slug) data structures
+          const appIdentifier = button.app_slug || button.delivery_app_id;
+          window.location.href = `/app/${appIdentifier}`;
         } else if (button.type === 'checkout') {
           window.location.href = '/checkout';
         }
       },
       bgColor: button.bg_color,
       textColor: button.text_color,
-      appSlug: button.app_slug
+      appSlug: button.app_slug || button.delivery_app_id
     }));
   };
 
