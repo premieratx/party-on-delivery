@@ -128,6 +128,14 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
   const [isHomepage, setIsHomepage] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // New styling controls
+  const [headlineSize, setHeadlineSize] = useState(20);
+  const [logoSize, setLogoSize] = useState(64);
+  const [subheadlineSize, setSubheadlineSize] = useState(14);
+  const [backgroundImage, setBackgroundImage] = useState('');
+  const [overlayOpacity, setOverlayOpacity] = useState(50);
+  const [overlayColor, setOverlayColor] = useState('#000000');
+
   // Collections state
   const [collections, setCollections] = useState([
     { name: 'Beer', collection_handle: 'beer' },
@@ -139,6 +147,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
 
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
   
   const isEditing = !!initial?.id;
   
@@ -183,16 +192,36 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       const fileName = `delivery-app-${computedSlug}-logo.${ext}`;
       
       const { error: uploadError } = await supabase.storage
-        .from('delivery-app-logos')
+        .from('app-assets')
         .upload(fileName, file, { cacheControl: '3600', upsert: true });
       
       if (uploadError) throw uploadError;
       
-      const { data } = supabase.storage.from('delivery-app-logos').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('app-assets').getPublicUrl(fileName);
       return data.publicUrl;
     } catch (error) {
       console.error('Upload failed:', error);
       toast({ title: 'Upload failed', variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const uploadBackground = async (file: File): Promise<string | null> => {
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const fileName = `delivery-app-${computedSlug}-bg.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('app-assets')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('app-assets').getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Background upload failed:', error);
+      toast({ title: 'Background upload failed', variant: 'destructive' });
       return null;
     }
   };
@@ -205,6 +234,17 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
     if (url) {
       setLogoUrl(url);
       toast({ title: 'Logo uploaded successfully!' });
+    }
+  };
+
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const url = await uploadBackground(file);
+    if (url) {
+      setBackgroundImage(url);
+      toast({ title: 'Background uploaded successfully!' });
     }
   };
 
@@ -312,19 +352,37 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
         {/* Preview Frame */}
         <div 
           className={`${device.className} border-2 border-gray-300 rounded-lg overflow-y-auto shadow-lg bg-white relative max-h-[80vh]`}
-          style={{ background: theme.colors.background }}
+          style={{ 
+            background: backgroundImage 
+              ? `url(${backgroundImage})` 
+              : theme.colors.background,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
         >
+          {/* Background Overlay */}
+          {backgroundImage && (
+            <div 
+              className="absolute inset-0"
+              style={{
+                backgroundColor: overlayColor,
+                opacity: overlayOpacity / 100
+              }}
+            />
+          )}
+          
           {/* App Header */}
-          <div className="p-4 text-center relative" style={{ color: theme.colors.text }}>
+          <div className="p-4 text-center relative z-10" style={{ color: theme.colors.text }}>
             {logoUrl && (
               <Draggable bounds="parent" defaultPosition={{ x: 0, y: 0 }}>
                 <div className="absolute cursor-move">
                   <img 
                     src={logoUrl} 
                     alt="Logo" 
-                    className="w-16 h-16 object-contain rounded-lg resize-handle"
+                    className="object-contain rounded-lg resize-handle"
                     style={{ 
-                      resize: 'both',
+                      width: `${logoSize}px`,
+                      height: `${logoSize}px`,
                       minWidth: '32px',
                       minHeight: '32px',
                       maxWidth: '128px',
@@ -335,10 +393,22 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
               </Draggable>
             )}
             <div className={logoUrl ? 'mt-20' : ''}>
-              <h1 className="text-xl font-bold mb-2" style={{ color: theme.colors.primary }}>
+              <h1 
+                className="font-bold mb-2" 
+                style={{ 
+                  color: theme.colors.primary,
+                  fontSize: `${headlineSize}px`
+                }}
+              >
                 {heroHeading || 'Welcome to Our Store'}
               </h1>
-              <p className="text-sm opacity-80">
+              <p 
+                className="opacity-80"
+                style={{ 
+                  fontSize: `${subheadlineSize}px`,
+                  color: backgroundImage ? '#ffffff' : theme.colors.text
+                }}
+              >
                 {heroSubheading || 'Premium delivery service'}
               </p>
             </div>
@@ -532,6 +602,108 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                         ))}
                       </div>
                     </div>
+
+                    {/* Size Controls */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Type className="w-4 h-4" />
+                          Headline Size: {headlineSize}px
+                        </Label>
+                        <Slider
+                          value={[headlineSize]}
+                          onValueChange={(value) => setHeadlineSize(value[0])}
+                          min={14}
+                          max={32}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" />
+                          Logo Size: {logoSize}px
+                        </Label>
+                        <Slider
+                          value={[logoSize]}
+                          onValueChange={(value) => setLogoSize(value[0])}
+                          min={32}
+                          max={128}
+                          step={4}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Type className="w-4 h-4" />
+                          Subheadline Size: {subheadlineSize}px
+                        </Label>
+                        <Slider
+                          value={[subheadlineSize]}
+                          onValueChange={(value) => setSubheadlineSize(value[0])}
+                          min={10}
+                          max={20}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Background Controls */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Background Image</Label>
+                        <Button
+                          variant="outline"
+                          onClick={() => backgroundInputRef.current?.click()}
+                          className="w-full mt-2"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Background
+                        </Button>
+                        {backgroundImage && (
+                          <div className="mt-2">
+                            <img src={backgroundImage} alt="Background" className="w-full h-20 object-cover rounded border" />
+                          </div>
+                        )}
+                      </div>
+
+                      {backgroundImage && (
+                        <>
+                          <div>
+                            <Label>Overlay Opacity: {overlayOpacity}%</Label>
+                            <Slider
+                              value={[overlayOpacity]}
+                              onValueChange={(value) => setOverlayOpacity(value[0])}
+                              min={0}
+                              max={100}
+                              step={5}
+                              className="mt-2"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Overlay Color</Label>
+                            <div className="flex gap-2 mt-2">
+                              <Input
+                                type="color"
+                                value={overlayColor}
+                                onChange={(e) => setOverlayColor(e.target.value)}
+                                className="w-12 h-10 p-1"
+                              />
+                              <Input
+                                value={overlayColor}
+                                onChange={(e) => setOverlayColor(e.target.value)}
+                                className="flex-1"
+                                placeholder="#000000"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="collections" className="space-y-4">
@@ -598,12 +770,19 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
           </div>
         </div>
 
-        {/* Hidden file input */}
+        {/* Hidden file inputs */}
         <input
           ref={logoInputRef}
           type="file"
           accept="image/*"
           onChange={handleLogoUpload}
+          className="hidden"
+        />
+        <input
+          ref={backgroundInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleBackgroundUpload}
           className="hidden"
         />
       </DialogContent>
