@@ -184,20 +184,28 @@ export default function DynamicHomepage() {
     );
   }
 
+  // Temporary simple homepage for debugging
   return (
-    <CustomDeliveryTabsPage
-      appName={homepageApp.app_name}
-      heroHeading={homepageApp.main_app_config?.hero_heading || homepageApp.app_name}
-      heroSubheading={homepageApp.main_app_config?.hero_subheading || 'Premium delivery service'}
-      logoUrl={homepageApp.logo_url}
-      collectionsConfig={homepageApp.collections_config}
-      onAddToCart={handleAddToCart}
-      cartItemCount={getTotalItems()}
-      onOpenCart={openCart}
-      cartItems={cartItems}
-      onUpdateQuantity={handleUpdateQuantity}
-      onProceedToCheckout={handleProceedToCheckout}
-      onGoHome={handleGoHome}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center">
+      <div className="text-center p-8 max-w-md mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h1 className="text-3xl font-bold mb-4 text-foreground">Party On Delivery</h1>
+          <p className="text-muted-foreground mb-6">
+            Homepage is working! App: {homepageApp.app_name}
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Collections: {homepageApp.collections_config?.tabs?.length || 0} tabs configured
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => navigate('/admin')} className="w-full">
+              Go to Admin
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/delivery')} className="w-full">
+              Browse Delivery Apps
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
