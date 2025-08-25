@@ -3,22 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from "@/components/ui/slider";
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { 
   Save, 
   Upload, 
   Plus, 
   Trash2, 
-  Eye,
   Package,
-  Settings,
-  Palette,
   Monitor,
   Smartphone,
   Tablet,
@@ -27,7 +21,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UNIFIED_THEMES, getThemeCSS, migrateLegacyTheme } from '@/lib/themeSystem';
-import { DeliveryAppLiveEditor } from './DeliveryAppLiveEditor';
 
 interface DeliveryAppTab {
   name: string;
@@ -72,7 +65,7 @@ const ICON_OPTIONS = [
   { value: '🍿', label: '🍿 Snacks' }
 ];
 
-// Real-time Preview Component - Exact Replica of DirectDeliveryApp
+// Enhanced Preview Component with proper proportions and background controls
 const DeliveryAppLivePreview: React.FC<{
   appName: string;
   heroHeading: string;
@@ -80,10 +73,13 @@ const DeliveryAppLivePreview: React.FC<{
   logoUrl?: string;
   logoSize: number;
   headlineSize: number;
+  subheadlineSize: number;
   logoVerticalPos: number;
   headlineVerticalPos: number;
   subheadlineVerticalPos: number;
   backgroundImageUrl?: string;
+  backgroundOpacity: number;
+  overlayColor: string;
   tabs: DeliveryAppTab[];
   theme: 'original' | 'gold' | 'platinum';
   device: 'mobile' | 'tablet' | 'desktop';
@@ -94,49 +90,69 @@ const DeliveryAppLivePreview: React.FC<{
   logoUrl, 
   logoSize,
   headlineSize,
+  subheadlineSize,
   logoVerticalPos,
   headlineVerticalPos,
   subheadlineVerticalPos,
   backgroundImageUrl,
+  backgroundOpacity,
+  overlayColor,
   tabs, 
   theme, 
   device 
 }) => {
-  const themeConfig = UNIFIED_THEMES[theme];
-  
+  const getThemeBackground = () => {
+    switch (theme) {
+      case 'gold':
+        return 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)';
+      case 'platinum':
+        return 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
+      default:
+        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+  };
+
+  // Proportions that match Lovable preview window
   const deviceClasses = {
-    mobile: 'w-[375px] h-[667px]',
-    tablet: 'w-[768px] h-[1024px]',
-    desktop: 'w-[1200px] h-[800px]'
+    mobile: 'w-[360px] h-[640px]',
+    tablet: 'w-[512px] h-[640px]', 
+    desktop: 'w-[800px] h-[600px]'
   };
   
   return (
-    <div className={`${deviceClasses[device]} border rounded-xl overflow-hidden shadow-xl`}>
-      <div className="h-full flex flex-col bg-background">
-        {/* EXACT REPLICA: Hero Section like DirectDeliveryApp */}
+    <div className={`${deviceClasses[device]} border rounded-xl overflow-hidden shadow-xl bg-background`}>
+      <div className="h-full flex flex-col">
+        {/* Hero Section with enhanced background controls */}
         <div 
-          className="relative bg-gradient-to-r from-primary to-secondary text-white py-12"
+          className="relative text-white py-12 flex-shrink-0"
           style={{
-            backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
+            background: backgroundImageUrl 
+              ? `linear-gradient(rgba(${parseInt(overlayColor.slice(1,3), 16)}, ${parseInt(overlayColor.slice(3,5), 16)}, ${parseInt(overlayColor.slice(5,7), 16)}, ${backgroundOpacity}), rgba(${parseInt(overlayColor.slice(1,3), 16)}, ${parseInt(overlayColor.slice(3,5), 16)}, ${parseInt(overlayColor.slice(5,7), 16)}, ${backgroundOpacity})), url(${backgroundImageUrl})`
+              : getThemeBackground(),
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
           }}
         >
-          {backgroundImageUrl && <div className="absolute inset-0 bg-black/50" />}
           <div className="relative container mx-auto px-4 text-center">
             {logoUrl && (
-              <img 
-                src={logoUrl} 
-                alt={appName} 
-                className="mx-auto mb-6 object-contain" 
-                style={{ 
-                  height: `${logoSize}px`,
-                  transform: `translateY(${logoVerticalPos}px)`
-                }}
-              />
+              <div 
+                className="flex justify-center mb-6"
+                style={{ transform: `translateY(${logoVerticalPos}px)` }}
+              >
+                <img 
+                  src={logoUrl} 
+                  alt={appName} 
+                  className="object-contain transition-all duration-300" 
+                  style={{ 
+                    height: `${logoSize}px`,
+                    maxHeight: `${logoSize}px`
+                  }}
+                />
+              </div>
             )}
             <h1 
-              className="font-bold mb-4 text-white"
+              className="font-bold mb-4 text-white leading-tight"
               style={{ 
                 fontSize: `${headlineSize}px`,
                 transform: `translateY(${headlineVerticalPos}px)`
@@ -145,9 +161,9 @@ const DeliveryAppLivePreview: React.FC<{
               {heroHeading || appName}
             </h1>
             <p 
-              className="text-blue-100 mb-6"
+              className="text-white/90 mb-6 max-w-2xl mx-auto"
               style={{ 
-                fontSize: `${Math.max(14, headlineSize * 0.6)}px`,
+                fontSize: `${subheadlineSize}px`,
                 transform: `translateY(${subheadlineVerticalPos}px)`
               }}
             >
@@ -162,42 +178,35 @@ const DeliveryAppLivePreview: React.FC<{
           </div>
         </div>
 
-        {/* EXACT REPLICA: Tab Navigation */}
-        <div className="container mx-auto px-4 py-8 flex-1">
+        {/* Tab Navigation */}
+        <div className="container mx-auto px-4 py-4 flex-1 overflow-y-auto">
           {tabs.length > 0 && (
-            <div className="mb-8 border-b pb-4">
+            <div className="mb-6 border-b pb-4">
               <div className="flex overflow-x-auto gap-2 scrollbar-hide">
                 {tabs.map((tab: any, index: number) => (
                   <Button
                     key={tab.collection_handle || index}
                     variant={index === 0 ? "default" : "outline"}
-                    className="flex-shrink-0 text-sm px-4 py-2 whitespace-nowrap"
+                    className="flex-shrink-0 text-sm px-3 py-2 whitespace-nowrap"
                   >
-                    {tab.name}
+                    {tab.icon} {tab.name}
                   </Button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* EXACT REPLICA: Product Grid Placeholder */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[1,2,3,4,5,6].map((i) => (
-              <div key={i} className="bg-card rounded-lg border p-4 hover:shadow-lg transition-shadow">
-                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
-                <h3 className="font-semibold mb-2 text-sm">Sample Product {i}</h3>
-                <p className="text-lg font-bold text-primary mb-4">$12.99</p>
-                <Button className="w-full text-sm">Add to Cart</Button>
+          {/* Product Grid Placeholder */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[1,2,3,4,5,6,7,8].map((i) => (
+              <div key={i} className="bg-card rounded-lg border p-3 hover:shadow-lg transition-shadow">
+                <div className="aspect-square bg-muted rounded-lg mb-3"></div>
+                <h3 className="font-semibold mb-2 text-xs">Product {i}</h3>
+                <p className="text-sm font-bold text-primary mb-3">$12.99</p>
+                <Button className="w-full text-xs py-1">Add to Cart</Button>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* EXACT REPLICA: Fixed Action Buttons */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-          <Button variant="outline" size="sm" className="bg-background/90 backdrop-blur-sm">
-            Admin
-          </Button>
         </div>
       </div>
     </div>
@@ -228,30 +237,17 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   // Size and positioning controls
   const [logoSize, setLogoSize] = useState(64);
   const [headlineSize, setHeadlineSize] = useState(32);
+  const [subheadlineSize, setSubheadlineSize] = useState(18);
   const [logoVerticalPos, setLogoVerticalPos] = useState(0);
   const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
   const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(0);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.7);
+  const [overlayColor, setOverlayColor] = useState('#000000');
 
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!initial?.id;
-
-  // Load homepage template for defaults
-  const [homepageTemplate, setHomepageTemplate] = useState<any>(null);
-
-  const loadHomepageTemplate = async () => {
-    try {
-      const { data } = await supabase
-        .from('delivery_app_variations')
-        .select('*')
-        .eq('is_homepage', true)
-        .single();
-      setHomepageTemplate(data);
-    } catch (error) {
-      console.error('Error loading homepage template:', error);
-    }
-  };
 
   // Load Shopify collections using get-all-collections edge function
   const loadShopifyCollections = async () => {
@@ -307,17 +303,13 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     }
   };
 
-  // Initialize form - FIXED PERSISTENCE AND TIMING
+  // Initialize form
   useEffect(() => {
     if (!open) return;
 
-    // Load collections first, then restore tabs to ensure dropdowns work
     const initializeApp = async () => {
-      // Always load collections first
       await loadShopifyCollections();
-      loadHomepageTemplate();
 
-      // Only initialize once when dialog opens
       if (initial && initial.id) {
         console.log('📝 Loading existing delivery app:', initial);
         setAppName(initial.app_name || '');
@@ -327,7 +319,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         setLogoUrl(initial.logo_url || '');
         setTheme(initial.theme || migrateLegacyTheme('gold'));
         
-        // CRITICAL: Ensure tabs are preserved exactly as saved - AFTER collections load
         const savedTabs = initial.collections_config?.tabs || [];
         console.log('🔄 Restoring saved tabs with collections loaded:', savedTabs);
         setTabs(savedTabs);
@@ -335,7 +326,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         setIsActive(initial.is_active ?? true);
         setIsHomepage(initial.is_homepage ?? false);
       } else if (!initial) {
-        // Only reset for completely new apps
         console.log('🆕 Creating new delivery app');
         setAppName('');
         setAppSlug('');
@@ -347,8 +337,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           { name: 'Beer', collection_handle: 'tailgate-beer', icon: '🍺' },
           { name: 'Seltzers', collection_handle: 'seltzer-collection', icon: '🥤' },
           { name: 'Cocktails', collection_handle: 'cocktail-kits', icon: '🍸' },
-          { name: 'Mixers & N/A', collection_handle: 'mixers-non-alcoholic', icon: '🧊' },
-          { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
         ]);
         setIsActive(true);
         setIsHomepage(false);
@@ -356,7 +344,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     };
 
     initializeApp();
-  }, [open, initial?.id]); // Only depend on open and initial.id to prevent unnecessary resets
+  }, [open, initial?.id]);
 
   // Auto-generate slug
   useEffect(() => {
@@ -437,12 +425,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       onOpenChange(false);
     } catch (error: any) {
       console.error('❌ Failed to save delivery app:', error);
-      console.error('❌ Error details:', {
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      });
       toast({
         title: 'Failed to save app',
         description: error?.message || error?.details || 'Please check the console for details',
@@ -571,7 +553,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                     {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
                   </h2>
                   <DialogDescription id="dialog-description" className="text-sm text-muted-foreground font-normal">
-                    Content-only editing with cohesive theming
+                    Consolidated editor with live preview
                   </DialogDescription>
                 </div>
               </div>
@@ -587,418 +569,388 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
             </DialogTitle>
           </DialogHeader>
 
+          {/* Consolidated Single-Tab Interface */}
           <div className="flex-1 overflow-hidden">
-            <Tabs defaultValue="editor" className="h-full flex flex-col">
-              <div className="px-6 pt-4 border-b">
-                <TabsList className="grid w-full grid-cols-3 max-w-md">
-                  <TabsTrigger value="editor" className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Live Editor
-                  </TabsTrigger>
-                  <TabsTrigger value="content" className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    Content
-                  </TabsTrigger>
-                  <TabsTrigger value="theme" className="flex items-center gap-2">
-                    <Palette className="w-4 h-4" />
-                    Theme
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+            <div className="h-full flex">
+              {/* Left Panel - All Controls */}
+              <div className="w-80 border-r bg-muted/20 overflow-y-auto">
+                <div className="p-4 space-y-6">
+                  <h3 className="text-lg font-semibold">Delivery App Creator</h3>
+                  
+                  {/* Device Selector */}
+                  <div>
+                    <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button
+                        variant={previewDevice === 'mobile' ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPreviewDevice('mobile')}
+                        className="flex flex-col items-center gap-1 h-auto py-2"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        <span className="text-xs">Mobile</span>
+                      </Button>
+                      <Button
+                        variant={previewDevice === 'tablet' ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPreviewDevice('tablet')}
+                        className="flex flex-col items-center gap-1 h-auto py-2"
+                      >
+                        <Tablet className="w-4 h-4" />
+                        <span className="text-xs">Tablet</span>
+                      </Button>
+                      <Button
+                        variant={previewDevice === 'desktop' ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPreviewDevice('desktop')}
+                        className="flex flex-col items-center gap-1 h-auto py-2"
+                      >
+                        <Monitor className="w-4 h-4" />
+                        <span className="text-xs">Desktop</span>
+                      </Button>
+                    </div>
+                  </div>
 
-              <TabsContent value="editor" className="flex-1 overflow-hidden">
-                <DeliveryAppLiveEditor
-                  appName={appName}
-                  heroHeading={heroHeading}
-                  heroSubheading={heroSubheading}
-                  logoUrl={logoUrl}
-                  backgroundImageUrl={backgroundImageUrl}
-                  tabs={tabs}
-                  theme={theme}
-                  logoSize={logoSize}
-                  headlineSize={headlineSize}
-                  logoVerticalPos={logoVerticalPos}
-                  headlineVerticalPos={headlineVerticalPos}
-                  subheadlineVerticalPos={subheadlineVerticalPos}
-                  onLogoSizeChange={(value) => setLogoSize(value[0])}
-                  onHeadlineSizeChange={(value) => setHeadlineSize(value[0])}
-                  onLogoVerticalChange={(value) => setLogoVerticalPos(value[0])}
-                  onHeadlineVerticalChange={(value) => setHeadlineVerticalPos(value[0])}
-                  onSubheadlineVerticalChange={(value) => setSubheadlineVerticalPos(value[0])}
-                  onHeroHeadingChange={setHeroHeading}
-                  onHeroSubheadingChange={setHeroSubheading}
-                  onLogoUpload={handleLogoUpload}
-                  onBackgroundUpload={handleBackgroundUpload}
-                />
-              </TabsContent>
+                  {/* App Details */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">App Details</h4>
+                    <div>
+                      <Label htmlFor="app-name">App Name *</Label>
+                      <Input
+                        id="app-name"
+                        value={appName}
+                        onChange={(e) => setAppName(e.target.value)}
+                        placeholder="My Delivery App"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="app-slug">App Slug *</Label>
+                      <Input
+                        id="app-slug"
+                        value={appSlug}
+                        onChange={(e) => setAppSlug(e.target.value)}
+                        placeholder="my-delivery-app"
+                      />
+                    </div>
+                  </div>
 
-              <TabsContent value="content" className="flex-1 overflow-y-auto p-6">
-                <div className="max-w-2xl mx-auto space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>App Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                  {/* Hero Content */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Hero Content</h4>
+                    <div>
+                      <Label htmlFor="hero-heading">Headline</Label>
+                      <Input
+                        id="hero-heading"
+                        value={heroHeading}
+                        onChange={(e) => setHeroHeading(e.target.value)}
+                        placeholder="Austin's Premier Party Supply Delivery"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="hero-subheading">Subheadline</Label>
+                      <Input
+                        id="hero-subheading"
+                        value={heroSubheading}
+                        onChange={(e) => setHeroSubheading(e.target.value)}
+                        placeholder="Satisfaction Guaranteed, On-Time Delivery"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Background Image with Overlay Controls */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Background Image</h4>
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('background-upload')?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {backgroundImageUrl ? 'Change Background' : 'Upload Background'}
+                    </Button>
+                    {backgroundImageUrl && (
+                      <>
                         <div>
-                          <Label htmlFor="app-name">App Name *</Label>
-                          <Input
-                            id="app-name"
-                            value={appName}
-                            onChange={(e) => setAppName(e.target.value)}
-                            placeholder="My Delivery App"
+                          <Label className="text-sm font-medium">Background Opacity: {Math.round(backgroundOpacity * 100)}%</Label>
+                          <Slider
+                            value={[backgroundOpacity]}
+                            onValueChange={(value) => setBackgroundOpacity(value[0])}
+                            min={0}
+                            max={1}
+                            step={0.1}
+                            className="mt-2"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="app-slug">App Slug *</Label>
-                          <Input
-                            id="app-slug"
-                            value={appSlug}
-                            onChange={(e) => setAppSlug(e.target.value)}
-                            placeholder="my-delivery-app"
+                          <Label className="text-sm font-medium">Overlay Color</Label>
+                          <div className="flex gap-2 mt-2">
+                            <Input
+                              type="color"
+                              value={overlayColor}
+                              onChange={(e) => setOverlayColor(e.target.value)}
+                              className="w-12 h-8 p-0 border rounded"
+                            />
+                            <Input
+                              value={overlayColor}
+                              onChange={(e) => setOverlayColor(e.target.value)}
+                              placeholder="#000000"
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Logo Controls */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Logo</h4>
+                    <Button
+                      variant="outline"
+                      onClick={() => logoInputRef.current?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {logoUrl ? 'Change Logo' : 'Upload Logo'}
+                    </Button>
+                    {logoUrl && (
+                      <>
+                        <div>
+                          <Label className="text-sm font-medium">Logo Size: {logoSize}px</Label>
+                          <Slider
+                            value={[logoSize]}
+                            onValueChange={(value) => setLogoSize(value[0])}
+                            min={40}
+                            max={200}
+                            step={5}
+                            className="mt-2"
                           />
                         </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="hero-heading">Hero Heading</Label>
-                        <Input
-                          id="hero-heading"
-                          value={heroHeading}
-                          onChange={(e) => setHeroHeading(e.target.value)}
-                          placeholder="Austin's Premier Party Supply Delivery"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="hero-subheading">Hero Subheading</Label>
-                        <Textarea
-                          id="hero-subheading"
-                          value={heroSubheading}
-                          onChange={(e) => setHeroSubheading(e.target.value)}
-                          placeholder="Satisfaction Guaranteed, On-Time Delivery"
-                          rows={3}
-                        />
-                      </div>
-
-                      <div>
-                        <Label>App Logo</Label>
-                        <Button
-                          variant="outline"
-                          onClick={() => logoInputRef.current?.click()}
-                          className="w-full mt-2"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Logo
-                        </Button>
-                        {logoUrl && (
-                          <img src={logoUrl} alt="Logo" className="h-16 object-contain rounded border p-2 mt-3" />
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="is-active"
-                            checked={isActive}
-                            onCheckedChange={setIsActive}
+                        <div>
+                          <Label className="text-sm font-medium">Logo Position: {logoVerticalPos}px</Label>
+                          <Slider
+                            value={[logoVerticalPos]}
+                            onValueChange={(value) => setLogoVerticalPos(value[0])}
+                            min={-100}
+                            max={100}
+                            step={5}
+                            className="mt-2"
                           />
-                          <Label htmlFor="is-active">Active</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="is-homepage"
-                            checked={isHomepage}
-                            onCheckedChange={setIsHomepage}
-                          />
-                          <Label htmlFor="is-homepage">Homepage</Label>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Text Sizing & Positioning */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Text Sizing & Position</h4>
+                    <div>
+                      <Label className="text-sm font-medium">Headline Size: {headlineSize}px</Label>
+                      <Slider
+                        value={[headlineSize]}
+                        onValueChange={(value) => setHeadlineSize(value[0])}
+                        min={20}
+                        max={80}
+                        step={2}
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Subheadline Size: {subheadlineSize}px</Label>
+                      <Slider
+                        value={[subheadlineSize]}
+                        onValueChange={(value) => setSubheadlineSize(value[0])}
+                        min={12}
+                        max={32}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Headline Position: {headlineVerticalPos}px</Label>
+                      <Slider
+                        value={[headlineVerticalPos]}
+                        onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                        min={-100}
+                        max={100}
+                        step={5}
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Subheadline Position: {subheadlineVerticalPos}px</Label>
+                      <Slider
+                        value={[subheadlineVerticalPos]}
+                        onValueChange={(value) => setSubheadlineVerticalPos(value[0])}
+                        min={-100}
+                        max={100}
+                        step={5}
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Theme Selection */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Theme</h4>
+                    <Select value={theme} onValueChange={(value: any) => setTheme(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="original">Original Blue</SelectItem>
+                        <SelectItem value="gold">Luxury Gold</SelectItem>
+                        <SelectItem value="platinum">Modern Platinum</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   {/* Tabs & Collections */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        Tabs & Collections
-                        <Button onClick={addTab} size="sm" disabled={tabs.length >= 8}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Tab
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {tabs.map((tab, index) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="grid grid-cols-4 gap-4 mb-4">
-                            <div>
-                              <Label>Tab Name</Label>
-                              <Input
-                                value={tab.name}
-                                onChange={(e) => updateTab(index, { name: e.target.value })}
-                                placeholder="Tab Name"
-                              />
-                            </div>
-                            <div>
-                              <Label>Collection</Label>
-                              <Select 
-                                value={tab.collection_handle || ''} 
-                                onValueChange={(value) => {
-                                  console.log(`🔄 Tab ${index} collection changed to:`, value);
-                                  updateTab(index, { collection_handle: value });
-                                }}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder={loadingCollections ? "Loading..." : "Select a collection"} />
-                                </SelectTrigger>
-                                 <SelectContent className="z-[9999] bg-background border">
-                                    {loadingCollections ? (
-                                      <SelectItem value="" disabled>
-                                        Loading collections...
-                                      </SelectItem>
-                                    ) : shopifyCollections.length === 0 ? (
-                                      <SelectItem value="" disabled>
-                                        No collections available
-                                      </SelectItem>
-                                    ) : (
-                                       shopifyCollections.map((collection, collectionIndex) => {
-                                         const displayName = collection.title || collection.name || collection.handle || `Collection ${collectionIndex + 1}`;
-                                         const productCount = collection.products_count || 0;
-                                         console.log(`🔍 Collection ${collectionIndex}:`, { 
-                                           title: collection.title, 
-                                           name: collection.name, 
-                                           handle: collection.handle,
-                                           displayName,
-                                           productCount 
-                                         });
-                                         return (
-                                           <SelectItem 
-                                             key={`${collection.handle || collectionIndex}-${productCount}`} 
-                                             value={collection.handle || `collection-${collectionIndex}`}
-                                             className="bg-background hover:bg-muted cursor-pointer"
-                                           >
-                                             <div className="w-full flex justify-between items-center">
-                                               <span className="font-medium text-foreground">{displayName}</span>
-                                               <span className="text-muted-foreground text-sm">({productCount})</span>
-                                             </div>
-                                           </SelectItem>
-                                         );
-                                       })
-                                    )}
-                                 </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <Label>Icon</Label>
-                              <Select 
-                                value={tab.icon || '📦'} 
-                                onValueChange={(value) => updateTab(index, { icon: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              <SelectContent className="z-[9999]">
-                                {ICON_OPTIONS.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    <span className="text-lg">{option.value}</span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="flex items-end">
-                              <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={() => removeTab(index)}
-                                disabled={tabs.length <= 1}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Tabs & Collections</h4>
+                      <Button onClick={addTab} size="sm" disabled={tabs.length >= 8}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {tabs.map((tab, index) => (
+                      <div key={index} className="border rounded-lg p-3 space-y-3">
+                        <div>
+                          <Label className="text-xs">Tab Name</Label>
+                          <Input
+                            value={tab.name}
+                            onChange={(e) => updateTab(index, { name: e.target.value })}
+                            placeholder="Tab Name"
+                            className="text-sm"
+                          />
                         </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-
-                  {/* Size Controls */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Size Controls</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Logo Size: {logoSize}px</Label>
-                        <Slider
-                          value={[logoSize]}
-                          onValueChange={(value) => setLogoSize(value[0])}
-                          min={32}
-                          max={120}
-                          step={4}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Headline Size: {headlineSize}px</Label>
-                        <Slider
-                          value={[headlineSize]}
-                          onValueChange={(value) => setHeadlineSize(value[0])}
-                          min={16}
-                          max={48}
-                          step={2}
-                          className="w-full"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Positioning Controls */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Vertical Positioning</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Logo Position: {logoVerticalPos}rem</Label>
-                        <Slider
-                          value={[logoVerticalPos]}
-                          onValueChange={(value) => setLogoVerticalPos(value[0])}
-                          min={-3}
-                          max={3}
-                          step={0.5}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Headline Position: {headlineVerticalPos}rem</Label>
-                        <Slider
-                          value={[headlineVerticalPos]}
-                          onValueChange={(value) => setHeadlineVerticalPos(value[0])}
-                          min={-3}
-                          max={3}
-                          step={0.5}
-                          className="w-full"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label>Subheadline Position: {subheadlineVerticalPos}rem</Label>
-                        <Slider
-                          value={[subheadlineVerticalPos]}
-                          onValueChange={(value) => setSubheadlineVerticalPos(value[0])}
-                          min={-3}
-                          max={3}
-                          step={0.5}
-                          className="w-full"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="theme" className="flex-1 overflow-y-auto p-6">
-                <div className="max-w-2xl mx-auto">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Theme Selection</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-4">
-                        {Object.values(UNIFIED_THEMES).map((themeConfig) => (
-                          <div 
-                            key={themeConfig.id}
-                            className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                              theme === themeConfig.id ? 'ring-2 ring-primary' : ''
-                            }`}
-                            onClick={() => setTheme(themeConfig.id)}
+                        <div>
+                          <Label className="text-xs">Collection</Label>
+                          <Select 
+                            value={tab.collection_handle || ''} 
+                            onValueChange={(value) => updateTab(index, { collection_handle: value })}
                           >
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="font-semibold">{themeConfig.name}</h3>
-                              <Badge variant={theme === themeConfig.id ? 'default' : 'secondary'}>
-                                {theme === themeConfig.id ? 'Selected' : 'Select'}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {themeConfig.description}
-                            </p>
-                            <div className="flex gap-2">
-                              {Object.entries(themeConfig.colors).slice(0, 5).map(([name, color]) => (
-                                <div
-                                  key={name}
-                                  className="w-6 h-6 rounded border"
-                                  style={{ backgroundColor: color }}
-                                  title={name}
-                                />
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder={loadingCollections ? "Loading..." : "Select collection"} />
+                            </SelectTrigger>
+                            <SelectContent className="z-[9999]">
+                              {loadingCollections ? (
+                                <SelectItem value="" disabled>Loading collections...</SelectItem>
+                              ) : shopifyCollections.length === 0 ? (
+                                <SelectItem value="" disabled>No collections available</SelectItem>
+                              ) : (
+                                shopifyCollections.map((collection, collectionIndex) => (
+                                  <SelectItem 
+                                    key={`${collection.handle || collectionIndex}`} 
+                                    value={collection.handle || `collection-${collectionIndex}`}
+                                  >
+                                    <div className="flex justify-between items-center w-full">
+                                      <span>{collection.title || collection.name || collection.handle}</span>
+                                      <span className="text-muted-foreground text-xs">({collection.products_count || 0})</span>
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex gap-2">
+                          <Select 
+                            value={tab.icon || '📦'} 
+                            onValueChange={(value) => updateTab(index, { icon: value })}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ICON_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  <span className="text-lg">{option.value}</span>
+                                </SelectItem>
                               ))}
-                            </div>
-                          </div>
-                        ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => removeTab(index)}
+                            disabled={tabs.length <= 1}
+                            className="px-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="preview" className="flex-1 overflow-hidden p-6">
-                <div className="h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Configuration Summary</h3>
+                    ))}
                   </div>
-                  
-                  <div className="flex-1 bg-muted/10 rounded-lg p-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">App Details</h4>
-                        <div className="bg-card rounded-lg p-4 space-y-2">
-                          <p><span className="font-medium">Name:</span> {appName || 'Not set'}</p>
-                          <p><span className="font-medium">Slug:</span> {appSlug || 'Not set'}</p>
-                          <p><span className="font-medium">Theme:</span> {theme || 'Not set'}</p>
-                        </div>
+
+                  {/* App Settings */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Settings</h4>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is-active"
+                          checked={isActive}
+                          onCheckedChange={setIsActive}
+                        />
+                        <Label htmlFor="is-active" className="text-sm">Active</Label>
                       </div>
-                      
-                      <div>
-                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Content</h4>
-                        <div className="bg-card rounded-lg p-4 space-y-2">
-                          <p><span className="font-medium">Headline:</span> {heroHeading || 'Not set'}</p>
-                          <p><span className="font-medium">Subheadline:</span> {heroSubheading || 'Not set'}</p>
-                          <p><span className="font-medium">Logo:</span> {logoUrl ? 'Uploaded' : 'Not set'}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold text-sm text-muted-foreground mb-2">Collections ({tabs.length} tabs)</h4>
-                        <div className="bg-card rounded-lg p-4">
-                          <div className="space-y-2">
-                            {tabs.map((tab, index) => (
-                              <div key={index} className="flex items-center gap-2 text-sm">
-                                <span className="text-lg">{tab.icon}</span>
-                                <span className="font-medium">{tab.name}</span>
-                                <span className="text-muted-foreground">→ {tab.collection_handle}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is-homepage"
+                          checked={isHomepage}
+                          onCheckedChange={setIsHomepage}
+                        />
+                        <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
                       </div>
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+
+              {/* Right Panel - Live Preview */}
+              <div className="flex-1 p-6 bg-gradient-to-br from-muted/20 to-background overflow-hidden">
+                <div className="h-full flex items-center justify-center">
+                  <DeliveryAppLivePreview
+                    appName={appName}
+                    heroHeading={heroHeading}
+                    heroSubheading={heroSubheading}
+                    logoUrl={logoUrl}
+                    logoSize={logoSize}
+                    headlineSize={headlineSize}
+                    subheadlineSize={subheadlineSize}
+                    logoVerticalPos={logoVerticalPos}
+                    headlineVerticalPos={headlineVerticalPos}
+                    subheadlineVerticalPos={subheadlineVerticalPos}
+                    backgroundImageUrl={backgroundImageUrl}
+                    backgroundOpacity={backgroundOpacity}
+                    overlayColor={overlayColor}
+                    tabs={tabs}
+                    theme={theme}
+                    device={previewDevice}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Hidden File Inputs */}
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleLogoUpload}
+            className="hidden"
+          />
+          <input
+            id="background-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleBackgroundUpload}
+            className="hidden"
+          />
         </div>
-        
-        <input
-          type="file"
-          ref={logoInputRef}
-          onChange={handleLogoUpload}
-          accept="image/*"
-          className="hidden"
-        />
       </DialogContent>
     </Dialog>
   );
