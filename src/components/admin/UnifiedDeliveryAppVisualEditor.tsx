@@ -299,13 +299,6 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       const ext = file.name.split('.').pop() || 'png';
       const fileName = `delivery-app-${Date.now()}-logo.${ext}`;
       
-      // Ensure bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      if (!buckets?.find(bucket => bucket.name === 'delivery-app-assets')) {
-        const { error: bucketError } = await supabase.storage.createBucket('delivery-app-assets', { public: true });
-        if (bucketError) console.warn('Bucket creation failed:', bucketError);
-      }
-      
       const { error: uploadError } = await supabase.storage
         .from('delivery-app-assets')
         .upload(fileName, file, { cacheControl: '3600', upsert: true });
@@ -328,13 +321,6 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
     try {
       const ext = file.name.split('.').pop() || 'jpg';
       const fileName = `delivery-app-${Date.now()}-hero.${ext}`;
-      
-      // Ensure bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      if (!buckets?.find(bucket => bucket.name === 'delivery-app-assets')) {
-        const { error: bucketError } = await supabase.storage.createBucket('delivery-app-assets', { public: true });
-        if (bucketError) console.warn('Bucket creation failed:', bucketError);
-      }
       
       const { error: uploadError } = await supabase.storage
         .from('delivery-app-assets')
