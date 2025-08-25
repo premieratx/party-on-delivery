@@ -13,6 +13,7 @@ export default function AdminLogin() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [hasProcessedCallback, setHasProcessedCallback] = useState(false);
 
   // Clear sessions on mount
   React.useEffect(() => {
@@ -24,10 +25,16 @@ export default function AdminLogin() {
     clearSessions();
   }, []);
 
-  // Handle OAuth callback
+  // Handle OAuth callback - only once
   React.useEffect(() => {
     const handleOAuthCallback = async () => {
-      if (user?.email) {
+      if (hasProcessedCallback) return; // Prevent multiple processing
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasOAuthParams = urlParams.has('code') || window.location.hash.includes('access_token');
+      
+      if (user?.email && hasOAuthParams) {
+        setHasProcessedCallback(true);
         console.log('Processing OAuth callback for:', user.email);
         
         try {
@@ -47,6 +54,8 @@ export default function AdminLogin() {
 
           if (data?.isAdmin) {
             console.log('Admin verified, redirecting to dashboard');
+            // Clear the URL params to prevent loop
+            window.history.replaceState({}, document.title, '/affiliate/admin-login');
             navigate('/admin', { replace: true });
           } else {
             toast({
@@ -66,13 +75,8 @@ export default function AdminLogin() {
       }
     };
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasOAuthParams = urlParams.has('code') || window.location.hash.includes('access_token');
-    
-    if (user?.email && hasOAuthParams) {
-      handleOAuthCallback();
-    }
-  }, [user?.email, navigate, toast]);
+    handleOAuthCallback();
+  }, [user?.email, navigate, toast, hasProcessedCallback]);
 
   const handleGoogleLogin = async () => {
     if (isLoading) return;
