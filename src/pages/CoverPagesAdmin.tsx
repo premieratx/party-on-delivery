@@ -18,7 +18,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { UnifiedCoverPageEditor, type CoverPageConfig, type CoverButtonConfig } from '@/components/admin/UnifiedCoverPageEditor';
-import { HomepageCoverDisabled } from '@/components/admin/HomepageCoverDisabled';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -228,10 +228,6 @@ export default function CoverPagesAdmin() {
           </CardHeader>
         </Card>
 
-        {/* Homepage Cover Modal Settings - DISABLED */}
-        <div className="mb-6">
-          <HomepageCoverDisabled />
-        </div>
 
         {/* Features Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
