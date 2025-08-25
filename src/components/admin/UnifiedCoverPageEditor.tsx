@@ -1128,9 +1128,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-start justify-center bg-black/5 rounded-lg overflow-auto p-4">
-            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
-              {/* Use PhoneFrameLayout for proper mobile preview */}
+          <div className="flex-1 flex items-center justify-center bg-black/5 rounded-lg overflow-hidden">
+            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden my-4">
               <div className="w-full h-full relative">
                 <CoverStartScreen
                   title={title}
