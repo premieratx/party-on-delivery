@@ -288,21 +288,32 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
       if (data && data.collections && Array.isArray(data.collections)) {
         console.log('✅ Loaded real collections:', data.collections.length);
-        console.log('📋 Sample collections:', data.collections.slice(0, 3));
+        console.log('📋 First 3 real collections:', data.collections.slice(0, 3));
+        console.log('🔍 Raw collection data structure:', data.collections[0]);
         
         // Transform and filter collections - only include ones with valid handles
         const transformedCollections = data.collections
-          .filter((collection: any) => collection.handle && collection.title)
-          .map((collection: any) => ({
-            id: collection.id || collection.handle,
-            handle: collection.handle,
-            name: `${collection.title} (${collection.products_count || 0} products)`,
-            title: collection.title,
-            products_count: collection.products_count || 0
-          }));
+          .filter((collection: any) => {
+            const isValid = collection.handle && collection.title;
+            if (!isValid) {
+              console.log('❌ Filtering out invalid collection:', collection);
+            }
+            return isValid;
+          })
+          .map((collection: any) => {
+            const transformed = {
+              id: collection.id || collection.handle,
+              handle: collection.handle,
+              name: `${collection.title} (${collection.products_count || 0} products)`,
+              title: collection.title,
+              products_count: collection.products_count || 0
+            };
+            return transformed;
+          });
         
         console.log('🔄 Setting transformed collections:', transformedCollections.length);
         console.log('🔍 First 3 transformed collections:', transformedCollections.slice(0, 3));
+        console.log('📊 Collection handles available:', transformedCollections.map(c => c.handle).slice(0, 10));
         
         setCollections(transformedCollections);
         
