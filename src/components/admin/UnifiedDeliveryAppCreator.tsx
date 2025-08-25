@@ -816,20 +816,18 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                         No collections available
                                       </SelectItem>
                                     ) : (
-                                      shopifyCollections.map((collection) => (
-                                        <SelectItem 
-                                          key={collection.handle} 
-                                          value={collection.handle}
-                                          className="bg-background hover:bg-muted"
-                                        >
-                                          <span className="font-medium">
-                                            {collection.title || collection.name || collection.handle}
-                                          </span>
-                                          <span className="ml-2 text-muted-foreground">
-                                            ({collection.products_count} products)
-                                          </span>
-                                        </SelectItem>
-                                      ))
+                                       shopifyCollections.map((collection) => {
+                                         console.log('🔍 Rendering collection in dropdown:', collection);
+                                         return (
+                                           <SelectItem 
+                                             key={collection.handle} 
+                                             value={collection.handle}
+                                             className="bg-background hover:bg-muted"
+                                           >
+                                             {collection.title || collection.name || collection.handle} ({collection.products_count})
+                                           </SelectItem>
+                                         );
+                                       })
                                     )}
                                  </SelectContent>
                               </Select>
