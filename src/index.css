@@ -33,7 +33,7 @@
   }
 }
 
-/* Mobile optimized scrolling */
+/* Mobile optimized scrolling and keyboard hiding */
 @media (max-width: 768px) {
   html {
     height: 100vh;
@@ -54,6 +54,11 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide keyboard on scroll for mobile inputs */
+  input:focus, textarea:focus, [contenteditable]:focus {
+    /* Prepare for blur on scroll */
   }
 }
 

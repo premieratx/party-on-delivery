@@ -10,6 +10,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { RobustErrorBoundary } from '@/components/common/RobustErrorBoundary';
 import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
 import ColdStartSolution from '@/components/admin/ColdStartSolution';
+import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
 // Simple, bulletproof homepage
 import DynamicHomepage from "./pages/DynamicHomepage";
 const Success = lazy(() => import("./pages/Success"));
@@ -53,6 +54,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  // Global keyboard hiding on mobile scroll
+  useGlobalKeyboardHiding();
   
   return (
     <RobustErrorBoundary>
