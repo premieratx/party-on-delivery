@@ -40,7 +40,7 @@ import CoverPage from "./pages/CoverPage";
 import StandaloneCoverPage from "./components/cover-pages/StandaloneCoverPage";
 
 // Admin pages - using direct imports since they use named exports
-import { AdminLogin } from "./pages/AdminLogin";
+import AdminLogin from "./pages/AdminLogin";
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 const queryClient = new QueryClient({
