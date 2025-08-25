@@ -5,9 +5,13 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { LazyImage } from '@/components/common/LazyImage';
+import { PullToRefreshIndicator } from '@/components/common/PullToRefreshIndicator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
@@ -97,6 +101,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice, getTotalItems } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
   const { preloadMultipleCollections } = useProductPreloader();
+  const { triggerCartFeedback } = useHapticFeedback();
+
+  // Pull-to-refresh functionality
+  const { 
+    isPulling, 
+    pullDistance, 
+    isRefreshing, 
+    elementRef: pullToRefreshRef,
+    shouldTrigger 
+  } = usePullToRefresh({
+    onRefresh: async () => {
+      await refreshProducts();
+      triggerCartFeedback('update');
+    },
+    enabled: true
+  });
   
   // Set up search variables
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
@@ -265,6 +285,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     console.log('🛒 ProductCategories: Adding to cart:', cartItem);
     addToCart(cartItem);
+    triggerCartFeedback('add');
     
     // Also call parent handler if provided
     if (onAddToCart) {
@@ -303,6 +324,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     console.log('🛒 ProductCategories: Updating cart with:', cartItem);
     updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
+    triggerCartFeedback(newQty > currentQty ? 'add' : 'remove');
   }, [currentTabProducts, searchProducts, getCartItemQuantity, updateQuantity]);
 
   // Parse hero_config if available
@@ -329,7 +351,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-8">
+    <div 
+      ref={pullToRefreshRef}
+      className="min-h-screen bg-background pb-20 lg:pb-8"
+    >
+      {/* Pull-to-refresh indicator */}
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        threshold={80}
+        isRefreshing={isRefreshing}
+        shouldTrigger={shouldTrigger}
+      />
       {/* Hero Section with Enhanced Responsive Design */}
       <div 
         className={`relative min-h-[70vh] overflow-hidden bg-cover bg-center bg-no-repeat transition-opacity duration-300 ${
@@ -463,6 +495,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         totalAmount={getTotalPrice()}
         onOpenCart={onOpenCart}
         onCheckout={onProceedToCheckout || onCheckout}
+        allProducts={allProducts}
       />
 
       {/* Products Grid */}
@@ -482,11 +515,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                      onClick={() => setSelectedProduct(product)}
                    >
                     <div className="aspect-square relative overflow-hidden">
-                      <OptimizedImage
-                        src={product.image}
-                        alt={cleanTitle}
-                        className="w-full h-full object-cover hover-scale"
-                      />
+                     <LazyImage
+                       src={product.image}
+                       alt={cleanTitle}
+                       className="w-full h-full object-cover hover-scale"
+                       priority={false}
+                       quality={85}
+                       width={300}
+                     />
                     </div>
                     <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                       <div className="space-y-1 text-center">
@@ -595,13 +631,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                    className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full cursor-pointer"
                    onClick={() => setSelectedProduct(product)}
                  >
-                  <div className="aspect-square relative overflow-hidden">
-                    <OptimizedImage
-                      src={product.image}
-                      alt={cleanTitle}
-                      className="w-full h-full object-cover hover-scale"
-                    />
-                  </div>
+                   <div className="aspect-square relative overflow-hidden">
+                     <LazyImage
+                       src={product.image}
+                       alt={cleanTitle}
+                       className="w-full h-full object-cover hover-scale"
+                       priority={false}
+                       quality={85}
+                       width={300}
+                     />
+                   </div>
                   
                   <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                     {/* Product Title */}

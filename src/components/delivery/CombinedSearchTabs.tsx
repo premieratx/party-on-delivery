@@ -5,6 +5,7 @@ import { Search, ShoppingCart, CreditCard, Check } from 'lucide-react';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { safePrice, formatPrice } from '@/utils/safeCalculations';
 import { useStickySearchHeader } from '@/hooks/useStickySearchHeader';
+import { AdvancedSearchBar } from '@/components/search/AdvancedSearchBar';
 
 // Preload critical images
 const preloadImage = (src: string): Promise<void> => {
@@ -39,6 +40,8 @@ interface CombinedSearchTabsProps {
   totalAmount?: number;
   onOpenCart?: () => void;
   onCheckout?: () => void;
+  // Advanced search
+  allProducts?: any[];
 }
 
 export const CombinedSearchTabs = ({
@@ -55,7 +58,8 @@ export const CombinedSearchTabs = ({
   cartItemCount = 0,
   totalAmount = 0,
   onOpenCart,
-  onCheckout
+  onCheckout,
+  allProducts = []
 }: CombinedSearchTabsProps) => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [tabLayout, setTabLayout] = useState<'full' | 'compact' | 'minimal' | 'icon-only'>('full');
@@ -238,32 +242,19 @@ export const CombinedSearchTabs = ({
               <div className="flex items-center gap-2 ml-2">
                 {/* Compact Search Bar - shrinks first */}
                 <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                      <Input
-                        ref={searchInputRef}
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                          onSearchChange(e.target.value);
-                          // Trigger search automatically as user types
-                          if (e.target.value.trim()) {
-                            setTimeout(() => onSearchSubmit(), 300);
-                          }
-                        }}
-                        onFocus={() => {
-                          handleSearchFocus();
-                          activateSearch();
-                        }}
-                        onBlur={() => {
-                          handleSearchBlur();
-                          if (!searchQuery?.trim()) {
-                            deactivateSearch();
-                          }
-                        }}
-                        onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
-                        className="pl-8 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
-                      />
+                  <AdvancedSearchBar
+                    value={searchQuery}
+                    onChange={(newValue) => {
+                      onSearchChange(newValue);
+                      if (newValue.trim()) {
+                        setTimeout(() => onSearchSubmit(), 300);
+                      }
+                    }}
+                    onSubmit={onSearchSubmit}
+                    placeholder="Search products..."
+                    className="w-full"
+                    allProducts={allProducts}
+                  />
                   {isSearching && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
