@@ -299,6 +299,16 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
     { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
   ]);
+
+  // Enhanced positioning and sizing controls
+  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 48);
+  const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 20);
+  const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 16);
+  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? 0);
+  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? 0);
+  const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 0);
+  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 0);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? 0);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
   const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);
@@ -342,6 +352,16 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
         { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
       ]);
+      
+      // Load positioning controls
+      setTitleSize(initial.styles?.title_size ?? 48);
+      setSubtitleSize(initial.styles?.subtitle_size ?? 20);
+      setChecklistSize(initial.styles?.checklist_size ?? 16);
+      setTitleOffsetY(initial.styles?.title_offset_y ?? 0);
+      setSubtitleOffsetY(initial.styles?.subtitle_offset_y ?? 0);
+      setChecklistOffsetY(initial.styles?.checklist_offset_y ?? 0);
+      setButtonsOffsetY(initial.styles?.buttons_offset_y ?? 0);
+      setLogoOffsetY(initial.styles?.logo_offset_y ?? 0);
       setIsActive(initial.is_active ?? true);
       setFreeShippingEnabled(initial.free_shipping_enabled ?? false);
       
@@ -482,9 +502,14 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         theme: selectedTheme,
         styles: {
           element_positions: elementPositions,
-          title_size: 48,
-          subtitle_size: 20,
-          checklist_size: 16,
+          title_size: titleSize,
+          subtitle_size: subtitleSize,
+          checklist_size: checklistSize,
+          title_offset_y: titleOffsetY,
+          subtitle_offset_y: subtitleOffsetY,
+          checklist_offset_y: checklistOffsetY,
+          buttons_offset_y: buttonsOffsetY,
+          logo_offset_y: logoOffsetY,
           theme: selectedTheme
         } as any,
         created_by: 'admin',
@@ -825,6 +850,112 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       />
                     </div>
 
+                    {/* Size Controls */}
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Size Controls</h4>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Title Size: {titleSize}px</Label>
+                        <Slider
+                          value={[titleSize]}
+                          onValueChange={(value) => setTitleSize(value[0])}
+                          max={72}
+                          min={24}
+                          step={2}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Subtitle Size: {subtitleSize}px</Label>
+                        <Slider
+                          value={[subtitleSize]}
+                          onValueChange={(value) => setSubtitleSize(value[0])}
+                          max={32}
+                          min={12}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Checklist Size: {checklistSize}px</Label>
+                        <Slider
+                          value={[checklistSize]}
+                          onValueChange={(value) => setChecklistSize(value[0])}
+                          max={24}
+                          min={10}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Positioning Controls */}
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning</h4>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Logo Position: {logoOffsetY}px</Label>
+                        <Slider
+                          value={[logoOffsetY]}
+                          onValueChange={(value) => setLogoOffsetY(value[0])}
+                          max={100}
+                          min={-100}
+                          step={5}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Title Position: {titleOffsetY}px</Label>
+                        <Slider
+                          value={[titleOffsetY]}
+                          onValueChange={(value) => setTitleOffsetY(value[0])}
+                          max={100}
+                          min={-100}
+                          step={5}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Subtitle Position: {subtitleOffsetY}px</Label>
+                        <Slider
+                          value={[subtitleOffsetY]}
+                          onValueChange={(value) => setSubtitleOffsetY(value[0])}
+                          max={100}
+                          min={-100}
+                          step={5}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Checklist Position: {checklistOffsetY}px</Label>
+                        <Slider
+                          value={[checklistOffsetY]}
+                          onValueChange={(value) => setChecklistOffsetY(value[0])}
+                          max={100}
+                          min={-100}
+                          step={5}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Buttons Position: {buttonsOffsetY}px</Label>
+                        <Slider
+                          value={[buttonsOffsetY]}
+                          onValueChange={(value) => setButtonsOffsetY(value[0])}
+                          max={100}
+                          min={-100}
+                          step={5}
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
+
                     {/* Device Preview */}
                     <div>
                       <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
@@ -1069,6 +1200,14 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   backgroundVideoUrl={bgVideoUrl}
                   checklistItems={checklist}
                   buttons={buttons}
+                  titleSize={titleSize}
+                  subtitleSize={subtitleSize}
+                  checklistSize={checklistSize}
+                  titleOffsetY={titleOffsetY}
+                  subtitleOffsetY={subtitleOffsetY}
+                  checklistOffsetY={checklistOffsetY}
+                  buttonsOffsetY={buttonsOffsetY}
+                  logoOffsetY={logoOffsetY}
                 />
               </div>
             </div>

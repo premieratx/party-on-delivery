@@ -34,6 +34,7 @@ export interface CoverStartScreenProps {
   subtitleOffsetY?: number;
   checklistOffsetY?: number;
   buttonsOffsetY?: number;
+  logoOffsetY?: number;
   logoBgColor?: string;
   logoBgMode?: 'auto' | 'rectangle' | 'none';
 }
@@ -58,6 +59,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   subtitleOffsetY,
   checklistOffsetY,
   buttonsOffsetY,
+  logoOffsetY,
   logoBgColor,
   logoBgMode = 'auto',
 }) => {
@@ -132,7 +134,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         {/* Content */}
         <div className="relative z-10 flex h-full flex-col items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)] uppercase tracking-wider">
           <header className="w-full text-center my-5">
-            <div className="relative inline-block mx-auto">
+            <div className="relative inline-block mx-auto" style={{ marginTop: (logoOffsetY || 0) }}>
               {logoBgColor && logoBgMode !== 'none' && (
                 logoBgMode === 'rectangle' ? (
                   <div

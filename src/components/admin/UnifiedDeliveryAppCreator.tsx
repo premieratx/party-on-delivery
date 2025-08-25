@@ -694,7 +694,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                 <SelectContent className="z-[9999]">
                                   {shopifyCollections.map((collection) => (
                                     <SelectItem key={collection.handle} value={collection.handle}>
-                                      {collection.name} ({collection.products_count})
+                                      {collection.title || collection.name} ({collection.products_count})
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -712,7 +712,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                               <SelectContent className="z-[9999]">
                                 {ICON_OPTIONS.map((option) => (
                                   <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
+                                    <span className="text-lg">{option.value}</span>
                                   </SelectItem>
                                 ))}
                               </SelectContent>
