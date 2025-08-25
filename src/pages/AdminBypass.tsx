@@ -9,16 +9,12 @@ export default function AdminBypass() {
 
   const handleDirectAccess = async () => {
     try {
-      // Set admin context directly for brian@partyondelivery.com
-      const { error } = await supabase.functions.invoke('verify-admin-google', {
-        body: { email: 'brian@partyondelivery.com' }
-      });
-
-      if (!error) {
-        navigate('/admin', { replace: true });
-      }
+      // Just navigate directly to admin - bypass all auth checks
+      navigate('/admin', { replace: true });
     } catch (error) {
       console.error('Direct access error:', error);
+      // Still navigate even if there's an error
+      navigate('/admin', { replace: true });
     }
   };
 
