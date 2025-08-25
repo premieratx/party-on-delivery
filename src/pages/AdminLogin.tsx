@@ -15,14 +15,20 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasProcessedCallback, setHasProcessedCallback] = useState(false);
 
-  // Clear sessions on mount
+  // Only clear sessions if NOT processing OAuth callback
   React.useEffect(() => {
-    const clearSessions = async () => {
-      await supabase.auth.signOut({ scope: 'global' });
-      localStorage.clear();
-      sessionStorage.clear();
-    };
-    clearSessions();
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasOAuthParams = urlParams.has('code') || window.location.hash.includes('access_token');
+    
+    if (!hasOAuthParams) {
+      const clearSessions = async () => {
+        await supabase.auth.signOut({ scope: 'global' });
+        localStorage.clear();
+        sessionStorage.clear();
+        console.log('✅ Clean startup complete');
+      };
+      clearSessions();
+    }
   }, []);
 
   // Handle OAuth callback - only once
