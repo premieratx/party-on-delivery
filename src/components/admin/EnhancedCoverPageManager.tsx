@@ -35,6 +35,12 @@ interface CoverPage {
   updated_at: string;
   styles: any;
   affiliate_slug?: string;
+  theme?: string;
+  unified_theme?: string;
+  free_shipping_enabled?: boolean;
+  affiliate_id?: string;
+  flow_name?: string;
+  is_multi_flow?: boolean;
 }
 
 interface CoverPageConfig {
@@ -94,6 +100,7 @@ export const EnhancedCoverPageManager: React.FC = () => {
 
   const handleEdit = (page: CoverPage) => {
     // Convert CoverPage to CoverPageConfig format for the editor
+    // Create proper config object for the editor
     const coverPageConfig: CoverPageConfig = {
       id: page.id,
       slug: page.slug,
@@ -106,11 +113,14 @@ export const EnhancedCoverPageManager: React.FC = () => {
       checklist: Array.isArray(page.checklist) ? page.checklist : [],
       buttons: Array.isArray(page.buttons) ? page.buttons : [],
       is_active: page.is_active,
-      theme: (page.styles?.theme || 'gold') as 'gold' | 'original' | 'platinum' | 'ocean' | 'sunset' | 'forest',
-      styles: page.styles,
+      theme: (page.theme || page.unified_theme || 'gold') as 'gold' | 'original' | 'platinum' | 'ocean' | 'sunset' | 'forest',
+      styles: page.styles || {},
       is_default_homepage: page.is_default_homepage,
       affiliate_slug: page.affiliate_slug,
-      free_shipping_enabled: false
+      free_shipping_enabled: page.free_shipping_enabled || false,
+      affiliate_id: page.affiliate_id,
+      flow_name: page.flow_name,
+      is_multi_flow: page.is_multi_flow
     };
     
     setEditingPage(coverPageConfig);

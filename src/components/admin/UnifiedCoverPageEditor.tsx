@@ -235,6 +235,8 @@ export interface CoverPageConfig {
     logo_offset_y?: number;
     logo_bg_color?: string;
     logo_bg_mode?: 'auto' | 'rectangle' | 'none';
+    element_positions?: DraggableElement[];
+    theme?: string;
   };
   is_default_homepage?: boolean;
   flow_name?: string;
@@ -323,18 +325,48 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
   useEffect(() => {
     if (!open && !embedded) return;
-    setSelectedTheme(initial?.theme || 'gold');
-    setTitle(initial?.title || "Elite Concierge");
-    setSubtitle(initial?.subtitle || "Luxury Lifestyle Services");
-    setLogoUrl(initial?.logo_url || "");
-    setBgImageUrl(initial?.bg_image_url || "");
-    setBgVideoUrl(initial?.bg_video_url || "");
-    setChecklist(initial?.checklist || ["Premium Alcohol Delivery", "White-Glove Service", "Exclusive Member Access"]);
-    setButtons(initial?.buttons || [
-      { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
-      { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
-    ]);
-    setFreeShippingEnabled(initial?.free_shipping_enabled ?? false);
+    
+    console.log('🔄 Loading initial data:', initial);
+    
+    if (initial) {
+      setSelectedTheme((initial.theme as keyof typeof COVER_THEMES) || 'gold');
+      setSlug(initial.slug || "");
+      setTitle(initial.title || "");
+      setSubtitle(initial.subtitle || "");
+      setLogoUrl(initial.logo_url || "");
+      setLogoHeight(initial.logo_height || 160);
+      setBgImageUrl(initial.bg_image_url || "");
+      setBgVideoUrl(initial.bg_video_url || "");
+      setChecklist(Array.isArray(initial.checklist) ? initial.checklist : ["Premium Alcohol Delivery", "White-Glove Service", "Exclusive Member Access"]);
+      setButtons(Array.isArray(initial.buttons) ? initial.buttons : [
+        { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
+        { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
+      ]);
+      setIsActive(initial.is_active ?? true);
+      setFreeShippingEnabled(initial.free_shipping_enabled ?? false);
+      
+      // Load element positions if available
+      if (initial.styles?.element_positions) {
+        setElementPositions(initial.styles.element_positions);
+      }
+    } else {
+      // Reset to defaults for new cover page
+      setSelectedTheme('gold');
+      setSlug("");
+      setTitle("Elite Concierge");
+      setSubtitle("Luxury Lifestyle Services");
+      setLogoUrl("");
+      setLogoHeight(160);
+      setBgImageUrl("");
+      setBgVideoUrl("");
+      setChecklist(["Premium Alcohol Delivery", "White-Glove Service", "Exclusive Member Access"]);
+      setButtons([
+        { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
+        { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
+      ]);
+      setIsActive(true);
+      setFreeShippingEnabled(false);
+    }
   }, [open, embedded, initial]);
 
   useEffect(() => {
@@ -434,6 +466,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     setSaving(true);
     console.log('🔄 Saving cover page...', { title, slug: computedSlug, isEditing, initialId: initial?.id });
     try {
+      // Clean payload - remove unnecessary flow references
       const payload = {
         slug: computedSlug,
         title: title.trim(),
@@ -446,16 +479,16 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         buttons: buttons as any,
         is_active: isActive,
         free_shipping_enabled: freeShippingEnabled,
-        theme: selectedTheme || 'default',
+        theme: selectedTheme,
         styles: {
           element_positions: elementPositions,
           title_size: 48,
           subtitle_size: 20,
-          checklist_size: 16
+          checklist_size: 16,
+          theme: selectedTheme
         } as any,
         created_by: 'admin',
-        flow_name: title.trim(),
-        flow_description: subtitle.trim() || null
+        updated_at: new Date().toISOString()
       };
 
       if (isEditing && initial?.id) {

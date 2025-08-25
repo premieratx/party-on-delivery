@@ -35,6 +35,7 @@ import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
 // Cover pages
 import CoverPage from "./pages/CoverPage";
+import StandaloneCoverPage from "./components/cover-pages/StandaloneCoverPage";
 
 // Admin pages - using direct imports since they use named exports
 import { AdminLogin } from "./pages/AdminLogin";
@@ -76,9 +77,9 @@ const App = () => {
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
-                    {/* Cover pages - normal routes */}
+                    {/* Standalone Cover Pages - No restrictions */}
+                    <Route path="/cover/:slug" element={<StandaloneCoverPage />} />
                     <Route path="/premier-concierge" element={<CoverPage />} />
-                    <Route path="/cover/:slug" element={<CoverPage />} />
                     
                     {/* Post-checkout pages only */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />

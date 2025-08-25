@@ -411,7 +411,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
       const appData = {
         app_name: appName.trim(),
-        app_slug: isEditing ? appSlug.trim() : `${appSlug.trim()}-${Date.now()}`,
+        app_slug: isEditing ? appSlug.trim() : appSlug.trim(),
         main_app_config: {
           hero_heading: heroHeading.trim(),
           hero_subheading: heroSubheading.trim()
