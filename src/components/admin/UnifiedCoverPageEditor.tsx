@@ -1093,8 +1093,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       </div>
 
       {/* Preview Panel */}
-      <div className="flex-1 bg-gradient-to-br from-muted/30 to-background/30 p-6">
-        <div className="h-full flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-muted/30 to-background/30 pl-6 pr-6 pb-6">
+        <div className="h-full flex flex-col pt-2">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-sm font-medium text-muted-foreground">
               Live Preview • Universal Cover
@@ -1107,7 +1107,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center pt-6 min-h-0 overflow-auto">
+          <div className="flex-1 flex justify-center min-h-0 overflow-auto">
             <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
               <CoverStartScreen
                 title={title}
