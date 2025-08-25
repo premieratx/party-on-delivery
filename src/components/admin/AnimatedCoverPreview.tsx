@@ -211,13 +211,17 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
     return (
       <Draggable
         key={`${elementId}-${animationKey}`}
-        position={{ x: (position.x / 100) * device.previewWidth - device.previewWidth/2, y: (position.y / 100) * device.previewHeight - device.previewHeight/2 }}
-        onStop={(_, data) => handleElementDrag(elementId, { 
-          x: ((data.x + device.previewWidth/2) / device.previewWidth) * 100, 
-          y: ((data.y + device.previewHeight/2) / device.previewHeight) * 100 
-        })}
+        defaultPosition={{ x: (position.x / 100) * device.previewWidth - device.previewWidth/2, y: (position.y / 100) * device.previewHeight - device.previewHeight/2 }}
+        onStop={(_, data) => {
+          const newPosition = { 
+            x: Math.max(0, Math.min(100, ((data.x + device.previewWidth/2) / device.previewWidth) * 100)), 
+            y: Math.max(0, Math.min(100, ((data.y + device.previewHeight/2) / device.previewHeight) * 100))
+          };
+          handleElementDrag(elementId, newPosition);
+        }}
+        bounds="parent"
       >
-        <div className={`absolute cursor-move transition-all duration-300 ${animationClasses}`}>
+        <div className={`absolute cursor-move transition-none ${animationClasses} select-none hover:ring-2 hover:ring-primary/50 rounded p-1`}>
           {content}
         </div>
       </Draggable>

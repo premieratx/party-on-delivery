@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
           id: collection.id || collection.handle,
           handle: collection.handle,
           title: collection.title,
+          name: collection.title, // Add name field for DeliveryAppCreator compatibility
           products_count: collection.products?.length || 0,
           description: collection.description || ''
         }))

@@ -998,21 +998,28 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   dragMode={dragMode}
                 />
               ) : (
-                <AnimatedCoverPreview
-                  title={title}
-                  subtitle={subtitle}
-                  checklist={checklist}
-                  buttons={buttons}
-                  selectedTheme={selectedTheme}
-                  activeDevice={activeDevice}
-                  logoUrl={logoUrl}
-                  bgImageUrl={bgImageUrl}
-                  bgVideoUrl={bgVideoUrl}
-                  dragMode={dragMode}
-                  elementPositions={elementPositions}
-                  onElementDrag={handleElementDrag}
-                  templateData={templateData}
-                />
+                <div className="relative">
+                  <AnimatedCoverPreview
+                    title={title}
+                    subtitle={subtitle}
+                    checklist={checklist}
+                    buttons={buttons}
+                    selectedTheme={selectedTheme}
+                    activeDevice={activeDevice}
+                    logoUrl={logoUrl}
+                    bgImageUrl={bgImageUrl}
+                    bgVideoUrl={bgVideoUrl}
+                    dragMode={dragMode}
+                    elementPositions={elementPositions}
+                    onElementDrag={handleElementDrag}
+                    templateData={templateData}
+                  />
+                  {dragMode && (
+                    <div className="absolute top-2 left-2 z-50 bg-black/80 text-white px-2 py-1 rounded text-xs">
+                      Drag Mode: Move elements by dragging them
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
