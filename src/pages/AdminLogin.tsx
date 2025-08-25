@@ -208,8 +208,6 @@ export const AdminLogin: React.FC = () => {
 
   // SECURITY: Only process auth if user came from OAuth redirect
   React.useEffect(() => {
-    console.log('🔍 SECURITY: AdminLogin checking auth state');
-    
     // Only process if this is an OAuth callback with fresh session
     const urlParams = new URLSearchParams(window.location.search);
     const hasOAuthParams = urlParams.has('code') || window.location.hash.includes('access_token');
@@ -218,7 +216,7 @@ export const AdminLogin: React.FC = () => {
       console.log('🔐 SECURITY: Processing OAuth callback for:', user.email);
       processAuth(user.email);
     }
-  }, [user, isProcessingAuth]);
+  }, [user?.email, isProcessingAuth]); // Added dependencies to prevent infinite loop
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
