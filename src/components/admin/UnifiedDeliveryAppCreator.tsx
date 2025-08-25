@@ -452,20 +452,6 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
     setSaving(true);
     try {
-      // First, ensure admin context is set for RLS policies
-      console.log('🔑 Setting admin context for save operation...');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        const { error: contextError } = await supabase.rpc('set_admin_context', {
-          admin_email: user.email
-        });
-        if (contextError) {
-          console.warn('Failed to set admin context:', contextError);
-        } else {
-          console.log('✅ Admin context set for:', user.email);
-        }
-      }
-
       const appData = {
         app_name: appName.trim(),
         app_slug: isEditing ? appSlug.trim() : appSlug.trim(),
@@ -486,27 +472,41 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       console.log('💾 Saving delivery app data:', appData);
 
       if (isEditing && initial?.id) {
+        console.log('🔄 Updating existing app with ID:', initial.id);
         const { error } = await supabase
           .from('delivery_app_variations')
           .update(appData)
           .eq('id', initial.id);
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Update error:', error);
+          throw error;
+        }
         toast({ title: 'App updated successfully!' });
       } else {
+        console.log('🆕 Creating new app');
         const { error } = await supabase
           .from('delivery_app_variations')
           .insert(appData);
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Insert error:', error);
+          throw error;
+        }
         toast({ title: 'App created successfully!' });
       }
 
       onSaved?.();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('❌ Save error:', error);
+      console.error('❌ Failed to save delivery app:', error);
+      console.error('❌ Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
       toast({
-        title: 'Save failed',
-        description: error?.message || 'Unknown error occurred',
+        title: 'Failed to save app',
+        description: error?.message || error?.details || 'Please check the console for details',
         variant: 'destructive'
       });
     } finally {
@@ -817,14 +817,19 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                       </SelectItem>
                                     ) : (
                                        shopifyCollections.map((collection) => {
-                                         console.log('🔍 Rendering collection in dropdown:', collection);
+                                         const displayName = collection.title || collection.name || collection.handle;
+                                         const productCount = collection.products_count || 0;
+                                         console.log('🔍 Rendering collection:', { displayName, productCount, collection });
                                          return (
                                            <SelectItem 
-                                             key={collection.handle} 
+                                             key={`${collection.handle}-${productCount}`} 
                                              value={collection.handle}
-                                             className="bg-background hover:bg-muted"
+                                             className="bg-background hover:bg-muted cursor-pointer"
                                            >
-                                             {collection.title || collection.name || collection.handle} ({collection.products_count})
+                                             <div className="w-full flex justify-between items-center">
+                                               <span className="font-medium">{displayName}</span>
+                                               <span className="text-muted-foreground">({productCount})</span>
+                                             </div>
                                            </SelectItem>
                                          );
                                        })
