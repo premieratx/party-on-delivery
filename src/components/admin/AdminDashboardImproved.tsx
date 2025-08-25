@@ -190,11 +190,11 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button 
-                    onClick={handleCreateApp}
+                    onClick={() => setActiveSection('apps')}
                     className="h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                   >
                     <Package className="w-6 h-6" />
-                    <span>Create Delivery App</span>
+                    <span>Manage Delivery Apps</span>
                   </Button>
                   <Button 
                     onClick={handleCreatePage}
@@ -301,7 +301,7 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
                 </p>
                 <Button onClick={handleCreateApp} size="lg" className="gap-2">
                   <Plus className="w-5 h-5" />
-                  Create Delivery App
+                  Manage Delivery Apps
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </CardContent>

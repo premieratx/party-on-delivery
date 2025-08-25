@@ -394,36 +394,30 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="max-w-7xl w-full p-0 !z-[100] bg-background border-0 !max-h-none !h-auto" 
-        style={{ 
-          maxHeight: 'none', 
-          height: 'auto',
-          overflow: 'visible'
-        }}
-      >
-        {/* Header */}
-        <DialogHeader className="p-4 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-semibold">
-                {initial ? 'Edit Delivery App' : 'Create Delivery App'}
-              </DialogTitle>
-              <DialogDescription id="dialog-description">
-                Build and customize your delivery app with live preview
-              </DialogDescription>
+      <DialogContent className="max-w-7xl w-full p-0 !z-[100]">
+        <div className="max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <DialogHeader className="sticky top-0 z-20 p-4 border-b bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl font-semibold">
+                  {initial ? 'Edit Delivery App' : 'Create Delivery App'}
+                </DialogTitle>
+                <DialogDescription id="dialog-description">
+                  Build and customize your delivery app with live preview
+                </DialogDescription>
+              </div>
+              <Button
+                onClick={handleSave}
+                disabled={saving || !appName || !appSlug}
+                size="sm"
+                className="min-w-[100px]"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save App'}
+              </Button>
             </div>
-            <Button
-              onClick={handleSave}
-              disabled={saving || !appName || !appSlug}
-              size="sm"
-              className="min-w-[100px]"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? 'Saving...' : 'Save App'}
-            </Button>
-          </div>
-        </DialogHeader>
+          </DialogHeader>
 
         {/* Main Content - Natural scrolling grid layout */}
         <div className="grid grid-cols-2 gap-0 min-h-[600px]">
@@ -746,7 +740,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           accept="image/*"
           onChange={handleBackgroundUpload}
           className="hidden"
-        />
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
