@@ -758,20 +758,31 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                               <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
                             </SelectTrigger>
                             <SelectContent className="max-h-[200px] overflow-y-auto">
-                              {collections.length > 0 ? (
-                                collections.map((collection) => (
-                                  <SelectItem 
-                                    key={`${collection.handle}-${index}`} 
-                                    value={collection.handle}
-                                  >
-                                    {collection.name}
+                              {(() => {
+                                console.log(`🎯 Tab ${index} dropdown rendering:`, collections.length, 'collections');
+                                if (collections.length > 0) {
+                                  console.log(`🎯 First 3 collections for dropdown:`, collections.slice(0, 3).map(c => ({ handle: c.handle, name: c.name })));
+                                }
+                                return collections.length > 0 ? (
+                                  collections.map((collection, collectionIndex) => {
+                                    if (collectionIndex < 5) { // Log first 5 for debugging
+                                      console.log(`🎯 Rendering SelectItem ${collectionIndex}:`, collection.handle, collection.name);
+                                    }
+                                    return (
+                                      <SelectItem 
+                                        key={`${collection.handle}-${index}-${collectionIndex}`} 
+                                        value={collection.handle}
+                                      >
+                                        {collection.name}
+                                      </SelectItem>
+                                    );
+                                  })
+                                ) : (
+                                  <SelectItem value="loading" disabled>
+                                    Loading collections... ({collections.length} found)
                                   </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="loading" disabled>
-                                  Loading collections...
-                                </SelectItem>
-                              )}
+                                );
+                              })()}
                             </SelectContent>
                           </Select>
                           <Select
