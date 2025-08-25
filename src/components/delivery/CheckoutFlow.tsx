@@ -21,6 +21,7 @@ import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format, addHours, isToday } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { getActiveDeliveryInfo, formatDeliveryDate, parseDeliveryDate } from '@/utils/deliveryInfoManager';
+import { getAppTimezone } from '@/utils/timezoneManager';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useToast } from '@/hooks/use-toast';
@@ -73,7 +74,7 @@ const timeSlots = [
   '8:30 PM - 9:30 PM'
 ];
 
-const CST_TIMEZONE = 'America/Chicago';
+// Use centralized timezone management
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   cartItems,
@@ -322,12 +323,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (!deliveryInfo.date) return timeSlots;
     
     // Get current time in CST
-    const CST_TIMEZONE = 'America/Chicago';
-    const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
+    const nowCST = toZonedTime(new Date(), getAppTimezone());
     const minDeliveryDateCST = addHours(nowCST, 1);
     
     // Convert selected date to CST for comparison
-    const selectedDateCST = toZonedTime(deliveryInfo.date, CST_TIMEZONE);
+    const selectedDateCST = toZonedTime(deliveryInfo.date, getAppTimezone());
     
     // If today is selected, filter out time slots that are within 1 hour from current CST time
     if (isToday(selectedDateCST)) {
@@ -940,7 +940,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <div className="space-y-1 ml-4 md:ml-8 grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
                         <div className="text-xs md:text-sm text-green-700">
                           <strong>Date:</strong> {deliveryInfo.date && format(
-                            toZonedTime(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), 'America/Chicago'), 
+                            toZonedTime(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), getAppTimezone()), 
                             'MMM do'
                           )} at {deliveryInfo.timeSlot}
                         </div>

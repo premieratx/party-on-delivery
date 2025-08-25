@@ -112,19 +112,23 @@ serve(async (req) => {
         order_draft_id: draftData?.id || 'unknown',
         affiliate_code: (affiliateCode || '').substring(0, 100),
         customer_email: (customerInfo?.email || '').substring(0, 100),
+        customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim().substring(0, 100),
+        customer_phone: (customerInfo?.phone || '').substring(0, 20),
+        
+        // Delivery info with proper CST formatting
         delivery_date: (deliveryInfo?.date || '').substring(0, 50),
         delivery_time: (deliveryInfo?.timeSlot || '').substring(0, 50),
+        delivery_address: (deliveryInfo?.address || '').substring(0, 250),
+        delivery_instructions: (deliveryInfo?.instructions || '').substring(0, 250),
+        
+        // Order breakdown
         items_count: (cartItems?.length || 0).toString(),
         item_summary: cartItems?.slice(0, 2).map(item => item.title || 'Item').join(', ').substring(0, 200) + (cartItems?.length > 2 ? '...' : ''),
         subtotal: subtotal.toFixed(2),
         delivery_fee: deliveryFee.toFixed(2),
         sales_tax: salesTax.toFixed(2),
         tip_amount: tipAmount.toFixed(2),
-        total_amount: (amount / 100).toFixed(2),
-        customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim().substring(0, 100),
-        customer_phone: (customerInfo?.phone || '').substring(0, 20),
-        delivery_city: (deliveryInfo?.city || '').substring(0, 50),
-        delivery_state: (deliveryInfo?.state || '').substring(0, 20)
+        total_amount: (amount / 100).toFixed(2)
       }
     });
 

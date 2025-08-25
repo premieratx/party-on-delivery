@@ -8,6 +8,7 @@ import { format, addHours, isToday } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
 import { DeliveryInfo } from '../DeliveryWidget';
+import { getAppTimezone } from '@/utils/timezoneManager';
 
 interface DateTimeStepProps {
   deliveryInfo: DeliveryInfo;
@@ -27,7 +28,7 @@ const timeSlots = [
   '8:30 PM - 9:30 PM'
 ];
 
-const CST_TIMEZONE = 'America/Chicago';
+// Use centralized timezone management
 
 export const DateTimeStep: React.FC<DateTimeStepProps> = ({
   deliveryInfo,
@@ -118,10 +119,10 @@ export const DateTimeStep: React.FC<DateTimeStepProps> = ({
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateSelect}
-                disabled={(date) => {
-                  const today = new Date();
-                  const cstToday = toZonedTime(today, CST_TIMEZONE);
-                  const cutoffTime = addHours(cstToday, 2);
+                  disabled={(date) => {
+                    const today = new Date();
+                    const cstToday = toZonedTime(today, getAppTimezone());
+                    const cutoffTime = addHours(cstToday, 2);
                   
                   if (isToday(date)) {
                     return new Date() > cutoffTime;

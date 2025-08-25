@@ -273,13 +273,14 @@ serve(async (req) => {
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
 
-    // Parse delivery address
+    // Parse delivery address (enhanced format support)
     const addressParts = deliveryAddress.split(',').map(p => p.trim());
     const street = addressParts[0] || '';
     const city = addressParts[1] || '';
     const stateZip = addressParts[2] || '';
-    const state = stateZip.split(' ')[0] || '';
-    const zip = stateZip.split(' ')[1] || '';
+    const stateParts = stateZip.split(' ');
+    const state = stateParts[0] || '';
+    const zip = stateParts.slice(1).join(' ') || ''; // Handle zip+4 format
 
     logStep("Creating Shopify customer", { firstName, lastName, email: customerEmail });
 
@@ -291,7 +292,7 @@ serve(async (req) => {
           last_name: lastName,
           email: customerEmail,
           phone: customerPhone,
-          note: `Delivery order - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
+          note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
           addresses: [{
             address1: street,
             city: city,
@@ -432,10 +433,10 @@ serve(async (req) => {
         }] : [],
         
         // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
-        note: `DELIVERY ORDER - ${deliveryDate} at ${deliveryTime}
+        note: `DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
-📍 DELIVERY ADDRESS: ${street}, ${city}, ${state} ${zip}
-${deliveryInstructions ? `🗒️ INSTRUCTIONS: ${deliveryInstructions}` : ''}
+📍 DELIVERY ADDRESS: ${deliveryAddress}
+${deliveryInstructions ? `🗒️ SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : ''}
 
 💰 PAYMENT BREAKDOWN:
 • Subtotal: $${orderAmounts.subtotal.toFixed(2)}

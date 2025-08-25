@@ -9,6 +9,7 @@ import { CalendarIcon, Clock, ArrowRight } from 'lucide-react';
 import { format, addHours, isToday } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
+import { getAppTimezone } from '@/utils/timezoneManager';
 import { DeliveryInfo } from '../DeliveryWidget';
 
 interface DeliverySchedulerProps {
@@ -41,7 +42,7 @@ const timeSlots = [
   '8:30 PM - 9:30 PM'
 ];
 
-const CST_TIMEZONE = 'America/Chicago';
+// Use centralized timezone management
 
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
   // Check for prefilled group order delivery info (HIGHEST PRIORITY)
@@ -126,7 +127,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Get current time in CST
-  const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
+  const nowCST = toZonedTime(new Date(), getAppTimezone());
   const minDeliveryDateCST = addHours(nowCST, 1);
 
   // Get available time slots based on selected date
@@ -134,7 +135,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
     if (!date) return timeSlots;
     
     // Convert selected date to CST for comparison
-    const selectedDateCST = toZonedTime(date, CST_TIMEZONE);
+    const selectedDateCST = toZonedTime(date, getAppTimezone());
     
     // If today is selected, filter out time slots that are within 1 hour from current CST time
     if (isToday(selectedDateCST)) {
@@ -151,7 +152,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
         // Create a date object for the slot time in CST
         const slotDateTime = new Date(selectedDateCST);
         slotDateTime.setHours(slotHours, minutes, 0, 0);
-        const slotDateTimeCST = toZonedTime(slotDateTime, CST_TIMEZONE);
+        const slotDateTimeCST = toZonedTime(slotDateTime, getAppTimezone());
         
         // Check if slot is at least 1 hour from current CST time
         return slotDateTimeCST >= minDeliveryDateCST;
@@ -208,7 +209,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                   >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(
-                    toZonedTime(date, 'America/Chicago'), 
+                    toZonedTime(date, getAppTimezone()), 
                     "EEEE, PPP"
                   ) : <span>Pick a delivery date</span>}
                   </Button>

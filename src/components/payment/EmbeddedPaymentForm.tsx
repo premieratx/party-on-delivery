@@ -231,8 +231,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         throw new Error('All customer information fields (name, email, phone) are required');
       }
       
-      if (!deliveryInfo.address || !deliveryInfo.date || !deliveryInfo.time) {
-        throw new Error('All delivery information fields (address, date, time) are required');
+      if (!deliveryInfo.address || !deliveryInfo.date || !deliveryInfo.timeSlot) {
+        throw new Error('All delivery information fields (address, date, timeSlot) are required');
       }
       
       if (!cartItems || cartItems.length === 0) {
@@ -250,7 +250,6 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         deliveryInfo: {
           address: deliveryInfo.address,
           date: deliveryInfo.date,
-          time: deliveryInfo.time,
           timeSlot: deliveryInfo.timeSlot,
           instructions: deliveryInfo.instructions
         },
