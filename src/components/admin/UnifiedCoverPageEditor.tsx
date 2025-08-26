@@ -1297,8 +1297,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 </Button>
               </div>
             </div>
-            <div className="flex-1 bg-black flex items-center justify-center p-8">
-              <div className="w-[390px] h-[844px] relative rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <div className="flex-1 bg-black flex items-center justify-center p-4">
+              <div className="w-[393px] h-[852px] relative overflow-hidden border border-gray-700 shadow-2xl bg-black">
                 <CoverStartScreen
                 title={title}
                 subtitle={subtitle}
