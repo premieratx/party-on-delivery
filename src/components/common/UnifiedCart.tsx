@@ -45,9 +45,13 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // ENHANCED: Always scroll cart to top when opened - guaranteed to work
+  // ENHANCED: Always scroll cart to top when opened + prevent body scroll
   useEffect(() => {
     if (isOpen) {
+      // Prevent body scroll when cart is open
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      
       // Force scroll to top immediately when cart opens
       const scrollToTop = () => {
         if (scrollContainerRef.current) {
@@ -56,11 +60,17 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         }
       };
       
-      // Multiple attempts to ensure scroll reset works
+      // Multiple attempts to ensure scroll reset works reliably
       scrollToTop(); // Immediate
+      requestAnimationFrame(scrollToTop); // Next frame
       setTimeout(scrollToTop, 1); // Next tick
       setTimeout(scrollToTop, 10); // Backup
       setTimeout(scrollToTop, 50); // Final backup
+      
+      // Cleanup: restore body scroll when cart closes
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
     }
   }, [isOpen]);
 
@@ -75,7 +85,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
       />
       
       {/* Cart Sidebar - Fixed positioning with proper flex layout */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden">
+      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate">
         
         {/* Sticky Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 z-10">
@@ -107,14 +117,18 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Scrollable Content - Mobile Safe */}
+        {/* Enhanced Scrollable Content - Complete Scroll Isolation */}
         <div 
           ref={scrollContainerRef} 
-          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
+          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
           style={{ 
-            /* Ensure mobile browsers respect the scrolling area */
+            /* Complete scroll isolation from main page */
             WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain'
+            overscrollBehavior: 'contain',
+            position: 'relative',
+            zIndex: 1,
+            /* Ensure this container creates its own scroll context */
+            willChange: 'scroll-position'
           }}
         >
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">{/* Removed bottom padding since checkout button is now separate */}
@@ -241,9 +255,9 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           )}
         </div>
 
-        {/* Enhanced Sticky Checkout Button - Mobile Optimized */}
+        {/* ALWAYS VISIBLE Sticky Checkout Button - Guaranteed to stay at bottom */}
         {cartItems.length > 0 && (
-          <div className="sticky bottom-0 left-0 right-0 border-t p-3 sm:p-4 bg-background/98 backdrop-blur-sm shadow-xl z-20 safe-area-bottom">
+          <div className="sticky bottom-0 left-0 right-0 border-t p-3 sm:p-4 bg-background shadow-2xl z-30 flex-shrink-0">
             <Button 
               className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
               size="lg" 
