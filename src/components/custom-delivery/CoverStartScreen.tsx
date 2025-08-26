@@ -126,8 +126,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
-        height: '100vh',
-        maxHeight: '100vh'
+        height: '852px', // Fixed iPhone 14 Pro height
+        maxHeight: '852px'
       } as React.CSSProperties}
     >
       {/* Background */}
@@ -137,8 +137,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           backgroundColor: backgroundColor || undefined,
           touchAction: 'none',
           overscrollBehavior: 'none',
-          height: '100vh',
-          maxHeight: '100vh'
+          height: '852px', // Fixed iPhone 14 Pro height
+          maxHeight: '852px'
         } as React.CSSProperties}
       >
         <div className="absolute inset-0">
@@ -169,15 +169,15 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-          {/* Content Container - Fixed layout to fit all elements properly */}
+        {/* Content Container - Fixed layout to fit all elements properly */}
         <div 
           className="relative z-10 flex flex-col h-full px-4"
           style={{ 
             touchAction: 'none',
             userSelect: 'none',
             overscrollBehavior: 'none',
-            height: '100vh',
-            maxHeight: '100vh',
+            height: '852px', // Fixed iPhone 14 Pro height
+            maxHeight: '852px',
             overflow: 'hidden'
           } as React.CSSProperties}
         >
@@ -265,8 +265,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Flexible spacer to push features and buttons down */}
-          <div className="flex-1" />
+          {/* Minimal spacer between content and features */}
+          <div style={{ height: '30px' }} />
 
           {/* Features Section */}
           {checklistItems && checklistItems.length > 0 && (
