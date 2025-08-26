@@ -18,7 +18,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border hidden">
+      {/* Mobile bottom navigation permanently hidden */}
       <div className="flex items-center justify-between py-2 px-1">
         {/* Mobile Navigation - NO ICONS, TEXT ONLY */}
         <div className="flex-1 flex justify-evenly gap-0.5">

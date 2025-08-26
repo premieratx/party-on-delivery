@@ -15,10 +15,12 @@ export function useImageOptimization(imageUrl: string, priority = false) {
     };
   }, [imageUrl, isMobile]);
 
-  // Preload priority images
+  // Preload priority images with faster timeout
   useEffect(() => {
     if (priority && optimizedUrls.src) {
-      ImageOptimizer.preloadImage(optimizedUrls.src).catch(console.warn);
+      ImageOptimizer.preloadImage(optimizedUrls.src, 150).catch(() => {
+        // Silent fail for speed
+      });
     }
   }, [optimizedUrls.src, priority]);
 

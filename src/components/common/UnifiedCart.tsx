@@ -19,8 +19,11 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
   onClose
 }) => {
   const navigate = useNavigate();
-  const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
+  const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Calculate total product count (sum of all quantities)
+  const totalProductCount = getTotalItems();
 
   // BULLETPROOF pricing calculations to prevent crashes
   const subtotal = cartItems.reduce((total, item) => {
@@ -71,18 +74,16 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         onClick={onClose}
       />
       
-      {/* Cart Sidebar - Fixed positioning for mobile */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col">
-        {/* Mobile: Full screen height with safe area */}
+      {/* Cart Sidebar - Fixed positioning with proper flex layout */}
+      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden">
         
-        
-        {/* Enhanced Fixed Header - Mobile Optimized */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background sticky top-0 z-10 min-h-[60px]">
+        {/* Sticky Header */}
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 z-10">
           <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
             <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline">Your Cart</span>
             <span className="sm:hidden">Cart</span>
-            <span className="text-sm font-normal">({cartItems.length})</span>
+            <span className="text-sm font-normal">({totalProductCount})</span>
           </h2>
           <div className="flex gap-2">
             {cartItems.length > 0 && (
@@ -116,7 +117,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
             overscrollBehavior: 'contain'
           }}
         >
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 pb-24">{/* Add bottom padding for sticky checkout button */}
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">{/* Removed bottom padding since checkout button is now separate */}
             {cartItems.length === 0 ? (
               <div className="text-center py-8 sm:py-12">
                 <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
