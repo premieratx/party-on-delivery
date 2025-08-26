@@ -42,8 +42,15 @@ interface DeliveryApp {
   description?: string;
   logo_url?: string;
   is_active: boolean;
+  is_homepage?: boolean;
+  theme?: string; // Changed to string to match database
+  main_app_config?: any;
   collections_config?: any;
   custom_branding?: any;
+  bg_image_url?: string;
+  bg_video_url?: string;
+  hero_config?: any;
+  custom_post_checkout_config?: any;
   created_at: string;
   updated_at: string;
 }
@@ -100,17 +107,34 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
   };
 
   const handleEdit = (app: DeliveryApp) => {
+    console.log('🔄 Editing delivery app:', app);
     // Convert DeliveryApp to DeliveryAppConfig format for the editor
+    // Use the actual saved configuration data instead of hardcoded values
     const deliveryAppConfig = {
       id: app.id.toString(),
       app_name: app.app_name,
       app_slug: app.app_slug,
       logo_url: app.logo_url || '',
-      main_app_config: {
+      // Use the actual saved main_app_config or provide sensible defaults
+      main_app_config: app.main_app_config || {
         hero_heading: app.app_name,
-        hero_subheading: app.description || 'Premium delivery service'
+        hero_subheading: app.description || 'Premium delivery service',
+        logo_size: 50,
+        headline_size: 24,
+        subheadline_size: 14,
+        logo_vertical_pos: 0,
+        headline_vertical_pos: 0,
+        subheadline_vertical_pos: 0,
+        background_image_url: '',
+        background_opacity: 0.7,
+        overlay_color: '#000000',
+        headline_font: 'Inter',
+        headline_color: '#ffffff',
+        subheadline_font: 'Inter',
+        subheadline_color: '#ffffff'
       },
-      collections_config: {
+      // Use the actual saved collections_config or provide defaults
+      collections_config: app.collections_config || {
         tab_count: 3,
         tabs: [
           { name: 'Beer', collection_handle: 'beer', icon: '🍺' },
@@ -118,11 +142,12 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
           { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
         ]
       },
-      theme: 'gold' as const,
-      is_homepage: false,
+      theme: (app.theme as 'original' | 'gold' | 'platinum') || 'gold',
+      is_homepage: app.is_homepage || false,
       is_active: app.is_active
     };
     
+    console.log('📝 Passing config to editor:', deliveryAppConfig);
     setEditingApp(deliveryAppConfig);
     setShowEditor(true);
   };
