@@ -182,12 +182,12 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           } as React.CSSProperties}
         >
           
-          {/* Logo Section - FIXED 15px from top */}
+          {/* Logo Section - 15px from top of preview window */}
           <div 
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
               paddingTop: '15px',
-              marginBottom: '20px',
+              marginBottom: '15px',
               animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
