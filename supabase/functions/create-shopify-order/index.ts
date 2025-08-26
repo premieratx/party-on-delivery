@@ -471,23 +471,43 @@ serve(async (req) => {
         email: customerEmail,
         phone: customerPhone,
         
-        // PROPER SHOPIFY ORDER STRUCTURE - adjust subtotal to include tip
-        subtotal_price: (orderAmounts.subtotal + orderAmounts.tip_amount).toFixed(2),
-        total_price: orderAmounts.total_amount.toFixed(2),
+        // CORRECT SHOPIFY ORDER STRUCTURE - subtotal is ONLY product prices
+        subtotal_price: orderAmounts.subtotal.toFixed(2),  // Products only
+        total_price: orderAmounts.total_amount.toFixed(2),  // Full total including tip
         
         // Tax lines (proper Shopify structure for sales tax)
         tax_lines: orderAmounts.sales_tax > 0 ? [{
-          title: "Sales Tax",
+          title: "Sales Tax", 
           price: orderAmounts.sales_tax.toFixed(2),
           rate: 0.0825
         }] : [],
         
-        // Shipping lines (delivery fee only)
+        // Shipping lines (delivery fee only - tip handled separately)
         shipping_lines: orderAmounts.delivery_fee > 0 ? [{
           title: "Local Delivery",
           price: orderAmounts.delivery_fee.toFixed(2),
           code: "LOCAL_DELIVERY"
         }] : [],
+        
+        // Custom attributes to store tip (since Shopify doesn't have native tip field)
+        note_attributes: [
+          {
+            name: "Driver Tip",
+            value: `$${orderAmounts.tip_amount.toFixed(2)}`
+          },
+          {
+            name: "Delivery Date", 
+            value: deliveryDate
+          },
+          {
+            name: "Delivery Time",
+            value: deliveryTime
+          },
+          {
+            name: "Delivery Address",
+            value: `${street}, ${city}, ${state} ${zip}`
+          }
+        ].filter(attr => attr.value && attr.value !== '$0.00'),
         
         // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
         note: `DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
