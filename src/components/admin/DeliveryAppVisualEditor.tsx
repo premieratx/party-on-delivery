@@ -303,6 +303,12 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
   };
 
   const handleSave = async () => {
+    console.log('🔥 SAVE DEBUG - About to save with config:', {
+      heroHeading: config.heroHeading,
+      heroSubheading: config.heroSubheading,
+      appName: config.appName
+    });
+    
     if (!config.appName.trim()) {
       toast({
         title: "Missing required fields",
