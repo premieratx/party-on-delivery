@@ -34,6 +34,19 @@ interface DeliveryAppConfig {
   main_app_config: {
     hero_heading: string;
     hero_subheading: string;
+    logo_size?: number;
+    headline_size?: number;
+    subheadline_size?: number;
+    logo_vertical_pos?: number;
+    headline_vertical_pos?: number;
+    subheadline_vertical_pos?: number;
+    background_image_url?: string;
+    background_opacity?: number;
+    overlay_color?: string;
+    headline_font?: string;
+    headline_color?: string;
+    subheadline_font?: string;
+    subheadline_color?: string;
   };
   logo_url?: string;
   collections_config: {
@@ -270,6 +283,26 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Load initial configuration when editing an existing app
+  useEffect(() => {
+    if (initial?.main_app_config) {
+      const config = initial.main_app_config;
+      if (config.logo_size !== undefined) setLogoSize(config.logo_size);
+      if (config.headline_size !== undefined) setHeadlineSize(config.headline_size);
+      if (config.subheadline_size !== undefined) setSubheadlineSize(config.subheadline_size);
+      if (config.logo_vertical_pos !== undefined) setLogoVerticalPos(config.logo_vertical_pos);
+      if (config.headline_vertical_pos !== undefined) setHeadlineVerticalPos(config.headline_vertical_pos);
+      if (config.subheadline_vertical_pos !== undefined) setSubheadlineVerticalPos(config.subheadline_vertical_pos);
+      if (config.background_image_url) setBackgroundImageUrl(config.background_image_url);
+      if (config.background_opacity !== undefined) setBackgroundOpacity(config.background_opacity);
+      if (config.overlay_color) setOverlayColor(config.overlay_color);
+      if (config.headline_font) setHeadlineFont(config.headline_font);
+      if (config.headline_color) setHeadlineColor(config.headline_color);
+      if (config.subheadline_font) setSubheadlineFont(config.subheadline_font);
+      if (config.subheadline_color) setSubheadlineColor(config.subheadline_color);
+    }
+  }, [initial]);
+
   // Monitor open state to load collections
   useEffect(() => {
     if (open) {
@@ -412,7 +445,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   };
 
   const addTab = () => {
-    if (tabs.length < 6) {
+    if (tabs.length < 15) {
       setTabs([...tabs, { name: 'New Tab', collection_handle: '', icon: '📦' }]);
     }
   };
@@ -835,10 +868,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                         variant="outline"
                         size="sm"
                         onClick={addTab}
-                        disabled={tabs.length >= 6}
+                        disabled={tabs.length >= 15}
                       >
                         <Plus className="w-4 h-4 mr-1" />
-                        Add Tab
+                        Add Tab ({tabs.length}/15)
                       </Button>
                     </CardTitle>
                   </CardHeader>
