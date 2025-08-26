@@ -11,6 +11,7 @@ interface ImprovedCheckoutSummaryProps {
   subtotal: number;
   deliveryFee: number;
   salesTax: number;
+  tipAmount?: number; // Add tip amount prop
   appliedDiscount?: {
     code: string;
     type: 'percentage' | 'free_shipping';
@@ -24,6 +25,7 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
   subtotal,
   deliveryFee,
   salesTax,
+  tipAmount = 0, // Default tip amount to 0
   appliedDiscount,
   onUpdateQuantity
 }) => {
@@ -178,13 +180,24 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
             <span>Sales Tax (8.25%)</span>
             <span className="font-medium">${salesTax.toFixed(2)}</span>
           </div>
+
+          {/* Driver Tip Display */}
+          {tipAmount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span>Driver Tip</span>
+              <span className="font-medium">${tipAmount.toFixed(2)}</span>
+            </div>
+          )}
         </div>
 
         <Separator className="my-4" />
         
-        {/* Note: Final total is calculated in the payment step including tip */}
-        <div className="text-xs text-muted-foreground text-center py-2">
-          Final total with tip will be shown at checkout
+        {/* Final Total with Tip */}
+        <div className="flex justify-between items-center py-3 bg-primary/5 rounded-lg px-4">
+          <span className="text-lg font-bold">Total</span>
+          <span className="text-xl font-bold text-primary">
+            ${(discountedSubtotal + finalDeliveryFee + salesTax + tipAmount).toFixed(2)}
+          </span>
         </div>
 
         {/* Savings Summary */}

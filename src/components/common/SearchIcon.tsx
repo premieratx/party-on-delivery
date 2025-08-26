@@ -31,9 +31,22 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
     return "bg-background hover:bg-muted/50 shadow-md hover:shadow-lg transition-all duration-200";
   };
 
+  const handleClick = () => {
+    // Check if we're in a delivery app context by looking for mobile search handler
+    const searchHandler = document.querySelector('[data-mobile-search-handler]');
+    if (searchHandler && variant === "mobile") {
+      // Trigger mobile search expansion in delivery app
+      const event = new CustomEvent('mobileSearchActivate', { bubbles: true });
+      searchHandler.dispatchEvent(event);
+    } else {
+      // Default navigation to search page
+      navigate("/search");
+    }
+  };
+
   return (
     <Button
-      onClick={() => navigate("/search")}
+      onClick={handleClick}
       variant="outline"
       size="icon"
       className={`${getButtonSize()} ${getButtonStyle()} ${className}`}

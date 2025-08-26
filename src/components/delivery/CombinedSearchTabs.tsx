@@ -241,6 +241,26 @@ export const CombinedSearchTabs = ({
     onSearchActiveChange?.(true);
   };
 
+  // Listen for mobile search activation from SearchIcon component
+  useEffect(() => {
+    const handleMobileSearchActivate = () => {
+      setIsSearchExpanded(true);
+      onSearchActiveChange?.(true);
+      // Focus the search input when expanded
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 100);
+    };
+
+    document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    
+    return () => {
+      document.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    };
+  }, [onSearchActiveChange]);
+
   return (
     <div className={`bg-background border-b transition-all duration-200 ${
       isSticky || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
@@ -406,7 +426,7 @@ export const CombinedSearchTabs = ({
         </div>
 
         {/* Bottom Row - Search/Cart/Checkout Actions (Always visible) */}
-        <div className="container mx-auto px-4 py-2 bg-background border-b">
+        <div className="container mx-auto px-4 py-2 bg-background border-b" data-mobile-search-handler>
           <div className="flex items-center justify-center gap-4">
             {/* Search Icon - Toggle search bar */}
             {showSearch && (

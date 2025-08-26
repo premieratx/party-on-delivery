@@ -210,6 +210,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       subtotal: discountedSubtotal,
       deliveryFee: finalDeliveryFee,
       salesTax: calculatedSalesTax,
+      tipAmount: tipAmount, // Include tip amount in completion data
       paymentIntentId,
       appliedDiscount
     };
@@ -359,6 +360,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 subtotal={cartSubtotal}
                 deliveryFee={finalDeliveryFee}
                 salesTax={calculatedSalesTax}
+                tipAmount={tipAmount} // Pass tip amount to summary
                 appliedDiscount={appliedDiscount}
                 onUpdateQuantity={onUpdateQuantity}
               />
