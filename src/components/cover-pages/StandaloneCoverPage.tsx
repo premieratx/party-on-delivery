@@ -140,7 +140,18 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div 
+      className="min-h-screen bg-black flex items-center justify-center"
+      style={{
+        touchAction: 'none',
+        userSelect: 'none',
+        overscrollBehavior: 'none',
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        height: '100vh',
+        overflow: 'hidden'
+      } as React.CSSProperties}
+    >
       {/* Admin Preview Badge (only in development) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-4 right-4 z-50">
@@ -154,8 +165,21 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
       {/* Centered Phone Frame */}
       <div className="relative">
         {/* Phone Frame */}
-        <div className="relative w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden">
-          <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
+        <div 
+          className="relative w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden"
+          style={{
+            touchAction: 'none',
+            userSelect: 'none',
+            overscrollBehavior: 'none'
+          } as React.CSSProperties}
+        >
+          <div 
+            className="absolute inset-2 rounded-[1.5rem] overflow-hidden"
+            style={{
+              touchAction: 'none',
+              overscrollBehavior: 'none'
+            } as React.CSSProperties}
+          >
             <CoverStartScreen
               appName={coverPage.title}
               title={coverPage.title}

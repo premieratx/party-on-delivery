@@ -139,9 +139,30 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   }, [buttons]);
 
   return (
-    <div className="w-full h-full">
+    <div 
+      className="w-full h-full"
+      style={{
+        touchAction: 'none',
+        userSelect: 'none',
+        overscrollBehavior: 'none',
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+        overflow: 'hidden',
+        height: '100vh',
+        maxHeight: '100vh'
+      } as React.CSSProperties}
+    >
       {/* Background */}
-      <div className="relative h-full overflow-hidden" style={{ backgroundColor: backgroundColor || undefined }}>
+      <div 
+        className="relative h-full overflow-hidden" 
+        style={{ 
+          backgroundColor: backgroundColor || undefined,
+          touchAction: 'none',
+          overscrollBehavior: 'none',
+          height: '100vh',
+          maxHeight: '100vh'
+        } as React.CSSProperties}
+      >
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -171,7 +192,19 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         <div className="absolute inset-0 bg-black/70" />
 
         {/* Content - Fixed Phone Layout with proper mobile spacing and mandatory margins */}
-        <div className="relative z-10 flex h-full flex-col items-center px-4 justify-center space-y-4" style={{ paddingTop: '15px', paddingBottom: '15px' }}>
+        <div 
+          className="relative z-10 flex h-full flex-col items-center px-4 justify-center space-y-2" 
+          style={{ 
+            paddingTop: '15px', 
+            paddingBottom: '15px',
+            touchAction: 'none',
+            userSelect: 'none',
+            overscrollBehavior: 'none',
+            height: '100vh',
+            maxHeight: '100vh',
+            overflow: 'hidden'
+          } as React.CSSProperties}
+        >
           
           {/* Logo Section */}
           <div 
