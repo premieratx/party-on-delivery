@@ -282,53 +282,120 @@ serve(async (req) => {
     const state = stateParts[0] || '';
     const zip = stateParts.slice(1).join(' ') || ''; // Handle zip+4 format
 
-    logStep("Creating Shopify customer", { firstName, lastName, email: customerEmail });
+    logStep("Creating/finding Shopify customer", { firstName, lastName, email: customerEmail });
 
     let shopifyCustomerId = null;
+    
+    // First, try to find existing customer by email
     try {
-      const customerData = {
-        customer: {
-          first_name: firstName,
-          last_name: lastName,
-          email: customerEmail,
-          phone: customerPhone,
-          note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
-          addresses: [{
-            address1: street,
-            city: city,
-            province: state,
-            country: "US",
-            zip: zip,
-            phone: customerPhone
-          }]
-        }
-      };
-
-      const customerResponse = await fetch(
-        `https://${shopifyStore}/admin/api/2024-10/customers.json`,
+      const searchResponse = await fetch(
+        `https://${shopifyStore}/admin/api/2024-10/customers/search.json?query=email:${encodeURIComponent(customerEmail)}`,
         {
-          method: 'POST',
           headers: {
             'X-Shopify-Access-Token': shopifyToken,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(customerData),
         }
       );
 
-      if (customerResponse.ok) {
-        const customerResult = await customerResponse.json();
-        shopifyCustomerId = customerResult.customer.id;
-        logStep("Shopify customer created", { customerId: shopifyCustomerId });
-      } else {
-        const errorText = await customerResponse.text();
-        logStep("Customer creation failed, continuing", { 
-          status: customerResponse.status,
-          error: errorText
-        });
+      if (searchResponse.ok) {
+        const searchResult = await searchResponse.json();
+        if (searchResult.customers && searchResult.customers.length > 0) {
+          const existingCustomer = searchResult.customers[0];
+          shopifyCustomerId = existingCustomer.id;
+          
+          logStep("Found existing Shopify customer", { 
+            customerId: shopifyCustomerId,
+            existingEmail: existingCustomer.email 
+          });
+
+          // Update existing customer with latest info (phone, address)
+          const updateData = {
+            customer: {
+              id: shopifyCustomerId,
+              first_name: firstName || existingCustomer.first_name,
+              last_name: lastName || existingCustomer.last_name,
+              phone: customerPhone || existingCustomer.phone,
+              note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`
+            }
+          };
+
+          const updateResponse = await fetch(
+            `https://${shopifyStore}/admin/api/2024-10/customers/${shopifyCustomerId}.json`,
+            {
+              method: 'PUT',
+              headers: {
+                'X-Shopify-Access-Token': shopifyToken,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updateData),
+            }
+          );
+
+          if (updateResponse.ok) {
+            logStep("Updated existing customer info", { customerId: shopifyCustomerId });
+          }
+        }
       }
-    } catch (customerError) {
-      logStep("Customer creation error", { error: customerError.message });
+    } catch (searchError) {
+      logStep("Customer search error, will create new", { error: searchError.message });
+    }
+
+    // If no existing customer found, create new one
+    if (!shopifyCustomerId) {
+      try {
+        const customerData = {
+          customer: {
+            first_name: firstName,
+            last_name: lastName,
+            email: customerEmail,
+            phone: customerPhone,
+            note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
+            addresses: [{
+              address1: street,
+              city: city,
+              province: state,
+              country: "US",
+              zip: zip,
+              phone: customerPhone,
+              default: true
+            }],
+            // Ensure customer can receive marketing emails
+            accepts_marketing: true,
+            marketing_opt_in_level: "single_opt_in"
+          }
+        };
+
+        const customerResponse = await fetch(
+          `https://${shopifyStore}/admin/api/2024-10/customers.json`,
+          {
+            method: 'POST',
+            headers: {
+              'X-Shopify-Access-Token': shopifyToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(customerData),
+          }
+        );
+
+        if (customerResponse.ok) {
+          const customerResult = await customerResponse.json();
+          shopifyCustomerId = customerResult.customer.id;
+          logStep("✅ New Shopify customer created with contact info", { 
+            customerId: shopifyCustomerId,
+            email: customerEmail,
+            phone: customerPhone
+          });
+        } else {
+          const errorText = await customerResponse.text();
+          logStep("⚠️ Customer creation failed, order will continue without customer link", { 
+            status: customerResponse.status,
+            error: errorText
+          });
+        }
+      } catch (customerError) {
+        logStep("⚠️ Customer creation error, order will continue", { error: customerError.message });
+      }
     }
 
     // Prepare line items for Shopify
