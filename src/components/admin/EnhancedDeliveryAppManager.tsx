@@ -282,10 +282,10 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       {/* Delivery App Creator */}
       {showEditor && (
         <UnifiedDeliveryAppEditor
-          open={showEditor}
-          onOpenChange={setShowEditor}
-          initial={editingApp}
-          onSaved={() => {
+          isOpen={showEditor}
+          onClose={() => setShowEditor(false)}
+          editingApp={editingApp}
+          onAppCreated={() => {
             setShowEditor(false);
             setEditingApp(null);
             loadDeliveryApps();
@@ -415,10 +415,10 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       {/* Editor Modal */}
       {showEditor && (
         <UnifiedDeliveryAppEditor 
-          open={showEditor}
-          onOpenChange={setShowEditor}
-          initial={editingApp}
-          onSaved={() => {
+          isOpen={showEditor}
+          onClose={() => setShowEditor(false)}
+          editingApp={editingApp}
+          onAppCreated={() => {
             setShowEditor(false);
             setEditingApp(null);
             loadDeliveryApps();

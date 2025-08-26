@@ -567,10 +567,10 @@ export const UnifiedFlowManager: React.FC = () => {
 
       {showDeliveryEditor && (
         <UnifiedDeliveryAppEditor
-          open={showDeliveryEditor}
-          onOpenChange={setShowDeliveryEditor}
-          initial={editingDeliveryApp}
-          onSaved={() => {
+          isOpen={showDeliveryEditor}
+          onClose={() => setShowDeliveryEditor(false)}
+          editingApp={editingDeliveryApp}
+          onAppCreated={() => {
             loadAllData();
             setShowDeliveryEditor(false);
             setEditingDeliveryApp(null);

@@ -37,6 +37,7 @@ import { formatCurrency } from '@/utils/currency';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
 import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegrationTest';
+import { UnifiedDeliveryAppCreator } from '@/components/admin/UnifiedDeliveryAppCreator';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -52,6 +53,8 @@ export default function AdminDashboard() {
   const { activeTab, updateActiveTab } = useAdminState('overview');
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
+  const [isDeliveryAppCreatorOpen, setIsDeliveryAppCreatorOpen] = useState(false);
+  const [deliveryApps, setDeliveryApps] = useState<any[]>([]);
 
   // Prevent dashboard reload on tab switching - load data only ONCE with keep-warm
   useEffect(() => {
@@ -199,6 +202,27 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* fetchDeliveryApps function */}
+        {(() => {
+          const fetchDeliveryApps = async () => {
+            try {
+              const { data, error } = await supabase
+                .from('custom_affiliate_sites')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+              if (error) throw error;
+              setDeliveryApps(data || []);
+            } catch (error) {
+              console.error('Error fetching delivery apps:', error);
+            }
+          };
+          
+          // Store it for later use
+          (window as any).fetchDeliveryApps = fetchDeliveryApps;
+          return null;
+        })()}
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
@@ -365,6 +389,16 @@ export default function AdminDashboard() {
           }}
         />
       )}
+
+      {/* Delivery App Creator */}
+      <UnifiedDeliveryAppCreator
+        isOpen={isDeliveryAppCreatorOpen}
+        onClose={() => setIsDeliveryAppCreatorOpen(false)}
+        onAppCreated={() => {
+          setIsDeliveryAppCreatorOpen(false);
+          (window as any).fetchDeliveryApps?.();
+        }}
+      />
       </div>
     </AdminPerformanceFix>
   );

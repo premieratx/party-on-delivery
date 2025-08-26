@@ -429,10 +429,10 @@ export const UnifiedFlowCreatorDashboard: React.FC = () => {
 
       {/* Creators */}
       <UnifiedDeliveryAppCreator
-        open={showDeliveryCreator}
-        onOpenChange={setShowDeliveryCreator}
-        initial={editingItem}
-        onSaved={() => {
+        isOpen={showDeliveryCreator}
+        onClose={() => setShowDeliveryCreator(false)}
+        editingApp={editingItem}
+        onAppCreated={() => {
           setShowDeliveryCreator(false);
           setEditingItem(null);
           loadData();

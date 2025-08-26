@@ -287,6 +287,9 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       };
 
       const appData = {
+        business_name: config.app_name,
+        site_name: config.app_name,
+        site_slug: config.app_slug,
         app_name: config.app_name,
         app_slug: config.app_slug,
         description: config.description,
@@ -863,8 +866,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                   id={`tab-name-${index}`}
                                   value={tab.name}
                                   onChange={(e) => updateTab(index, 'name', e.target.value)}
-                                  placeholder="Tab name"
-                                  size="sm"
+                                   placeholder="Tab name"
                                 />
                               </div>
                               <div>
@@ -873,7 +875,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                   value={tab.collection_handle} 
                                   onValueChange={(value) => updateTab(index, 'collection_handle', value)}
                                 >
-                                  <SelectTrigger size="sm">
+                                  <SelectTrigger>
                                     <SelectValue placeholder="Select collection" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -932,8 +934,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                   id={`button-title-${index}`}
                                   value={button.title}
                                   onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
-                                  placeholder="Button title"
-                                  size="sm"
+                                   placeholder="Button title"
                                 />
                               </div>
                               <div>
@@ -942,7 +943,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                   value={button.collection_handle} 
                                   onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
                                 >
-                                  <SelectTrigger size="sm">
+                                  <SelectTrigger>
                                     <SelectValue placeholder="Select collection" />
                                   </SelectTrigger>
                                   <SelectContent>
