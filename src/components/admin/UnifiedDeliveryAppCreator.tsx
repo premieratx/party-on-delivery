@@ -192,7 +192,7 @@ const DeliveryAppLivePreview: React.FC<{
                 color: headlineColor
               }}
             >
-              {heroHeading || appName}
+              {heroHeading}
             </h1>
             <p 
               className="mb-4 max-w-xs mx-auto"
@@ -203,7 +203,7 @@ const DeliveryAppLivePreview: React.FC<{
                 color: subheadlineColor
               }}
             >
-              {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
+              {heroSubheading}
             </p>
           </div>
         </div>
@@ -253,8 +253,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const [saving, setSaving] = useState(false);
   const [appName, setAppName] = useState(initial?.app_name || '');
   const [appSlug, setAppSlug] = useState(initial?.app_slug || '');
-  const [heroHeading, setHeroHeading] = useState(initial?.main_app_config?.hero_heading || '');
-  const [heroSubheading, setHeroSubheading] = useState(initial?.main_app_config?.hero_subheading || '');
+  const [heroHeading, setHeroHeading] = useState(initial?.main_app_config?.hero_heading || 'Premium Delivery Service');
+  const [heroSubheading, setHeroSubheading] = useState(initial?.main_app_config?.hero_subheading || 'Fast & Reliable');
   const [logoUrl, setLogoUrl] = useState(initial?.logo_url || '');
   const [logoSize, setLogoSize] = useState(50);
   const [headlineSize, setHeadlineSize] = useState(24);
