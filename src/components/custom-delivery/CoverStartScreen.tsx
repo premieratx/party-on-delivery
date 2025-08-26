@@ -169,9 +169,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content Container */}
+          {/* Content Container - Fixed layout to fit all elements properly */}
         <div 
-          className="relative z-10 h-full"
+          className="relative z-10 flex flex-col h-full px-4"
           style={{ 
             touchAction: 'none',
             userSelect: 'none',
@@ -184,9 +184,10 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           
           {/* Logo Section - FIXED 15px from top */}
           <div 
-            className={`absolute left-0 right-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
+            className={`flex-none text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
-              top: '15px',
+              paddingTop: '15px',
+              marginBottom: '20px',
               animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
@@ -225,16 +226,16 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Title & Content Section - Flows between logo and features */}
+          {/* Title & Content Section */}
           <div 
-            className={`absolute left-4 right-4 text-center transition-all duration-700 ${getAnimationClass(1)}`}
+            className={`flex-none text-center transition-all duration-700 ${getAnimationClass(1)}`}
             style={{ 
-              top: `${100 + (logoHeight || 60)}px`,
+              marginBottom: '20px',
               animationDelay: `${getAnimationDelay(1)}ms`
             }}
           >
             <h1 
-              className="font-bold mb-2 px-3 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
+              className="font-bold mb-3 px-3 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
               style={{ 
                 fontSize: titleSizeProp ? `${titleSizeProp}px` : '24px',
                 fontFamily: titleFont || 'system-ui'
@@ -252,7 +253,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 }}
               >
                 <p 
-                  className="text-white/80 mb-3 px-3 leading-relaxed"
+                  className="text-white/80 px-3 leading-relaxed"
                   style={{ 
                     fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px',
                     fontFamily: subtitleFont || 'system-ui'
@@ -264,12 +265,15 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Features Section - Positioned between content and buttons */}
+          {/* Flexible spacer to push features and buttons down */}
+          <div className="flex-1" />
+
+          {/* Features Section */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className={`absolute left-4 right-4 transition-all duration-700 ${getAnimationClass(3)}`}
+              className={`flex-none transition-all duration-700 ${getAnimationClass(3)}`}
               style={{ 
-                bottom: '120px',
+                marginBottom: '20px',
                 animationDelay: `${getAnimationDelay(3)}ms`
               }}
             >
@@ -305,9 +309,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
           {/* Buttons Section - FIXED 15px from bottom */}
           <div 
-            className={`absolute left-4 right-4 transition-all duration-700 ${getAnimationClass(4)}`}
+            className={`flex-none transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
-              bottom: '15px',
+              paddingBottom: '15px',
               animationDelay: `${getAnimationDelay(4)}ms`
             }}
           >
