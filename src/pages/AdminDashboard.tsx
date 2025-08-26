@@ -14,6 +14,7 @@ import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 // EnhancedCoverPageCreator removed - standalone implementation only
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
+import { UnifiedDeliveryAppCreator } from '@/components/admin/UnifiedDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +38,6 @@ import { formatCurrency } from '@/utils/currency';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
 import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegrationTest';
-import { UnifiedDeliveryAppCreator } from '@/components/admin/UnifiedDeliveryAppCreator';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -51,10 +51,9 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { activeTab, updateActiveTab } = useAdminState('overview');
+  const [showDeliveryCreator, setShowDeliveryCreator] = useState(false);
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
-  const [isDeliveryAppCreatorOpen, setIsDeliveryAppCreatorOpen] = useState(false);
-  const [deliveryApps, setDeliveryApps] = useState<any[]>([]);
 
   // Prevent dashboard reload on tab switching - load data only ONCE with keep-warm
   useEffect(() => {
@@ -203,27 +202,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* fetchDeliveryApps function */}
-        {(() => {
-          const fetchDeliveryApps = async () => {
-            try {
-              const { data, error } = await supabase
-                .from('custom_affiliate_sites')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-              if (error) throw error;
-              setDeliveryApps(data || []);
-            } catch (error) {
-              console.error('Error fetching delivery apps:', error);
-            }
-          };
-          
-          // Store it for later use
-          (window as any).fetchDeliveryApps = fetchDeliveryApps;
-          return null;
-        })()}
-
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-7">
@@ -343,6 +321,10 @@ export default function AdminDashboard() {
           <TabsContent value="delivery" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Delivery App Management</h2>
+              <Button onClick={() => setShowDeliveryCreator(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Delivery App
+              </Button>
             </div>
             <EnhancedDeliveryAppManager />
           </TabsContent>
@@ -379,6 +361,17 @@ export default function AdminDashboard() {
         <div>Cover page creation moved to EnhancedCoverPageManager</div>
       )}
       
+      {showDeliveryCreator && (
+        <UnifiedDeliveryAppCreator 
+          open={showDeliveryCreator}
+          onOpenChange={setShowDeliveryCreator}
+          onSaved={() => {
+            setShowDeliveryCreator(false);
+            loadDashboardData(); // Refresh data after creation
+          }}
+        />
+      )}
+      
       {showPostCheckoutCreator && (
         <EnhancedPostCheckoutCreator 
           open={showPostCheckoutCreator}
@@ -389,16 +382,6 @@ export default function AdminDashboard() {
           }}
         />
       )}
-
-      {/* Delivery App Creator */}
-      <UnifiedDeliveryAppCreator
-        isOpen={isDeliveryAppCreatorOpen}
-        onClose={() => setIsDeliveryAppCreatorOpen(false)}
-        onAppCreated={() => {
-          setIsDeliveryAppCreatorOpen(false);
-          (window as any).fetchDeliveryApps?.();
-        }}
-      />
       </div>
     </AdminPerformanceFix>
   );

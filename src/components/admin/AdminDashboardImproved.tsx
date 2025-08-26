@@ -77,10 +77,10 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
     return (
       <div className="min-h-screen bg-background">
         <UnifiedDeliveryAppCreator
-          isOpen={showAppCreator}
-          onClose={() => setShowAppCreator(false)}
-          editingApp={editingApp}
-          onAppCreated={() => {
+          open={showAppCreator}
+          onOpenChange={setShowAppCreator}
+          initial={editingApp}
+          onSaved={() => {
             setShowAppCreator(false);
             setEditingApp(null);
           }}

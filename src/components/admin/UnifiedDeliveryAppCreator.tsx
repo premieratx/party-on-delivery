@@ -1,1010 +1,845 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from "@/components/ui/slider";
 import { 
   Save, 
-  Eye, 
   Upload, 
-  Smartphone, 
-  Tablet, 
-  Monitor, 
-  Palette,
-  Settings,
-  Plus,
-  Trash2,
-  Move,
-  Type,
-  Image as ImageIcon,
-  Sparkles
+  Plus, 
+  Trash2, 
+  Package,
+  Monitor,
+  Smartphone,
+  Tablet
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { CANONICAL_DOMAIN } from '@/utils/links';
-import Draggable from 'react-draggable';
+import { UNIFIED_THEMES, getThemeCSS } from '@/lib/themeSystem';
 
-const DELIVERY_THEMES = {
-  modern: {
-    name: 'Modern',
-    colors: { 
-      primary: '#0ea5e9', 
-      secondary: '#06b6d4', 
-      accent: '#3b82f6',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      text: '#1e293b'
-    }
-  },
-  vibrant: {
-    name: 'Vibrant',
-    colors: { 
-      primary: '#ef4444', 
-      secondary: '#f97316', 
-      accent: '#eab308',
-      background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-      text: '#7f1d1d'
-    }
-  },
-  elegant: {
-    name: 'Elegant',
-    colors: { 
-      primary: '#8b5cf6', 
-      secondary: '#a855f7', 
-      accent: '#c084fc',
-      background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
-      text: '#581c87'
-    }
-  },
-  nature: {
-    name: 'Nature',
-    colors: { 
-      primary: '#059669', 
-      secondary: '#10b981', 
-      accent: '#34d399',
-      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-      text: '#064e3b'
-    }
-  }
-};
-
-const DEVICE_SIZES = {
-  mobile: { width: 375, height: 667, name: 'Mobile', icon: Smartphone },
-  tablet: { width: 768, height: 1024, name: 'Tablet', icon: Tablet },
-  desktop: { width: 1200, height: 800, name: 'Desktop', icon: Monitor }
-};
-
-interface Tab {
-  index: number;
+interface DeliveryAppTab {
   name: string;
   collection_handle: string;
-}
-
-interface OccasionButton {
-  title: string;
-  collection_handle: string;
-  enabled: boolean;
+  icon?: string;
 }
 
 interface DeliveryAppConfig {
+  id?: string;
   app_name: string;
   app_slug: string;
-  description: string;
-  theme: string;
-  logo_url: string;
-  logo_size: number;
-  logo_vertical_position: number;
-  headline: string;
-  headline_font_family: string;
-  headline_font_color: string;
-  headline_vertical_position: number;
-  subheadline: string;
-  subheadline_font_family: string;
-  subheadline_font_color: string;
-  subheadline_vertical_position: number;
-  background_image_url: string;
-  background_opacity: number;
-  collections_config: {
-    tabs: Tab[];
-    occasion_buttons: OccasionButton[];
+  main_app_config: {
+    hero_heading: string;
+    hero_subheading: string;
   };
+  logo_url?: string;
+  collections_config: {
+    tab_count: number;
+    tabs: DeliveryAppTab[];
+  };
+  theme: 'original' | 'gold' | 'platinum';
+  is_active: boolean;
+  is_homepage: boolean;
 }
 
 interface UnifiedDeliveryAppCreatorProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onAppCreated: () => void;
-  editingApp?: any;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initial?: DeliveryAppConfig;
+  onSaved?: () => void;
 }
 
+
+// Enhanced Preview Component with proper responsive handling
+const DeliveryAppLivePreview: React.FC<{
+  appName: string;
+  heroHeading: string;
+  heroSubheading: string;
+  logoUrl?: string;
+  logoSize: number;
+  headlineSize: number;
+  subheadlineSize: number;
+  logoVerticalPos: number;
+  headlineVerticalPos: number;
+  subheadlineVerticalPos: number;
+  backgroundImageUrl?: string;
+  backgroundOpacity: number;
+  overlayColor: string;
+  tabs: DeliveryAppTab[];
+  theme: 'original' | 'gold' | 'platinum';
+  device: 'mobile' | 'tablet' | 'desktop';
+}> = ({ 
+  appName, 
+  heroHeading, 
+  heroSubheading, 
+  logoUrl, 
+  logoSize,
+  headlineSize,
+  subheadlineSize,
+  logoVerticalPos,
+  headlineVerticalPos,
+  subheadlineVerticalPos,
+  backgroundImageUrl,
+  backgroundOpacity,
+  overlayColor,
+  tabs, 
+  theme, 
+  device 
+}) => {
+  const getThemeBackground = () => {
+    switch (theme) {
+      case 'gold':
+        return 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)';
+      case 'platinum':
+        return 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
+      default:
+        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+  };
+
+  // Fixed dimensions that are properly sized for preview
+  const previewDimensions = {
+    mobile: { width: 375, height: 667 },
+    tablet: { width: 768, height: 900 }, 
+    desktop: { width: 1200, height: 700 }
+  };
+  
+  const currentDimensions = previewDimensions[device];
+  const scaleFactor = device === 'tablet' ? 0.6 : device === 'desktop' ? 0.4 : 0.8;
+  
+  return (
+    <div 
+      className="border rounded-xl overflow-hidden shadow-xl bg-background mx-auto"
+      style={{ 
+        width: `${currentDimensions.width * scaleFactor}px`, 
+        height: `${currentDimensions.height * scaleFactor}px`
+      }}
+    >
+      <div className="h-full flex flex-col">
+        {/* Hero Section */}
+        <div 
+          className="relative text-white py-8 flex-shrink-0"
+          style={{
+            background: backgroundImageUrl 
+              ? `linear-gradient(rgba(${parseInt(overlayColor.slice(1,3), 16)}, ${parseInt(overlayColor.slice(3,5), 16)}, ${parseInt(overlayColor.slice(5,7), 16)}, ${backgroundOpacity}), rgba(${parseInt(overlayColor.slice(1,3), 16)}, ${parseInt(overlayColor.slice(3,5), 16)}, ${parseInt(overlayColor.slice(5,7), 16)}, ${backgroundOpacity})), url(${backgroundImageUrl})`
+              : getThemeBackground(),
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="relative px-4 text-center">
+            {logoUrl && (
+              <div 
+                className="flex justify-center mb-4"
+                style={{ transform: `translateY(${logoVerticalPos}px)` }}
+              >
+                <img 
+                  src={logoUrl} 
+                  alt={appName} 
+                  className="object-contain transition-all duration-300" 
+                  style={{ 
+                    height: `${Math.min(logoSize, 60)}px`,
+                    maxHeight: `${Math.min(logoSize, 60)}px`
+                  }}
+                />
+              </div>
+            )}
+            <h1 
+              className="font-bold mb-3 text-white leading-tight"
+              style={{ 
+                fontSize: `${Math.min(headlineSize, 24)}px`,
+                transform: `translateY(${headlineVerticalPos}px)`
+              }}
+            >
+              {heroHeading || appName}
+            </h1>
+            <p 
+              className="text-white/90 mb-4 max-w-xs mx-auto"
+              style={{ 
+                fontSize: `${Math.min(subheadlineSize, 14)}px`,
+                transform: `translateY(${subheadlineVerticalPos}px)`
+              }}
+            >
+              {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
+            </p>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="px-4 py-3 flex-1 overflow-y-auto">
+          {tabs.length > 0 && (
+            <div className="mb-4 border-b pb-3">
+              <div className="flex overflow-x-auto gap-2 scrollbar-hide">
+                {tabs.map((tab: any, index: number) => (
+                  <Button
+                    key={tab.collection_handle || index}
+                    variant={index === 0 ? "default" : "outline"}
+                    className="flex-shrink-0 text-xs px-2 py-1 whitespace-nowrap h-7"
+                  >
+                    {tab.icon} {tab.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Product Grid Placeholder */}
+          <div className="grid grid-cols-2 gap-2">
+            {[1,2,3,4,5,6].map((i) => (
+              <div key={i} className="bg-card rounded-lg border p-2 hover:shadow-lg transition-shadow">
+                <div className="aspect-square bg-muted rounded-lg mb-2"></div>
+                <h3 className="font-semibold mb-1 text-xs">Product {i}</h3>
+                <p className="text-xs font-bold text-primary mb-2">$12.99</p>
+                <Button className="w-full text-xs py-1 h-6">Add</Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps> = ({
-  isOpen,
-  onClose,
-  onAppCreated,
-  editingApp
+  open,
+  onOpenChange,
+  initial,
+  onSaved
 }) => {
   const { toast } = useToast();
-  const [currentDevice, setCurrentDevice] = useState<keyof typeof DEVICE_SIZES>('mobile');
-  const [activeTab, setActiveTab] = useState('basic');
-  
-  const [config, setConfig] = useState<DeliveryAppConfig>({
-    app_name: '',
-    app_slug: '',
-    description: '',
-    theme: 'modern',
-    logo_url: '',
-    logo_size: 120,
-    logo_vertical_position: 20,
-    headline: 'Welcome to Our Delivery App',
-    headline_font_family: 'Inter',
-    headline_font_color: '#1e293b',
-    headline_vertical_position: 35,
-    subheadline: 'Fresh flowers delivered to your door',
-    subheadline_font_family: 'Inter',
-    subheadline_font_color: '#64748b',
-    subheadline_vertical_position: 45,
-    background_image_url: '',
-    background_opacity: 100,
-    collections_config: {
-      tabs: [
-        { index: 0, name: 'All Products', collection_handle: 'all' },
-        { index: 1, name: 'Bouquets', collection_handle: 'bouquets' },
-        { index: 2, name: 'Plants', collection_handle: 'plants' }
-      ],
-      occasion_buttons: [
-        { title: 'Birthday', collection_handle: 'birthday', enabled: true },
-        { title: 'Anniversary', collection_handle: 'anniversary', enabled: true },
-        { title: 'Sympathy', collection_handle: 'sympathy', enabled: true },
-        { title: 'Get Well', collection_handle: 'get-well', enabled: true }
-      ]
-    }
-  });
+  const [saving, setSaving] = useState(false);
+  const [appName, setAppName] = useState(initial?.app_name || '');
+  const [appSlug, setAppSlug] = useState(initial?.app_slug || '');
+  const [heroHeading, setHeroHeading] = useState(initial?.main_app_config?.hero_heading || '');
+  const [heroSubheading, setHeroSubheading] = useState(initial?.main_app_config?.hero_subheading || '');
+  const [logoUrl, setLogoUrl] = useState(initial?.logo_url || '');
+  const [logoSize, setLogoSize] = useState(80);
+  const [headlineSize, setHeadlineSize] = useState(32);
+  const [subheadlineSize, setSubheadlineSize] = useState(18);
+  const [logoVerticalPos, setLogoVerticalPos] = useState(0);
+  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
+  const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(0);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.7);
+  const [overlayColor, setOverlayColor] = useState('#000000');
+  const [tabs, setTabs] = useState<DeliveryAppTab[]>(initial?.collections_config?.tabs || [
+    { name: 'Beer', collection_handle: '', icon: '🍺' },
+    { name: 'Seltzers', collection_handle: '', icon: '🥤' },
+    { name: 'Cocktails', collection_handle: '', icon: '🍸' }
+  ]);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [theme, setTheme] = useState<'original' | 'gold' | 'platinum'>(initial?.theme || 'original');
+  const [isActive, setIsActive] = useState(initial?.is_active ?? true);
+  const [isHomepage, setIsHomepage] = useState(initial?.is_homepage ?? false);
+  const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
 
-  const [availableCollections, setAvailableCollections] = useState<any[]>([]);
-  const [previewKey, setPreviewKey] = useState(0);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Monitor open state to load collections
   useEffect(() => {
-    if (isOpen) {
-      fetchCollections();
-      if (editingApp) {
-        loadEditingAppData();
-      } else {
-        resetForm();
-      }
+    if (open) {
+      loadCollections();
     }
-  }, [isOpen, editingApp]);
+  }, [open]);
 
-  const loadEditingAppData = () => {
-    if (!editingApp) return;
-    
-    const customBranding = editingApp.custom_branding || {};
-    const collectionsConfig = editingApp.collections_config || { tabs: [], occasion_buttons: [] };
-    
-    setConfig({
-      app_name: editingApp.app_name || '',
-      app_slug: editingApp.app_slug || '',
-      description: editingApp.description || '',
-      theme: customBranding.theme || 'modern',
-      logo_url: editingApp.logo_url || '',
-      logo_size: customBranding.logo_size || 120,
-      logo_vertical_position: customBranding.logo_vertical_position || 20,
-      headline: customBranding.headline || 'Welcome to Our Delivery App',
-      headline_font_family: customBranding.headline_font_family || 'Inter',
-      headline_font_color: customBranding.headline_font_color || '#1e293b',
-      headline_vertical_position: customBranding.headline_vertical_position || 35,
-      subheadline: customBranding.subheadline || 'Fresh flowers delivered to your door',
-      subheadline_font_family: customBranding.subheadline_font_family || 'Inter',
-      subheadline_font_color: customBranding.subheadline_font_color || '#64748b',
-      subheadline_vertical_position: customBranding.subheadline_vertical_position || 45,
-      background_image_url: customBranding.background_image_url || '',
-      background_opacity: customBranding.background_opacity || 100,
-      collections_config: collectionsConfig
-    });
-  };
-
-  const resetForm = () => {
-    setConfig({
-      app_name: '',
-      app_slug: '',
-      description: '',
-      theme: 'modern',
-      logo_url: '',
-      logo_size: 120,
-      logo_vertical_position: 20,
-      headline: 'Welcome to Our Delivery App',
-      headline_font_family: 'Inter',
-      headline_font_color: '#1e293b',
-      headline_vertical_position: 35,
-      subheadline: 'Fresh flowers delivered to your door',
-      subheadline_font_family: 'Inter',
-      subheadline_font_color: '#64748b',
-      subheadline_vertical_position: 45,
-      background_image_url: '',
-      background_opacity: 100,
-      collections_config: {
-        tabs: [
-          { index: 0, name: 'All Products', collection_handle: 'all' },
-          { index: 1, name: 'Bouquets', collection_handle: 'bouquets' },
-          { index: 2, name: 'Plants', collection_handle: 'plants' }
-        ],
-        occasion_buttons: [
-          { title: 'Birthday', collection_handle: 'birthday', enabled: true },
-          { title: 'Anniversary', collection_handle: 'anniversary', enabled: true },
-          { title: 'Sympathy', collection_handle: 'sympathy', enabled: true },
-          { title: 'Get Well', collection_handle: 'get-well', enabled: true }
-        ]
-      }
-    });
-  };
-
-  const fetchCollections = async () => {
+  const loadCollections = async () => {
     try {
-      const { data, error } = await supabase
-        .from('custom_collections')
-        .select('*')
-        .eq('is_published', true)
-        .order('title');
+      setCollections([]); // Clear existing collections while loading
+      
+      const { data, error } = await supabase.functions.invoke('get-all-collections', {
+        body: {}
+      });
 
-      if (error) throw error;
-      setAvailableCollections(data || []);
+      if (error) {
+        console.error('❌ Error loading collections:', error);
+        toast({
+          title: "Failed to load collections",
+          description: "Could not load Shopify collections. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data && data.collections && Array.isArray(data.collections)) {
+        // Transform and filter collections - only include ones with valid handles
+        const transformedCollections = data.collections
+          .filter((collection: any) => {
+            const isValid = collection.handle && collection.title;
+            if (!isValid) {
+              console.log('❌ Filtering out invalid collection:', collection);
+            }
+            return isValid;
+          })
+          .map((collection: any) => {
+            const transformed = {
+              id: collection.id || collection.handle,
+              handle: collection.handle,
+              name: `${collection.title} (${collection.products_count || 0} products)`,
+              title: collection.title,
+              products_count: collection.products_count || 0
+            };
+            return transformed;
+          });
+        
+        setCollections(transformedCollections);
+        
+      } else {
+        console.warn('⚠️ No collections data received or invalid format:', data);
+        setCollections([]);
+      }
     } catch (error) {
-      console.error('Error fetching collections:', error);
+      console.error('💥 Failed to load collections:', error);
+      toast({
+        title: "Error loading collections",
+        description: "Failed to connect to Shopify. Please check your connection.",
+        variant: "destructive"
+      });
+      setCollections([]);
     }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    console.log('🔄 Starting logo upload for file:', file.name, 'Size:', file.size);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      
+      console.log('📂 Uploading to app-assets bucket with filename:', fileName);
+      
+      const { error: uploadError } = await supabase.storage
+        .from('app-assets')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('✅ Upload successful, getting public URL...');
+
+      const { data: urlData } = supabase.storage
+        .from('app-assets')
+        .getPublicUrl(fileName);
+
+      console.log('🔗 Public URL generated:', urlData.publicUrl);
+      setLogoUrl(urlData.publicUrl);
+      
+      toast({
+        title: "Logo uploaded successfully",
+        description: "Your logo has been updated in the preview."
+      });
+    } catch (error) {
+      console.error('💥 Error uploading logo:', error);
+      toast({
+        title: "Upload failed",
+        description: `Failed to upload logo. Error: ${error.message || 'Unknown error'}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `background-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('app-assets')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('app-assets')
+        .getPublicUrl(fileName);
+
+      setBackgroundImageUrl(urlData.publicUrl);
+      
+      toast({
+        title: "Background uploaded successfully",
+        description: "Your background has been updated in the preview."
+      });
+    } catch (error) {
+      console.error('Error uploading background:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload background. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addTab = () => {
+    if (tabs.length < 6) {
+      setTabs([...tabs, { name: 'New Tab', collection_handle: '', icon: '📦' }]);
+    }
+  };
+
+  const removeTab = (index: number) => {
+    if (tabs.length > 1) {
+      setTabs(tabs.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateTab = (index: number, field: keyof DeliveryAppTab, value: string) => {
+    const newTabs = [...tabs];
+    newTabs[index] = { ...newTabs[index], [field]: value };
+    setTabs(newTabs);
   };
 
   const handleSave = async () => {
-    if (!config.app_name.trim() || !config.app_slug.trim()) {
+    if (!appName || !appSlug) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Validation Error",
+        description: "App name and slug are required.",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      const customBranding = {
-        theme: config.theme,
-        logo_size: config.logo_size,
-        logo_vertical_position: config.logo_vertical_position,
-        headline: config.headline,
-        headline_font_family: config.headline_font_family,
-        headline_font_color: config.headline_font_color,
-        headline_vertical_position: config.headline_vertical_position,
-        subheadline: config.subheadline,
-        subheadline_font_family: config.subheadline_font_family,
-        subheadline_font_color: config.subheadline_font_color,
-        subheadline_vertical_position: config.subheadline_vertical_position,
-        background_image_url: config.background_image_url,
-        background_opacity: config.background_opacity
-      };
+    setSaving(true);
 
+    try {
+      console.log('💾 Saving delivery app...', { appName, appSlug, theme });
+
+      // Convert data to proper JSON format for Supabase
       const appData = {
-        business_name: config.app_name,
-        site_name: config.app_name,
-        site_slug: config.app_slug,
-        app_name: config.app_name,
-        app_slug: config.app_slug,
-        description: config.description,
-        logo_url: config.logo_url,
-        custom_branding: customBranding,
-        collections_config: config.collections_config,
-        is_active: true
+        app_name: appName,
+        app_slug: appSlug,
+        logo_url: logoUrl,
+        main_app_config: JSON.parse(JSON.stringify({
+          hero_heading: heroHeading,
+          hero_subheading: heroSubheading,
+          logo_size: logoSize,
+          headline_size: headlineSize,
+          subheadline_size: subheadlineSize,
+          logo_vertical_pos: logoVerticalPos,
+          headline_vertical_pos: headlineVerticalPos,
+          subheadline_vertical_pos: subheadlineVerticalPos,
+          background_image_url: backgroundImageUrl,
+          background_opacity: backgroundOpacity,
+          overlay_color: overlayColor
+        })),
+        collections_config: JSON.parse(JSON.stringify({
+          tab_count: tabs.length,
+          tabs: tabs.map(tab => ({
+            name: tab.name,
+            collection_handle: tab.collection_handle,
+            icon: tab.icon || '📦'
+          }))
+        })),
+        theme: theme,
+        is_active: isActive,
+        is_homepage: isHomepage,
+        updated_at: new Date().toISOString()
       };
 
       let result;
-      if (editingApp) {
+      
+      if (initial?.id) {
+        // Update existing app
         result = await supabase
-          .from('custom_affiliate_sites')
+          .from('delivery_app_variations')
           .update(appData)
-          .eq('id', editingApp.id);
+          .eq('id', initial.id);
       } else {
+        // Create new app
         result = await supabase
-          .from('custom_affiliate_sites')
-          .insert([appData]);
+          .from('delivery_app_variations')
+          .insert({
+            ...appData,
+            created_at: new Date().toISOString()
+          });
       }
 
-      if (result.error) throw result.error;
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
 
+      console.log('✅ App saved successfully');
+      
       toast({
-        title: "Success",
-        description: editingApp ? "Delivery app updated successfully!" : "Delivery app created successfully!",
+        title: "App saved successfully",
+        description: initial?.id ? "Your delivery app has been updated." : "Your delivery app has been created."
       });
 
-      onAppCreated();
-      onClose();
-    } catch (error) {
-      console.error('Error saving delivery app:', error);
+      onSaved?.();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('💥 Error saving app:', error);
       toast({
-        title: "Error",
-        description: "Failed to save delivery app",
+        title: "Save failed",
+        description: `Failed to save delivery app: ${error.message || 'Please try again.'}`,
         variant: "destructive"
       });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const currentTheme = DELIVERY_THEMES[config.theme as keyof typeof DELIVERY_THEMES];
-  const deviceConfig = DEVICE_SIZES[currentDevice];
-
-  const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  };
-
-  const handleAppNameChange = (value: string) => {
-    setConfig(prev => ({
-      ...prev,
-      app_name: value,
-      app_slug: generateSlug(value)
-    }));
-  };
-
-  const addTab = () => {
-    const newTab: Tab = {
-      index: config.collections_config.tabs.length,
-      name: '',
-      collection_handle: ''
-    };
-    setConfig(prev => ({
-      ...prev,
-      collections_config: {
-        ...prev.collections_config,
-        tabs: [...prev.collections_config.tabs, newTab]
-      }
-    }));
-  };
-
-  const updateTab = (index: number, field: keyof Tab, value: string | number) => {
-    setConfig(prev => ({
-      ...prev,
-      collections_config: {
-        ...prev.collections_config,
-        tabs: prev.collections_config.tabs.map((tab, i) => 
-          i === index ? { ...tab, [field]: value } : tab
-        )
-      }
-    }));
-  };
-
-  const removeTab = (index: number) => {
-    setConfig(prev => ({
-      ...prev,
-      collections_config: {
-        ...prev.collections_config,
-        tabs: prev.collections_config.tabs.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const addOccasionButton = () => {
-    const newButton: OccasionButton = {
-      title: '',
-      collection_handle: '',
-      enabled: true
-    };
-    setConfig(prev => ({
-      ...prev,
-      collections_config: {
-        ...prev.collections_config,
-        occasion_buttons: [...prev.collections_config.occasion_buttons, newButton]
-      }
-    }));
-  };
-
-  const updateOccasionButton = (index: number, field: keyof OccasionButton, value: string | boolean) => {
-    setConfig(prev => ({
-      ...prev,
-      collections_config: {
-        ...prev.collections_config,
-        occasion_buttons: prev.collections_config.occasion_buttons.map((button, i) => 
-          i === index ? { ...button, [field]: value } : button
-        )
-      }
-    }));
-  };
-
-  const removeOccasionButton = (index: number) => {
-    setConfig(prev => ({
-      ...prev,
-      collections_config: {
-        ...prev.collections_config,
-        occasion_buttons: prev.collections_config.occasion_buttons.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const renderPreview = () => {
-    const deviceStyle = {
-      width: `${deviceConfig.width}px`,
-      height: `${deviceConfig.height}px`,
-      background: currentTheme.colors.background,
-      position: 'relative' as const,
-      overflow: 'hidden',
-      borderRadius: currentDevice === 'mobile' ? '24px' : currentDevice === 'tablet' ? '12px' : '8px',
-      border: '2px solid #e2e8f0',
-      margin: '0 auto'
-    };
-
-    return (
-      <div style={deviceStyle}>
-        {/* Background Image */}
-        {config.background_image_url && (
-          <div 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundImage: `url(${config.background_image_url})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              opacity: config.background_opacity / 100,
-              zIndex: 1
-            }}
-          />
-        )}
-        
-        {/* Content Overlay */}
-        <div style={{ position: 'relative', zIndex: 2, height: '100%', padding: '20px' }}>
-          {/* Logo */}
-          {config.logo_url && (
-            <div 
-              style={{
-                position: 'absolute',
-                top: `${config.logo_vertical_position}%`,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 3
-              }}
-            >
-              <img
-                src={config.logo_url}
-                alt="Logo"
-                style={{
-                  width: `${config.logo_size}px`,
-                  height: 'auto',
-                  maxWidth: '100%'
-                }}
-              />
-            </div>
-          )}
-
-          {/* Headline */}
-          <div
-            style={{
-              position: 'absolute',
-              top: `${config.headline_vertical_position}%`,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              textAlign: 'center',
-              zIndex: 3,
-              width: '90%'
-            }}
-          >
-            <h1
-              style={{
-                fontFamily: config.headline_font_family,
-                color: config.headline_font_color,
-                fontSize: currentDevice === 'mobile' ? '24px' : currentDevice === 'tablet' ? '32px' : '40px',
-                fontWeight: 'bold',
-                margin: 0,
-                lineHeight: 1.2
-              }}
-            >
-              {config.headline}
-            </h1>
-          </div>
-
-          {/* Subheadline */}
-          <div
-            style={{
-              position: 'absolute',
-              top: `${config.subheadline_vertical_position}%`,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              textAlign: 'center',
-              zIndex: 3,
-              width: '90%'
-            }}
-          >
-            <p
-              style={{
-                fontFamily: config.subheadline_font_family,
-                color: config.subheadline_font_color,
-                fontSize: currentDevice === 'mobile' ? '16px' : currentDevice === 'tablet' ? '18px' : '20px',
-                margin: 0,
-                lineHeight: 1.4
-              }}
-            >
-              {config.subheadline}
-            </p>
-          </div>
-
-          {/* Tabs Preview */}
-          <div 
-            style={{
-              position: 'absolute',
-              bottom: '40%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '90%',
-              zIndex: 3
-            }}
-          >
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-              {config.collections_config.tabs.slice(0, 3).map((tab, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: currentTheme.colors.primary,
-                    color: 'white',
-                    borderRadius: '20px',
-                    fontSize: '12px',
-                    fontWeight: '500'
-                  }}
-                >
-                  {tab.name || `Tab ${index + 1}`}
-                </div>
-              ))}
-            </div>
-            
-            {/* Occasion Buttons Preview */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-              {config.collections_config.occasion_buttons.filter(btn => btn.enabled).slice(0, 4).map((button, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: currentTheme.colors.secondary,
-                    color: 'white',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    textAlign: 'center'
-                  }}
-                >
-                  {button.title || `Button ${index + 1}`}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>
-            {editingApp ? 'Edit Delivery App' : 'Create New Delivery App'}
-          </DialogTitle>
-        </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent 
+        className="max-w-7xl w-full p-0 max-h-[90vh] overflow-hidden"
+        aria-describedby="dialog-description"
+      >
+        <div className="flex flex-col h-full max-h-[90vh]">
+          {/* Header */}
+          <DialogHeader className="flex-shrink-0 p-4 border-b bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl font-semibold">
+                  {initial ? 'Edit Delivery App' : 'Create Delivery App'}
+                </DialogTitle>
+                <DialogDescription id="dialog-description" className="text-sm text-muted-foreground mt-1">
+                  Build and customize your delivery app with live preview. Configure collections, themes, and branding.
+                </DialogDescription>
+              </div>
+              <Button
+                onClick={handleSave}
+                disabled={saving || !appName || !appSlug}
+                size="sm"
+                className="min-w-[100px]"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save App'}
+              </Button>
+            </div>
+          </DialogHeader>
 
-        <div className="flex-1 flex gap-6 overflow-hidden">
-          {/* Configuration Panel */}
-          <div className="w-1/2 flex flex-col">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="basic">Basic</TabsTrigger>
-                <TabsTrigger value="styling">Styling</TabsTrigger>
-                <TabsTrigger value="collections">Collections</TabsTrigger>
-                <TabsTrigger value="layout">Layout</TabsTrigger>
-              </TabsList>
-
-              <ScrollArea className="flex-1 mt-4">
-                <TabsContent value="basic" className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="app_name">App Name *</Label>
-                      <Input
-                        id="app_name"
-                        value={config.app_name}
-                        onChange={(e) => handleAppNameChange(e.target.value)}
-                        placeholder="Enter app name"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="app_slug">App URL Slug *</Label>
-                      <Input
-                        id="app_slug"
-                        value={config.app_slug}
-                        onChange={(e) => setConfig(prev => ({ ...prev, app_slug: e.target.value }))}
-                        placeholder="app-url-slug"
-                      />
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {CANONICAL_DOMAIN}/delivery/{config.app_slug}
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={config.description}
-                        onChange={(e) => setConfig(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Brief description of your delivery app"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="logo_url">Logo URL</Label>
-                      <Input
-                        id="logo_url"
-                        value={config.logo_url}
-                        onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
-                        placeholder="https://example.com/logo.png"
-                      />
-                    </div>
+        {/* Main Content - Scrollable content area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-0 h-full min-h-[600px]">
+            {/* Left Panel - Configuration */}
+            <div className="border-r bg-muted/20">
+              <div className="p-6 space-y-6">
+                {/* Device Selector */}
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant={previewDevice === 'mobile' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewDevice('mobile')}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      <span className="text-xs">Mobile</span>
+                    </Button>
+                    <Button
+                      variant={previewDevice === 'tablet' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewDevice('tablet')}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <Tablet className="w-4 h-4" />
+                      <span className="text-xs">Tablet</span>
+                    </Button>
+                    <Button
+                      variant={previewDevice === 'desktop' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPreviewDevice('desktop')}
+                      className="flex flex-col items-center gap-1 h-auto py-2"
+                    >
+                      <Monitor className="w-4 h-4" />
+                      <span className="text-xs">Desktop</span>
+                    </Button>
                   </div>
-                </TabsContent>
+                </div>
 
-                <TabsContent value="styling" className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Theme</Label>
-                      <Select 
-                        value={config.theme} 
-                        onValueChange={(value) => setConfig(prev => ({ ...prev, theme: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(DELIVERY_THEMES).map(([key, theme]) => (
-                            <SelectItem key={key} value={key}>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-4 h-4 rounded"
-                                  style={{ backgroundColor: theme.colors.primary }}
-                                />
-                                {theme.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                {/* App Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">App Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="app-name">App Name *</Label>
+                        <Input
+                          id="app-name"
+                          value={appName}
+                          onChange={(e) => setAppName(e.target.value)}
+                          placeholder="My Delivery App"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="app-slug">App Slug *</Label>
+                        <Input
+                          id="app-slug"
+                          value={appSlug}
+                          onChange={(e) => setAppSlug(e.target.value)}
+                          placeholder="my-delivery-app"
+                        />
+                      </div>
                     </div>
+                  </CardContent>
+                </Card>
 
+                {/* Hero Content */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Hero Content</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div>
                       <Label htmlFor="headline">Headline</Label>
                       <Input
                         id="headline"
-                        value={config.headline}
-                        onChange={(e) => setConfig(prev => ({ ...prev, headline: e.target.value }))}
-                        placeholder="Welcome to Our Delivery App"
+                        value={heroHeading}
+                        onChange={(e) => setHeroHeading(e.target.value)}
+                        placeholder="Austin's Premier Party"
                       />
                     </div>
-
-                    <div>
-                      <Label htmlFor="headline_font_family">Headline Font</Label>
-                      <Select 
-                        value={config.headline_font_family} 
-                        onValueChange={(value) => setConfig(prev => ({ ...prev, headline_font_family: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Inter">Inter</SelectItem>
-                          <SelectItem value="Arial">Arial</SelectItem>
-                          <SelectItem value="Helvetica">Helvetica</SelectItem>
-                          <SelectItem value="Georgia">Georgia</SelectItem>
-                          <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="headline_font_color">Headline Color</Label>
-                      <Input
-                        id="headline_font_color"
-                        type="color"
-                        value={config.headline_font_color}
-                        onChange={(e) => setConfig(prev => ({ ...prev, headline_font_color: e.target.value }))}
-                      />
-                    </div>
-
                     <div>
                       <Label htmlFor="subheadline">Subheadline</Label>
                       <Input
                         id="subheadline"
-                        value={config.subheadline}
-                        onChange={(e) => setConfig(prev => ({ ...prev, subheadline: e.target.value }))}
-                        placeholder="Fresh flowers delivered to your door"
+                        value={heroSubheading}
+                        onChange={(e) => setHeroSubheading(e.target.value)}
+                        placeholder="Satisfaction Guaranteed"
                       />
                     </div>
+                  </CardContent>
+                </Card>
 
-                    <div>
-                      <Label htmlFor="subheadline_font_family">Subheadline Font</Label>
-                      <Select 
-                        value={config.subheadline_font_family} 
-                        onValueChange={(value) => setConfig(prev => ({ ...prev, subheadline_font_family: value }))}
+                {/* Branding */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Branding</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Logo Upload</Label>
+                        <Button
+                          variant="outline"
+                          onClick={() => logoInputRef.current?.click()}
+                          className="w-full"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Logo
+                        </Button>
+                      </div>
+                      <div>
+                        <Label>Background Image</Label>
+                        <Button
+                          variant="outline"
+                          onClick={() => document.getElementById('background-upload')?.click()}
+                          className="w-full"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Background
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Text Sizing & Position */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Text Sizing & Position</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Logo Size: {logoSize}px</Label>
+                        <Slider
+                          value={[logoSize]}
+                          onValueChange={(value) => setLogoSize(value[0])}
+                          max={120}
+                          min={40}
+                          step={5}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <Label>Headline Size: {headlineSize}px</Label>
+                        <Slider
+                          value={[headlineSize]}
+                          onValueChange={(value) => setHeadlineSize(value[0])}
+                          max={48}
+                          min={16}
+                          step={2}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Theme */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Theme</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Select value={theme} onValueChange={(value: 'original' | 'gold' | 'platinum') => setTheme(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="original">Original (Purple)</SelectItem>
+                        <SelectItem value="gold">Gold (Dark)</SelectItem>
+                        <SelectItem value="platinum">Platinum (Blue)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+
+                {/* Collections/Tabs */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      Collections & Tabs
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={addTab}
+                        disabled={tabs.length >= 6}
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Inter">Inter</SelectItem>
-                          <SelectItem value="Arial">Arial</SelectItem>
-                          <SelectItem value="Helvetica">Helvetica</SelectItem>
-                          <SelectItem value="Georgia">Georgia</SelectItem>
-                          <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="subheadline_font_color">Subheadline Color</Label>
-                      <Input
-                        id="subheadline_font_color"
-                        type="color"
-                        value={config.subheadline_font_color}
-                        onChange={(e) => setConfig(prev => ({ ...prev, subheadline_font_color: e.target.value }))}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="background_image_url">Background Image URL</Label>
-                      <Input
-                        id="background_image_url"
-                        value={config.background_image_url}
-                        onChange={(e) => setConfig(prev => ({ ...prev, background_image_url: e.target.value }))}
-                        placeholder="https://example.com/background.jpg"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Background Opacity: {config.background_opacity}%</Label>
-                      <Slider
-                        value={[config.background_opacity]}
-                        onValueChange={([value]) => setConfig(prev => ({ ...prev, background_opacity: value }))}
-                        max={100}
-                        min={0}
-                        step={5}
-                        className="mt-2"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="layout" className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Logo Size: {config.logo_size}px</Label>
-                      <Slider
-                        value={[config.logo_size]}
-                        onValueChange={([value]) => setConfig(prev => ({ ...prev, logo_size: value }))}
-                        max={300}
-                        min={50}
-                        step={10}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Logo Vertical Position: {config.logo_vertical_position}%</Label>
-                      <Slider
-                        value={[config.logo_vertical_position]}
-                        onValueChange={([value]) => setConfig(prev => ({ ...prev, logo_vertical_position: value }))}
-                        max={80}
-                        min={5}
-                        step={1}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Headline Vertical Position: {config.headline_vertical_position}%</Label>
-                      <Slider
-                        value={[config.headline_vertical_position]}
-                        onValueChange={([value]) => setConfig(prev => ({ ...prev, headline_vertical_position: value }))}
-                        max={80}
-                        min={10}
-                        step={1}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Subheadline Vertical Position: {config.subheadline_vertical_position}%</Label>
-                      <Slider
-                        value={[config.subheadline_vertical_position]}
-                        onValueChange={([value]) => setConfig(prev => ({ ...prev, subheadline_vertical_position: value }))}
-                        max={80}
-                        min={15}
-                        step={1}
-                        className="mt-2"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="collections" className="space-y-4">
-                  <div className="space-y-6">
-                    {/* Tabs Configuration */}
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <Label className="text-base font-semibold">Navigation Tabs</Label>
-                        <Button onClick={addTab} size="sm" variant="outline">
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add Tab
-                        </Button>
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Tab
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {tabs.map((tab, index) => (
+                      <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                        <div className="flex-1 grid grid-cols-3 gap-2">
+                          <Input
+                            placeholder="Tab Name"
+                            value={tab.name}
+                            onChange={(e) => updateTab(index, 'name', e.target.value)}
+                          />
+                          <Select
+                            key={`collection-${index}-${collections.length}`}
+                            value={tab.collection_handle}
+                            onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[200px] overflow-y-auto bg-background border border-border shadow-lg z-50">
+                              {collections.length > 0 ? (
+                                collections.map((collection, collectionIndex) => (
+                                  <SelectItem 
+                                    key={`${collection.handle}-${index}-${collectionIndex}`} 
+                                    value={collection.handle}
+                                    className="bg-background hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                  >
+                                    {collection.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="loading" disabled>
+                                  Loading collections... ({collections.length} found)
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {tabs.length > 1 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeTab(index)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
-                      
-                      <div className="space-y-3">
-                        {config.collections_config.tabs.map((tab, index) => (
-                          <Card key={index} className="p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Move className="w-4 h-4 text-muted-foreground" />
-                              <Label className="text-sm font-medium">Tab {index + 1}</Label>
-                              <Button
-                                onClick={() => removeTab(index)}
-                                size="sm"
-                                variant="ghost"
-                                className="ml-auto text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label htmlFor={`tab-name-${index}`} className="text-xs">Tab Name</Label>
-                                <Input
-                                  id={`tab-name-${index}`}
-                                  value={tab.name}
-                                  onChange={(e) => updateTab(index, 'name', e.target.value)}
-                                   placeholder="Tab name"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor={`tab-collection-${index}`} className="text-xs">Collection</Label>
-                                <Select 
-                                  value={tab.collection_handle} 
-                                  onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select collection" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">All Products</SelectItem>
-                                    {availableCollections.map((collection) => (
-                                      <SelectItem key={collection.id} value={collection.handle}>
-                                        {collection.title}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Status Controls */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is-active"
+                          checked={isActive}
+                          onCheckedChange={setIsActive}
+                        />
+                        <Label htmlFor="is-active" className="text-sm">Active</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is-homepage"
+                          checked={isHomepage}
+                          onCheckedChange={setIsHomepage}
+                        />
+                        <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
                       </div>
                     </div>
-
-                    {/* Occasion Buttons Configuration */}
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <Label className="text-base font-semibold">Occasion Buttons</Label>
-                        <Button onClick={addOccasionButton} size="sm" variant="outline">
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add Button
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {config.collections_config.occasion_buttons.map((button, index) => (
-                          <Card key={index} className="p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant={button.enabled ? "default" : "secondary"}>
-                                {button.enabled ? "Enabled" : "Disabled"}
-                              </Badge>
-                              <Label className="text-sm font-medium">Button {index + 1}</Label>
-                              <Switch
-                                checked={button.enabled}
-                                onCheckedChange={(checked) => updateOccasionButton(index, 'enabled', checked)}
-                                className="ml-auto"
-                              />
-                              <Button
-                                onClick={() => removeOccasionButton(index)}
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label htmlFor={`button-title-${index}`} className="text-xs">Button Title</Label>
-                                <Input
-                                  id={`button-title-${index}`}
-                                  value={button.title}
-                                  onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
-                                   placeholder="Button title"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor={`button-collection-${index}`} className="text-xs">Collection</Label>
-                                <Select 
-                                  value={button.collection_handle} 
-                                  onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select collection" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {availableCollections.map((collection) => (
-                                      <SelectItem key={collection.id} value={collection.handle}>
-                                        {collection.title}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </ScrollArea>
-            </Tabs>
-          </div>
-
-          {/* Preview Panel */}
-          <div className="w-1/2 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Preview</h3>
-              <div className="flex items-center gap-2">
-                {Object.entries(DEVICE_SIZES).map(([key, device]) => {
-                  const IconComponent = device.icon;
-                  return (
-                    <Button
-                      key={key}
-                      variant={currentDevice === key ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentDevice(key as keyof typeof DEVICE_SIZES)}
-                    >
-                      <IconComponent className="w-4 h-4" />
-                    </Button>
-                  );
-                })}
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto">
-              <div className="min-h-full flex items-center justify-center p-4">
-                {renderPreview()}
+            {/* Right Panel - Preview */}
+            <div className="bg-muted/10">
+              <div className="p-6">
+                <h4 className="text-lg font-semibold mb-4">Live Preview</h4>
+                <div className="flex items-center justify-center">
+                  <DeliveryAppLivePreview
+                    appName={appName}
+                    heroHeading={heroHeading}
+                    heroSubheading={heroSubheading}
+                    logoUrl={logoUrl}
+                    logoSize={logoSize}
+                    headlineSize={headlineSize}
+                    subheadlineSize={subheadlineSize}
+                    logoVerticalPos={logoVerticalPos}
+                    headlineVerticalPos={headlineVerticalPos}
+                    subheadlineVerticalPos={subheadlineVerticalPos}
+                    backgroundImageUrl={backgroundImageUrl}
+                    backgroundOpacity={backgroundOpacity}
+                    overlayColor={overlayColor}
+                    tabs={tabs}
+                    theme={theme}
+                    device={previewDevice}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} className="min-w-[100px]">
-            <Save className="w-4 h-4 mr-2" />
-            {editingApp ? 'Update App' : 'Create App'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        {/* Hidden File Inputs */}
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+          className="hidden"
+        />
+        <input
+          id="background-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleBackgroundUpload}
+          className="hidden"
+        />
+      </div>
+    </DialogContent>
+  </Dialog>
   );
 };

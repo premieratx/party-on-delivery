@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedCoverPageEditor, type CoverPageConfig } from './UnifiedCoverPageEditor';
-import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
+import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
 import { UnifiedPostCheckoutEditor } from './UnifiedPostCheckoutEditor';
 
 interface CoverPage {
@@ -566,11 +566,11 @@ export const UnifiedFlowManager: React.FC = () => {
       )}
 
       {showDeliveryEditor && (
-        <UnifiedDeliveryAppCreator
-          isOpen={showDeliveryEditor}
-          onClose={() => setShowDeliveryEditor(false)}
-          editingApp={editingDeliveryApp}
-          onAppCreated={() => {
+        <UnifiedDeliveryAppEditor
+          open={showDeliveryEditor}
+          onOpenChange={setShowDeliveryEditor}
+          initial={editingDeliveryApp}
+          onSaved={() => {
             loadAllData();
             setShowDeliveryEditor(false);
             setEditingDeliveryApp(null);
