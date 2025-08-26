@@ -170,8 +170,12 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 <img 
                   src={logoUrl} 
                   alt="Logo" 
-                  className="relative w-20 h-20 object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
-                  style={{ height: `${logoHeight || 80}px` }}
+                  className="relative object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
+                  style={{ 
+                    height: `${logoHeight || 120}px`,
+                    width: 'auto', // Maintains aspect ratio
+                    maxWidth: '200px' // Prevents logos from being too wide
+                  }}
                 />
               </div>
             </div>
