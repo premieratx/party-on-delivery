@@ -255,11 +255,15 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           </div>
 
-          {/* Title Section */}
+          {/* Title Section - Centered in available space */}
           <div 
             className={`text-center transition-all duration-700 ${getAnimationClass(1)}`}
             style={{ 
-              transform: `translateY(${titleOffsetY || 0}px)`,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)', // Perfect center - ignore titleOffsetY
+              width: '90%',
               animationDelay: `${getAnimationDelay(1)}ms`
             }}
           >
@@ -274,13 +278,12 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             
             {/* Subtitle */}
             {subtitle && (
-              <div 
-                className={`transition-all duration-700 ${getAnimationClass(2)}`}
-                style={{ 
-                  transform: `translateY(${subtitleOffsetY || 0}px)`,
-                  animationDelay: `${getAnimationDelay(2)}ms`
-                }}
-              >
+               <div 
+                 className={`transition-all duration-700 ${getAnimationClass(2)}`}
+                 style={{ 
+                   animationDelay: `${getAnimationDelay(2)}ms` // Removed subtitleOffsetY
+                 }}
+               >
                 <p 
                   className="text-white/80 mb-3 px-3 leading-relaxed"
                   style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px' }}
@@ -291,15 +294,14 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Features Section */}
-          {checklistItems && checklistItems.length > 0 && (
-            <div 
-              className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(3)}`}
-              style={{ 
-                transform: `translateY(${checklistOffsetY || 0}px)`,
-                animationDelay: `${getAnimationDelay(3)}ms`
-              }}
-            >
+           {/* Features Section */}
+           {checklistItems && checklistItems.length > 0 && (
+             <div 
+               className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(3)}`}
+               style={{ 
+                 animationDelay: `${getAnimationDelay(3)}ms` // Removed checklistOffsetY
+               }}
+             >
               <div className="space-y-2">
                 {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
                   <div 
