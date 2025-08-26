@@ -140,7 +140,7 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen bg-black flex items-center justify-center">
       {/* Admin Preview Badge (only in development) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-4 right-4 z-50">
@@ -151,39 +151,43 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
         </div>
       )}
 
-      {/* Cover Page Content */}
-      <CoverStartScreen
-        appName={coverPage.title}
-        title={coverPage.title}
-        subtitle={coverPage.subtitle}
-        logoUrl={coverPage.logo_url}
-        logoHeight={coverPage.logo_height}
-        backgroundImageUrl={coverPage.bg_image_url}
-        backgroundVideoUrl={coverPage.bg_video_url}
-        checklistItems={(() => {
-          const checklist = Array.isArray(coverPage.checklist) ? coverPage.checklist : 
-            (typeof coverPage.checklist === 'string' ? JSON.parse(coverPage.checklist) : []);
-          console.log('🔍 Checklist items being passed to CoverStartScreen:', checklist);
-          return checklist;
-        })()}
-        buttons={convertButtons(Array.isArray(coverPage.buttons) ? coverPage.buttons : 
-          (typeof coverPage.buttons === 'string' ? JSON.parse(coverPage.buttons) : []))}
-        titleSize={coverPage.styles?.title_size}
-        subtitleSize={coverPage.styles?.subtitle_size}
-        checklistSize={coverPage.styles?.checklist_size}
-        backgroundColor={coverPage.styles?.background_color}
-        titleOffsetY={coverPage.styles?.title_offset_y}
-        subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
-        checklistOffsetY={coverPage.styles?.checklist_offset_y}
-        buttonsOffsetY={coverPage.styles?.buttons_offset_y}
-        logoBgColor={coverPage.styles?.logo_bg_color}
-        logoBgMode={coverPage.styles?.logo_bg_mode}
-      />
+      {/* Centered Phone Frame - Exactly matching editor preview */}
+      <div className="w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden relative">
+        <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
+          <CoverStartScreen
+            appName={coverPage.title}
+            title={coverPage.title}
+            subtitle={coverPage.subtitle}
+            logoUrl={coverPage.logo_url}
+            logoHeight={coverPage.logo_height}
+            backgroundImageUrl={coverPage.bg_image_url}
+            backgroundVideoUrl={coverPage.bg_video_url}
+            checklistItems={(() => {
+              const checklist = Array.isArray(coverPage.checklist) ? coverPage.checklist : 
+                (typeof coverPage.checklist === 'string' ? JSON.parse(coverPage.checklist) : []);
+              console.log('🔍 Checklist items being passed to CoverStartScreen:', checklist);
+              return checklist;
+            })()}
+            buttons={convertButtons(Array.isArray(coverPage.buttons) ? coverPage.buttons : 
+              (typeof coverPage.buttons === 'string' ? JSON.parse(coverPage.buttons) : []))}
+            titleSize={coverPage.styles?.title_size}
+            subtitleSize={coverPage.styles?.subtitle_size}
+            checklistSize={coverPage.styles?.checklist_size}
+            backgroundColor={coverPage.styles?.background_color}
+            titleOffsetY={coverPage.styles?.title_offset_y}
+            subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
+            checklistOffsetY={coverPage.styles?.checklist_offset_y}
+            buttonsOffsetY={coverPage.styles?.buttons_offset_y}
+            logoOffsetY={coverPage.styles?.logo_offset_y}
+            logoBgColor={coverPage.styles?.logo_bg_color}
+            logoBgMode={coverPage.styles?.logo_bg_mode}
+          />
+        </div>
+      </div>
 
-      {/* SEO Meta Tags */}
+      {/* SEO Meta Tags - without setting document.title to avoid filename display */}
       {typeof document !== 'undefined' && (
         <>
-          {document.title = coverPage.title}
           {coverPage.subtitle && (
             <meta name="description" content={coverPage.subtitle} />
           )}
