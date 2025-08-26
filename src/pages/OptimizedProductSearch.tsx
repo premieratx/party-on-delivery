@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
+import { SwipeUpNavigation } from '@/components/common/SwipeUpNavigation';
 import { getInstantProducts } from '@/utils/instantCacheClient';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -571,15 +571,11 @@ export default function OptimizedProductSearch() {
         onClose={() => setIsCartOpen(false)}
       />
 
-        {/* Mobile Bottom Cart - Show when items exist */}
-        {getTotalItems() > 0 && (
-          <MobileBottomCartBar
-            cartItemCount={getTotalItems()}
-            totalAmount={getTotalPrice()}
-            onOpenCart={() => setIsCartOpen(true)}
-            className="md:hidden"
-          />
-        )}
+      {/* Swipe-up Navigation */}
+      <SwipeUpNavigation
+        cartItemCount={getTotalItems()}
+        onOpenCart={() => setIsCartOpen(true)}
+      />
     </div>
   );
 }

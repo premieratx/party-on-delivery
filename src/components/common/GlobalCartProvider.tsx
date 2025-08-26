@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { BottomCartBar } from '@/components/common/BottomCartBar';
+import { SwipeUpNavigation } from '@/components/common/SwipeUpNavigation';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCoverPageDetection } from '@/hooks/useCoverPageDetection';
@@ -82,19 +82,11 @@ export const GlobalCartProvider: React.FC<GlobalCartProviderProps> = ({ children
         onClose={closeCart}
       />
       
-      {/* Always render bottom cart bar unless on specific pages */}
-      {shouldShowCartBar && (
-        <BottomCartBar
-          items={cartItems}
-          totalPrice={getTotalPrice()}
-          isVisible={forceVisible}
-          onOpenCart={openCart}
-          onCheckout={handleCheckout}
-          shouldHide={false} // Never hide
-          showAdmin={isAdminUser}
-          currentAppSlug={location.pathname.includes('/app/') ? location.pathname.split('/app/')[1] : undefined}
-        />
-      )}
+      {/* Always render swipe-up navigation */}
+      <SwipeUpNavigation
+        cartItemCount={getTotalItems()}
+        onOpenCart={openCart}
+      />
     </GlobalCartContext.Provider>
   );
 };

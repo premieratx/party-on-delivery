@@ -16,7 +16,7 @@ import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { parseProductTitle } from '@/utils/productUtils';
-import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
+import { SwipeUpNavigation } from '@/components/common/SwipeUpNavigation';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
@@ -90,6 +90,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Preload background image for instant display
   const { loaded: bgImageLoaded } = useImagePreloader(bgImage, { priority: true });
@@ -729,23 +730,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
 
-        {/* Mobile Bottom Cart - Fixed button functionality */}
-        {getTotalItems() > 0 && (
-          <MobileBottomCartBar
-            cartItemCount={getTotalItems()}
-            totalAmount={getTotalPrice()}
-            onOpenCart={() => {
-              console.log('🛒 Mobile cart button clicked');
-              if (onOpenCart) {
-                onOpenCart();
-              } else {
-                // Fallback navigation to checkout
-                navigate('/checkout');
-              }
-            }}
-            className="md:hidden fixed bottom-0 left-0 right-0 z-50"
-          />
-        )}
+      {/* Swipe-up Navigation */}
+      <SwipeUpNavigation
+        cartItemCount={getTotalItems()}
+        onOpenCart={() => setIsCartOpen(true)}
+      />
         
         {/* What's the Occasion? - HIDDEN as requested */}
 
