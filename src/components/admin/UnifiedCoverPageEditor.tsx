@@ -1173,9 +1173,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden flex items-center justify-center">
+          <div className="flex-1 overflow-auto flex items-center justify-center py-4">
             <div className="w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden relative">
-              <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
+              <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden">
                 <CoverStartScreen
                 title={title}
                 subtitle={subtitle}
