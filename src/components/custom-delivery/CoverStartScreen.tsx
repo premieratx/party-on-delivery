@@ -126,8 +126,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
-        height: '852px', // Fixed iPhone 14 Pro height
-        maxHeight: '852px'
+        height: '720px', // Reduced to match preview window visible area
+        maxHeight: '720px'
       } as React.CSSProperties}
     >
       {/* Background */}
@@ -137,8 +137,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           backgroundColor: backgroundColor || undefined,
           touchAction: 'none',
           overscrollBehavior: 'none',
-          height: '852px', // Fixed iPhone 14 Pro height
-          maxHeight: '852px'
+          height: '720px', // Reduced to match preview window visible area
+          maxHeight: '720px'
         } as React.CSSProperties}
       >
         <div className="absolute inset-0">
@@ -176,8 +176,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             touchAction: 'none',
             userSelect: 'none',
             overscrollBehavior: 'none',
-            height: '852px', // Fixed iPhone 14 Pro height
-            maxHeight: '852px',
+            height: '720px', // Reduced to match preview window visible area
+            maxHeight: '720px',
             overflow: 'hidden'
           } as React.CSSProperties}
         >
