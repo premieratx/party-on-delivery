@@ -105,17 +105,24 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
           return;
         }
 
-        console.log('✅ Loaded app config:', data);
+        console.log('✅ Raw loaded app config:', data);
         
         // Ensure main_app_config is properly parsed as JSON if it's a string
         let parsedData = { ...data };
+        
         if (typeof data.main_app_config === 'string') {
           try {
             parsedData.main_app_config = JSON.parse(data.main_app_config);
+            console.log('📋 Parsed main_app_config from string:', parsedData.main_app_config);
           } catch (e) {
-            console.error('Failed to parse main_app_config:', e);
+            console.error('❌ Failed to parse main_app_config:', e);
             parsedData.main_app_config = {};
           }
+        } else if (data.main_app_config) {
+          console.log('📋 main_app_config already object:', data.main_app_config);
+        } else {
+          console.log('⚠️ No main_app_config found, using empty object');
+          parsedData.main_app_config = {};
         }
         
         // Ensure collections_config is properly parsed as JSON if it's a string
@@ -123,13 +130,16 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
           try {
             parsedData.collections_config = JSON.parse(data.collections_config);
           } catch (e) {
-            console.error('Failed to parse collections_config:', e);
+            console.error('❌ Failed to parse collections_config:', e);
             parsedData.collections_config = { tabs: [] };
           }
+        } else if (!data.collections_config) {
+          parsedData.collections_config = { tabs: [] };
         }
         
-        console.log('📋 Final parsed config:', parsedData);
-        setAppConfig(parsedData as any);
+        console.log('🎯 Final parsed delivery app config:', parsedData);
+        
+        setAppConfig(parsedData as unknown as DeliveryAppConfig);
       } catch (error) {
         console.error('💥 Failed to load app config:', error);
         setAppConfig(null);

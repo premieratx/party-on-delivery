@@ -23,10 +23,11 @@ export function CustomDeliveryIntro({
   onGoHome 
 }: CustomDeliveryIntroProps) {
   // Debug logging to check what values we're receiving
-  console.log('🔍 CustomDeliveryIntro props:', {
+  console.log('🔍 CustomDeliveryIntro props received:', {
     appName,
     heroHeading,
     heroSubheading,
+    logoUrl,
     mainAppConfig
   });
 
@@ -39,15 +40,31 @@ export function CustomDeliveryIntro({
 
   // Helper function to get the actual heading with proper fallback
   const getActualHeading = () => {
-    const heading = heroHeading?.trim() || mainAppConfig?.hero_heading?.trim() || appName;
-    console.log('📝 Using heading:', heading);
+    // Priority: heroHeading prop -> mainAppConfig.hero_heading -> appName fallback
+    let heading = '';
+    if (heroHeading && heroHeading.trim()) {
+      heading = heroHeading.trim();
+    } else if (mainAppConfig?.hero_heading && mainAppConfig.hero_heading.trim()) {
+      heading = mainAppConfig.hero_heading.trim();
+    } else {
+      heading = appName || 'Delivery Service';
+    }
+    console.log('📝 Final heading selected:', heading);
     return heading;
   };
 
   // Helper function to get the actual subheading with proper fallback
   const getActualSubheading = () => {
-    const subheading = heroSubheading?.trim() || mainAppConfig?.hero_subheading?.trim() || 'Premium Curated Experience';
-    console.log('📝 Using subheading:', subheading);
+    // Priority: heroSubheading prop -> mainAppConfig.hero_subheading -> default fallback
+    let subheading = '';
+    if (heroSubheading && heroSubheading.trim()) {
+      subheading = heroSubheading.trim();
+    } else if (mainAppConfig?.hero_subheading && mainAppConfig.hero_subheading.trim()) {
+      subheading = mainAppConfig.hero_subheading.trim();
+    } else {
+      subheading = 'Premium Curated Experience';
+    }
+    console.log('📝 Final subheading selected:', subheading);
     return subheading;
   };
 
@@ -93,23 +110,23 @@ export function CustomDeliveryIntro({
           <div className="space-y-4">
             <h1 
               className="font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
-              style={{
-                fontSize: `${(mainAppConfig?.headline_size || 24) * 1.5}px`,
-                fontFamily: mainAppConfig?.headline_font ? `${mainAppConfig.headline_font}, sans-serif` : undefined,
-                color: mainAppConfig?.headline_color || undefined,
-                transform: `translateY(${mainAppConfig?.headline_vertical_pos || 0}px)`
-              }}
+            style={{
+              fontSize: `${(mainAppConfig?.headline_size || 24) * 1.5}px`,
+              fontFamily: mainAppConfig?.headline_font ? `${mainAppConfig.headline_font}, sans-serif` : undefined,
+              color: mainAppConfig?.headline_color && mainAppConfig.headline_color !== '#ffffff' ? mainAppConfig.headline_color : undefined,
+              transform: `translateY(${mainAppConfig?.headline_vertical_pos || 0}px)`
+            }}
             >
               {getActualHeading()}
             </h1>
             <p 
               className="text-xl text-muted-foreground"
-              style={{
-                fontSize: `${(mainAppConfig?.subheadline_size || 14) * 1.2}px`,
-                fontFamily: mainAppConfig?.subheadline_font ? `${mainAppConfig.subheadline_font}, sans-serif` : undefined,
-                color: mainAppConfig?.subheadline_color || undefined,
-                transform: `translateY(${mainAppConfig?.subheadline_vertical_pos || 0}px)`
-              }}
+            style={{
+              fontSize: `${(mainAppConfig?.subheadline_size || 14) * 1.2}px`,
+              fontFamily: mainAppConfig?.subheadline_font ? `${mainAppConfig.subheadline_font}, sans-serif` : undefined,
+              color: mainAppConfig?.subheadline_color && mainAppConfig.subheadline_color !== '#ffffff' ? mainAppConfig.subheadline_color : undefined,
+              transform: `translateY(${mainAppConfig?.subheadline_vertical_pos || 0}px)`
+            }}
             >
               {getActualSubheading()}
             </p>

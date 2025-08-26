@@ -509,89 +509,101 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     setSaving(true);
 
     try {
-      console.log('💾 Saving delivery app...', { 
+      console.log('💾 Saving delivery app with complete config...', { 
         appName, 
         appSlug, 
+        heroHeading,
+        heroSubheading,
         theme,
         logoSize,
         headlineSize,
+        subheadlineSize,
         headlineColor,
-        headlineFont
+        headlineFont,
+        subheadlineColor,
+        subheadlineFont
       });
 
-      // Convert data to proper JSON format for Supabase
+      // Convert data to proper JSON format for Supabase with EXPLICIT values
       const appData = {
         app_name: appName,
         app_slug: appSlug,
         logo_url: logoUrl,
-        main_app_config: JSON.parse(JSON.stringify({
-          hero_heading: heroHeading,
-          hero_subheading: heroSubheading,
-          logo_size: logoSize,
-          headline_size: headlineSize,
-          subheadline_size: subheadlineSize,
-          logo_vertical_pos: logoVerticalPos,
-          headline_vertical_pos: headlineVerticalPos,
-          subheadline_vertical_pos: subheadlineVerticalPos,
-          background_image_url: backgroundImageUrl,
-          background_opacity: backgroundOpacity,
-          overlay_color: overlayColor,
-          // NEW: Save font and color settings
-          headline_font: headlineFont,
-          headline_color: headlineColor,
-          subheadline_font: subheadlineFont,
-          subheadline_color: subheadlineColor
-        })),
-        collections_config: JSON.parse(JSON.stringify({
+        main_app_config: {
+          hero_heading: heroHeading.trim() || 'Premium Delivery Service',
+          hero_subheading: heroSubheading.trim() || 'Fast & Reliable',
+          logo_size: Number(logoSize) || 50,
+          headline_size: Number(headlineSize) || 24,
+          subheadline_size: Number(subheadlineSize) || 14,
+          logo_vertical_pos: Number(logoVerticalPos) || 0,
+          headline_vertical_pos: Number(headlineVerticalPos) || 0,
+          subheadline_vertical_pos: Number(subheadlineVerticalPos) || 0,
+          background_image_url: backgroundImageUrl || '',
+          background_opacity: Number(backgroundOpacity) || 0.7,
+          overlay_color: overlayColor || '#000000',
+          // NEW: Save font and color settings explicitly
+          headline_font: headlineFont || 'Inter',
+          headline_color: headlineColor || '#ffffff',
+          subheadline_font: subheadlineFont || 'Inter',
+          subheadline_color: subheadlineColor || '#ffffff'
+        },
+        collections_config: {
           tab_count: tabs.length,
           tabs: tabs.map(tab => ({
             name: tab.name,
             collection_handle: tab.collection_handle,
             icon: tab.icon || '📦'
           }))
-        })),
+        },
         theme: theme,
         is_active: isActive,
         is_homepage: isHomepage,
         updated_at: new Date().toISOString()
       };
 
+      console.log('📋 Final appData being saved:', JSON.stringify(appData, null, 2));
+
       let result;
       
       if (initial?.id) {
         // Update existing app
+        console.log('🔄 Updating existing app with ID:', initial.id);
         result = await supabase
           .from('delivery_app_variations')
           .update(appData)
-          .eq('id', initial.id);
+          .eq('id', initial.id)
+          .select();
       } else {
         // Create new app
+        console.log('🆕 Creating new app');
         result = await supabase
           .from('delivery_app_variations')
           .insert({
             ...appData,
             created_at: new Date().toISOString()
-          });
+          })
+          .select();
       }
 
       if (result.error) {
+        console.error('❌ Database error:', result.error);
         throw new Error(result.error.message);
       }
 
-      console.log('✅ App saved successfully');
-      
+      console.log('✅ App saved successfully:', result.data);
+
       toast({
-        title: "App saved successfully",
-        description: initial?.id ? "Your delivery app has been updated." : "Your delivery app has been created."
+        title: "Success!",
+        description: `Delivery app ${initial?.id ? 'updated' : 'created'} successfully.`
       });
 
       onSaved?.();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('💥 Error saving app:', error);
+      console.error('💥 Error saving delivery app:', error);
       toast({
-        title: "Save failed",
-        description: `Failed to save delivery app: ${error.message || 'Please try again.'}`,
+        title: "Error",
+        description: `Failed to save delivery app: ${error.message}`,
         variant: "destructive"
       });
     } finally {
