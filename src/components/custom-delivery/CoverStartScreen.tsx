@@ -3,10 +3,6 @@ import { Button } from '@/components/ui/button';
 import { PhoneFrameLayout } from '@/components/layout/PhoneFrameLayout';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
-// Removed imports for disabled preloading systems
-// import { instantAppLoader } from '@/utils/instantAppLoader';
-// import { preloadManager } from '@/utils/preloadManager';
-import { getInstantProducts } from '@/utils/instantCacheClient';
 
 export interface CoverStartButton {
   text: string;
@@ -44,8 +40,6 @@ export interface CoverStartScreenProps {
   entranceAnimation?: boolean;
   animationDuration?: number;
 }
-
-// No default checklist - must be provided via props
 
 export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   appName,
@@ -91,7 +85,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
     if (entranceAnimation) {
       const timer = setTimeout(() => {
         setAnimationsStarted(true);
-      }, 300); // Small delay to ensure proper rendering
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [entranceAnimation]);
@@ -99,7 +93,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   // Calculate staggered delays for sequential animation
   const getAnimationDelay = (index: number) => {
     if (!entranceAnimation || animationsStarted) return 0;
-    const delayPerElement = Math.max(animationDuration / 6, 200); // At least 200ms per element
+    const delayPerElement = Math.max(animationDuration / 6, 200);
     return index * delayPerElement;
   };
 
@@ -121,26 +115,6 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
       setShowVideo(false);
     }
   }, [backgroundVideoUrl]);
-
-  // Preload delivery app data for all buttons
-  React.useEffect(() => {
-    // Disabled all preloading to prevent loading animations
-    // const preloadApps = async () => {
-    //   console.log('🚀 Preloading delivery apps from cover screen...');
-    //   // Preload specific apps for each button
-    //   for (const button of buttons) {
-    //     if (button.appSlug) {
-    //       try {
-    //         await instantAppLoader.preloadApp(button.appSlug);
-    //       } catch (error) {
-    //         console.error(`Failed to preload app ${button.appSlug}:`, error);
-    //       }
-    //     }
-    //   }
-    // };
-    // const timer = setTimeout(preloadApps, 100);
-    // return () => clearTimeout(timer);
-  }, [buttons]);
 
   return (
     <div 
@@ -195,12 +169,10 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content - Fixed Phone Layout with proper mobile spacing and mandatory margins */}
+        {/* Content Container */}
         <div 
-          className="relative z-10 flex h-full flex-col items-center px-4" 
+          className="relative z-10 h-full"
           style={{ 
-            paddingTop: '0px', 
-            paddingBottom: '0px',
             touchAction: 'none',
             userSelect: 'none',
             overscrollBehavior: 'none',
@@ -212,62 +184,52 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           
           {/* Logo Section - FIXED 15px from top */}
           <div 
-            className={`flex-shrink-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
+            className={`absolute left-0 right-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
-              position: 'absolute',
-              top: '15px', // FIXED: Always 15px from top - ignoring logoOffsetY
-              left: '50%',
-              transform: 'translateX(-50%)', // Removed logoOffsetY to keep pixel perfect
+              top: '15px',
               animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
-            <div className="mb-2">
-              {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt="Logo" 
-                  className="mx-auto object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
-                  style={{ 
-                    height: `${logoHeight || 60}px`,
-                    width: 'auto',
-                    maxWidth: `${logoHeight || 60}px`,
-                    maxHeight: `${logoHeight || 60}px`
-                  }}
-                />
-              ) : (
-                /* Logo Placeholder Circle */
-                <div 
-                  className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg mx-auto"
-                  style={{ 
-                    height: `${logoHeight || 60}px`,
-                    width: `${logoHeight || 60}px`,
-                    maxWidth: `${logoHeight || 60}px`,
-                    maxHeight: `${logoHeight || 60}px`
-                  }}
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                className="mx-auto object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
+                style={{ 
+                  height: `${logoHeight || 60}px`,
+                  width: 'auto',
+                  maxWidth: `${logoHeight || 60}px`,
+                  maxHeight: `${logoHeight || 60}px`
+                }}
+              />
+            ) : (
+              <div 
+                className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg mx-auto"
+                style={{ 
+                  height: `${logoHeight || 60}px`,
+                  width: `${logoHeight || 60}px`,
+                  maxWidth: `${logoHeight || 60}px`,
+                  maxHeight: `${logoHeight || 60}px`
+                }}
+              >
+                <svg 
+                  className="text-white/60" 
+                  width="50%" 
+                  height="50%" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
                 >
-                  <svg 
-                    className="text-white/60" 
-                    width="50%" 
-                    height="50%" 
-                    fill="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                </div>
-              )}
-            </div>
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
+            )}
           </div>
 
-          {/* Title Section - Centered in available space */}
+          {/* Title & Content Section - Flows between logo and features */}
           <div 
-            className={`text-center transition-all duration-700 ${getAnimationClass(1)}`}
+            className={`absolute left-4 right-4 text-center transition-all duration-700 ${getAnimationClass(1)}`}
             style={{ 
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)', // Perfect center - ignore titleOffsetY
-              width: '90%',
+              top: `${100 + (logoHeight || 60)}px`,
               animationDelay: `${getAnimationDelay(1)}ms`
             }}
           >
@@ -283,61 +245,69 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             
             {/* Subtitle */}
             {subtitle && (
-               <div 
-                 className={`transition-all duration-700 ${getAnimationClass(2)}`}
-                 style={{ 
-                   animationDelay: `${getAnimationDelay(2)}ms` // Removed subtitleOffsetY
-                 }}
-               >
-                 <p 
-                   className="text-white/80 mb-3 px-3 leading-relaxed"
-                   style={{ 
-                     fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px',
-                     fontFamily: subtitleFont || 'system-ui'
-                   }}
-                 >
-                   {subtitle}
-                 </p>
+              <div 
+                className={`transition-all duration-700 ${getAnimationClass(2)}`}
+                style={{ 
+                  animationDelay: `${getAnimationDelay(2)}ms`
+                }}
+              >
+                <p 
+                  className="text-white/80 mb-3 px-3 leading-relaxed"
+                  style={{ 
+                    fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px',
+                    fontFamily: subtitleFont || 'system-ui'
+                  }}
+                >
+                  {subtitle}
+                </p>
               </div>
             )}
           </div>
 
-           {/* Features Section */}
-           {checklistItems && checklistItems.length > 0 && (
-             <div 
-               className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(3)}`}
-               style={{ 
-                 animationDelay: `${getAnimationDelay(3)}ms` // Removed checklistOffsetY
-               }}
-             >
-              <div className="space-y-2">
-                {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
-                  <div 
-                    key={index} 
-                    className={`bg-white/10 backdrop-blur-sm rounded-xl p-2.5 border border-white/20 transition-all duration-700 ${getAnimationClass(3)}`}
-                    style={{ 
-                      animationDelay: `${getAnimationDelay(3) + (index * 100)}ms`
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-3">
-                        <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+          {/* Features Section - Positioned between content and buttons */}
+          {checklistItems && checklistItems.length > 0 && (
+            <div 
+              className={`absolute left-4 right-4 transition-all duration-700 ${getAnimationClass(3)}`}
+              style={{ 
+                bottom: '120px',
+                animationDelay: `${getAnimationDelay(3)}ms`
+              }}
+            >
+              <div className="w-full max-w-xs mx-auto">
+                <div className="space-y-2">
+                  {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
+                    <div 
+                      key={index} 
+                      className={`bg-white/10 backdrop-blur-sm rounded-xl p-2.5 border border-white/20 transition-all duration-700 ${getAnimationClass(3)}`}
+                      style={{ 
+                        animationDelay: `${getAnimationDelay(3) + (index * 100)}ms`
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-3">
+                          <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <h3 
+                          className="font-bold text-white"
+                          style={{ fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px' }}
+                        >
+                          {item}
+                        </h3>
                       </div>
-                      <h3 className="text-sm font-bold text-white">{item}</h3>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Buttons Section - FIXED 15px from bottom, ignore offset */}
+          {/* Buttons Section - FIXED 15px from bottom */}
           <div 
             className={`absolute left-4 right-4 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
-              bottom: '15px', // FIXED: Always 15px from bottom
+              bottom: '15px',
               animationDelay: `${getAnimationDelay(4)}ms`
             }}
           >
