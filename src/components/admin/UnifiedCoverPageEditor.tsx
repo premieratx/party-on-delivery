@@ -386,15 +386,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
       ]);
       // Apply optimized positioning defaults for perfect phone frame fit
-      setTitleSize(32);
+      setTitleSize(28);           // Slightly smaller for better fit
       setSubtitleSize(16);
       setChecklistSize(14);
-      // Perfect vertical spacing within phone frame (approx 600px height)
-      setLogoOffsetY(-120);    // Logo at top of frame
-      setTitleOffsetY(-80);    // Headline below logo  
-      setSubtitleOffsetY(-50); // Sub-headline below title
-      setChecklistOffsetY(-10); // Features in middle area
-      setButtonsOffsetY(40);   // Buttons near bottom but visible
+      // Optimized vertical spacing within phone frame (844px height)
+      setLogoOffsetY(-60);        // Logo visible at top (was -120, too high)
+      setTitleOffsetY(-20);       // Headline below logo (was -80)
+      setSubtitleOffsetY(0);      // Sub-headline below title (was -50)
+      setChecklistOffsetY(20);    // Features in middle area
+      setButtonsOffsetY(60);      // Buttons near bottom but visible (was 40)
       setIsActive(true);
       setFreeShippingEnabled(false);
     }
