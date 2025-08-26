@@ -246,9 +246,9 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const [logoSize, setLogoSize] = useState(50);
   const [headlineSize, setHeadlineSize] = useState(24);
   const [subheadlineSize, setSubheadlineSize] = useState(14);
-  const [logoVerticalPos, setLogoVerticalPos] = useState(-10);
-  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(-5);
-  const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(-5);
+  const [logoVerticalPos, setLogoVerticalPos] = useState(0);
+  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
+  const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(0);
   const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.7);
   const [overlayColor, setOverlayColor] = useState('#000000');
