@@ -130,6 +130,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
         console.log('🔥 CRITICAL DEBUG - Final parsed hero_subheading:', (parsedData.main_app_config as any)?.hero_subheading);
         console.log('🎯 FIXED - Direct hero_heading from DB:', (parsedData as any).hero_heading);
         console.log('🎯 FIXED - Direct hero_subheading from DB:', (parsedData as any).hero_subheading);
+        console.log('🚨 ULTIMATE DEBUG - Raw data from database:', data);
+        console.log('🚨 ULTIMATE DEBUG - ALL database fields:', Object.keys(data).sort());
         
         // Ensure collections_config is properly parsed as JSON if it's a string
         if (typeof data.collections_config === 'string') {

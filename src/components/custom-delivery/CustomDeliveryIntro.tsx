@@ -30,6 +30,8 @@ export function CustomDeliveryIntro({
     logoUrl,
     mainAppConfig
   });
+  console.log('🚨 DEEP DEBUG - heroHeading type:', typeof heroHeading, 'length:', heroHeading?.length);
+  console.log('🚨 DEEP DEBUG - heroSubheading type:', typeof heroSubheading, 'length:', heroSubheading?.length);
 
   const getButtonText = () => {
     if (appName.toLowerCase().includes('airbnb')) {
