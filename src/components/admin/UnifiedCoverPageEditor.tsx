@@ -300,15 +300,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
   ]);
 
-  // Enhanced positioning and sizing controls - device specific
-  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 48);
-  const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 20);
-  const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 16);
-  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? 0);
-  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? 0);
+  // Enhanced positioning and sizing controls - optimized for fixed iPhone frame (390x844)
+  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 32);
+  const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 16);
+  const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 14);
+  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? -50);
+  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? -30);
   const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 0);
-  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 0);
-  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? 0);
+  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 50);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -100);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
   const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);
@@ -370,13 +370,13 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         setElementPositions(initial.styles.element_positions);
       }
     } else {
-      // Reset to defaults for new cover page
+      // Reset to defaults for new cover page - optimized for fixed iPhone frame
       setSelectedTheme('gold');
       setSlug("");
       setTitle("Elite Concierge");
       setSubtitle("Luxury Lifestyle Services");
       setLogoUrl("");
-      setLogoHeight(160);
+      setLogoHeight(120); // Reduced for better fit
       setBgImageUrl("");
       setBgVideoUrl("");
       setChecklist(["Premium Alcohol Delivery", "White-Glove Service", "Exclusive Member Access"]);
@@ -384,6 +384,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
         { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
       ]);
+      // Apply optimized positioning defaults
+      setTitleSize(32);
+      setSubtitleSize(16);
+      setChecklistSize(14);
+      setTitleOffsetY(-50);
+      setSubtitleOffsetY(-30);
+      setChecklistOffsetY(0);
+      setButtonsOffsetY(50); // Positions buttons well above bottom
+      setLogoOffsetY(-100);
       setIsActive(true);
       setFreeShippingEnabled(false);
     }
@@ -1107,7 +1116,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           </div>
 
           <div className="flex-1 overflow-hidden flex items-center justify-center">
-            <div className="w-[375px] h-[667px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden relative">
+            <div className="w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden relative">
               <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
                 <CoverStartScreen
                 title={title}
@@ -1167,7 +1176,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
               </div>
             </div>
             <div className="flex-1 bg-black flex items-center justify-center p-8">
-              <div className="w-full max-w-md h-full max-h-[667px] relative">
+              <div className="w-[390px] h-[844px] relative rounded-[2.5rem] overflow-hidden shadow-2xl">
                 <CoverStartScreen
                 title={title}
                 subtitle={subtitle}
