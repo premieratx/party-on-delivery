@@ -321,19 +321,16 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Spacer to push buttons to bottom */}
-          <div className="flex-1"></div>
-          
-          {/* Buttons Section - Fixed 15px from bottom */}
+          {/* Buttons Section - Positioned absolutely at bottom with 15px margin */}
           <div 
-            className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(4)}`}
+            className={`absolute bottom-0 left-4 right-4 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
               transform: `translateY(${buttonsOffsetY || 0}px)`,
               animationDelay: `${getAnimationDelay(4)}ms`,
               marginBottom: '15px'
             }}
           >
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2.5 w-full max-w-xs mx-auto">
               {buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
