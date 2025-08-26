@@ -115,8 +115,8 @@ export function CustomDeliveryIntro({
                 alt="Logo" 
                 className="w-auto object-contain"
                 style={{
-                  height: `${(mainAppConfig?.logo_size || 50) * 1.2}px`,
-                  maxHeight: '100px'
+                  height: `${mainAppConfig?.logo_size || 50}px`,
+                  maxHeight: `${mainAppConfig?.logo_size || 50}px`
                 }}
               />
             </div>
@@ -127,7 +127,7 @@ export function CustomDeliveryIntro({
             <h1 
               className="font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
             style={{
-              fontSize: `${(mainAppConfig?.headline_size || 24) * 1.5}px`,
+              fontSize: `${mainAppConfig?.headline_size || 24}px`,
               fontFamily: mainAppConfig?.headline_font ? `${mainAppConfig.headline_font}, sans-serif` : undefined,
               color: mainAppConfig?.headline_color && mainAppConfig.headline_color !== '#ffffff' ? mainAppConfig.headline_color : undefined,
               transform: `translateY(${mainAppConfig?.headline_vertical_pos || 0}px)`
@@ -138,7 +138,7 @@ export function CustomDeliveryIntro({
             <p 
               className="text-xl text-muted-foreground"
             style={{
-              fontSize: `${(mainAppConfig?.subheadline_size || 14) * 1.2}px`,
+              fontSize: `${mainAppConfig?.subheadline_size || 14}px`,
               fontFamily: mainAppConfig?.subheadline_font ? `${mainAppConfig.subheadline_font}, sans-serif` : undefined,
               color: mainAppConfig?.subheadline_color && mainAppConfig.subheadline_color !== '#ffffff' ? mainAppConfig.subheadline_color : undefined,
               transform: `translateY(${mainAppConfig?.subheadline_vertical_pos || 0}px)`
