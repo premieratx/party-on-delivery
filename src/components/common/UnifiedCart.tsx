@@ -45,13 +45,9 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // ENHANCED: Always scroll cart to top when opened + prevent body scroll
+  // ENHANCED: Always scroll cart to top when opened - NO BODY SCROLL INTERFERENCE
   useEffect(() => {
     if (isOpen) {
-      // Prevent body scroll when cart is open
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      
       // Force scroll to top immediately when cart opens
       const scrollToTop = () => {
         if (scrollContainerRef.current) {
@@ -60,17 +56,13 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         }
       };
       
-      // Multiple attempts to ensure scroll reset works reliably
+      // Multiple attempts to ensure scroll reset works reliably across all scenarios
       scrollToTop(); // Immediate
       requestAnimationFrame(scrollToTop); // Next frame
       setTimeout(scrollToTop, 1); // Next tick
       setTimeout(scrollToTop, 10); // Backup
       setTimeout(scrollToTop, 50); // Final backup
-      
-      // Cleanup: restore body scroll when cart closes
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
+      setTimeout(scrollToTop, 100); // Extra backup for slow devices
     }
   }, [isOpen]);
 
