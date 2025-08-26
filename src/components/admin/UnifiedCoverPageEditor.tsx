@@ -877,36 +877,35 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
                     </div>
 
-                    {/* Logo Height */}
-                    <div>
-                      <Label className="text-sm font-medium">Logo Height: {logoHeight}px</Label>
-                      <Slider
-                        value={[logoHeight]}
-                        onValueChange={(value) => setLogoHeight(value[0])}
-                        max={300}
-                        min={60}
-                        step={10}
-                        className="mt-2"
-                      />
-                    </div>
-
                     <div className="space-y-4 border-t pt-4">
                       <h4 className="text-sm font-semibold text-muted-foreground">Size Controls</h4>
                       
                       <div>
-                        <Label className="text-sm font-medium">Title Size: {titleSize}px</Label>
+                        <Label className="text-sm font-medium">Logo Size: {logoHeight}px</Label>
+                        <Slider
+                          value={[logoHeight]}
+                          onValueChange={(value) => setLogoHeight(value[0])}
+                          max={300}
+                          min={30}
+                          step={5}
+                          className="mt-2"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Headline Size: {titleSize}px</Label>
                         <Slider
                           value={[titleSize]}
                           onValueChange={(value) => setTitleSize(value[0])}
                           max={72}
-                          min={24}
+                          min={16}
                           step={2}
                           className="mt-2"
                         />
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Subtitle Size: {subtitleSize}px</Label>
+                        <Label className="text-sm font-medium">Subheadline Size: {subtitleSize}px</Label>
                         <Slider
                           value={[subtitleSize]}
                           onValueChange={(value) => setSubtitleSize(value[0])}
@@ -932,14 +931,14 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
                     {/* Positioning Controls - Universal */}
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning</h4>
+                      <h4 className="text-sm font-semibold text-muted-foreground">Position Controls</h4>
                       
                       <div>
-                        <Label className="text-sm font-medium">Logo Position: {logoOffsetY}px</Label>
+                        <Label className="text-sm font-medium">Logo Position: {logoOffsetY}px from top</Label>
                         <Slider
                           value={[logoOffsetY]}
                           onValueChange={(value) => setLogoOffsetY(value[0])}
-                          max={100}
+                          max={200}
                           min={-100}
                           step={5}
                           className="mt-2"
@@ -947,11 +946,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Title Position: {titleOffsetY}px</Label>
+                        <Label className="text-sm font-medium">Headline Position: {titleOffsetY}px from center</Label>
                         <Slider
                           value={[titleOffsetY]}
                           onValueChange={(value) => setTitleOffsetY(value[0])}
-                          max={100}
+                          max={200}
                           min={-100}
                           step={5}
                           className="mt-2"
@@ -959,11 +958,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Subtitle Position: {subtitleOffsetY}px</Label>
+                        <Label className="text-sm font-medium">Subheadline Position: {subtitleOffsetY}px from center</Label>
                         <Slider
                           value={[subtitleOffsetY]}
                           onValueChange={(value) => setSubtitleOffsetY(value[0])}
-                          max={100}
+                          max={200}
                           min={-100}
                           step={5}
                           className="mt-2"
@@ -971,11 +970,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Checklist Position: {checklistOffsetY}px</Label>
+                        <Label className="text-sm font-medium">Checklist Position: {checklistOffsetY}px from center</Label>
                         <Slider
                           value={[checklistOffsetY]}
                           onValueChange={(value) => setChecklistOffsetY(value[0])}
-                          max={100}
+                          max={200}
                           min={-100}
                           step={5}
                           className="mt-2"
@@ -983,11 +982,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium">Buttons Position: {buttonsOffsetY}px</Label>
+                        <Label className="text-sm font-medium">Buttons Position: {buttonsOffsetY}px from bottom</Label>
                         <Slider
                           value={[buttonsOffsetY]}
                           onValueChange={(value) => setButtonsOffsetY(value[0])}
-                          max={100}
+                          max={200}
                           min={-100}
                           step={5}
                           className="mt-2"

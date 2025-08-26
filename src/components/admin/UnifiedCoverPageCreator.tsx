@@ -1,3 +1,11 @@
+// ⚠️ DEPRECATED COMPONENT - DO NOT USE ⚠️
+// This component is deprecated and should not be used.
+// Use UnifiedCoverPageEditor instead for all cover page functionality.
+// Located at: src/components/admin/UnifiedCoverPageEditor.tsx
+//
+// If you see this component being used anywhere, please replace it
+// with UnifiedCoverPageEditor to avoid inconsistency.
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

@@ -1,3 +1,10 @@
+// ⚠️ DEPRECATED COMPONENT - DO NOT USE ⚠️
+// This is an outdated version of the cover page editor.
+// Use UnifiedCoverPageEditor instead for all cover page functionality.
+// Located at: src/components/admin/UnifiedCoverPageEditor.tsx
+//
+// This file is kept for reference only and should not be imported.
+
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
