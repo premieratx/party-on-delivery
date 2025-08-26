@@ -312,7 +312,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? -10);
   const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 10);
   const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 40);
-  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -60);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -40);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
   const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);
@@ -1184,7 +1184,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 backgroundImageUrl={bgImageUrl}
                 backgroundVideoUrl={bgVideoUrl}
                 checklistItems={checklist}
-                buttons={buttons}
+                buttons={buttons.map(btn => ({
+                  text: btn.text,
+                  bgColor: btn.style === 'filled' ? undefined : 'transparent',
+                  textColor: btn.style === 'outline' ? '#FFFFFF' : undefined,
+                  onClick: () => console.log(`Button clicked: ${btn.text}`)
+                }))}
                 titleSize={titleSize}
                 subtitleSize={subtitleSize}
                 checklistSize={checklistSize}
@@ -1245,7 +1250,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 backgroundImageUrl={bgImageUrl}
                 backgroundVideoUrl={bgVideoUrl}
                 checklistItems={checklist}
-                buttons={buttons}
+                buttons={buttons.map(btn => ({
+                  text: btn.text,
+                  bgColor: btn.style === 'filled' ? undefined : 'transparent',
+                  textColor: btn.style === 'outline' ? '#FFFFFF' : undefined,
+                  onClick: () => console.log(`Button clicked: ${btn.text}`)
+                }))}
                 titleSize={titleSize}
                 subtitleSize={subtitleSize}
                 checklistSize={checklistSize}
