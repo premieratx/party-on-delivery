@@ -509,7 +509,9 @@ serve(async (req) => {
         shipping_address: {
           first_name: firstName,
           last_name: lastName,
+          company: `DELIVERY: ${deliveryDate} at ${deliveryTime}`,
           address1: street,
+          address2: deliveryInstructions || undefined,
           city: city,
           province: state,
           country: "US",
