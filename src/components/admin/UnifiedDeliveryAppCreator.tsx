@@ -283,23 +283,43 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  // Load initial configuration when editing an existing app
+  // Load initial configuration when editing an existing app or when initial data changes
   useEffect(() => {
-    if (initial?.main_app_config) {
-      const config = initial.main_app_config;
-      if (config.logo_size !== undefined) setLogoSize(config.logo_size);
-      if (config.headline_size !== undefined) setHeadlineSize(config.headline_size);
-      if (config.subheadline_size !== undefined) setSubheadlineSize(config.subheadline_size);
-      if (config.logo_vertical_pos !== undefined) setLogoVerticalPos(config.logo_vertical_pos);
-      if (config.headline_vertical_pos !== undefined) setHeadlineVerticalPos(config.headline_vertical_pos);
-      if (config.subheadline_vertical_pos !== undefined) setSubheadlineVerticalPos(config.subheadline_vertical_pos);
-      if (config.background_image_url) setBackgroundImageUrl(config.background_image_url);
-      if (config.background_opacity !== undefined) setBackgroundOpacity(config.background_opacity);
-      if (config.overlay_color) setOverlayColor(config.overlay_color);
-      if (config.headline_font) setHeadlineFont(config.headline_font);
-      if (config.headline_color) setHeadlineColor(config.headline_color);
-      if (config.subheadline_font) setSubheadlineFont(config.subheadline_font);
-      if (config.subheadline_color) setSubheadlineColor(config.subheadline_color);
+    if (initial) {
+      // Load basic app data
+      setAppName(initial.app_name || '');
+      setAppSlug(initial.app_slug || '');
+      setHeroHeading(initial.main_app_config?.hero_heading || '');
+      setHeroSubheading(initial.main_app_config?.hero_subheading || '');
+      setLogoUrl(initial.logo_url || '');
+      setTheme(initial.theme || 'original');
+      setIsActive(initial.is_active ?? true);
+      setIsHomepage(initial.is_homepage ?? false);
+      
+      // Load styling configuration if it exists
+      if (initial.main_app_config) {
+        const config = initial.main_app_config;
+        console.log('Loading config:', config); // Debug log
+        
+        setLogoSize(config.logo_size ?? 50);
+        setHeadlineSize(config.headline_size ?? 24);
+        setSubheadlineSize(config.subheadline_size ?? 14);
+        setLogoVerticalPos(config.logo_vertical_pos ?? 0);
+        setHeadlineVerticalPos(config.headline_vertical_pos ?? 0);
+        setSubheadlineVerticalPos(config.subheadline_vertical_pos ?? 0);
+        setBackgroundImageUrl(config.background_image_url || '');
+        setBackgroundOpacity(config.background_opacity ?? 0.7);
+        setOverlayColor(config.overlay_color || '#000000');
+        setHeadlineFont(config.headline_font || 'Inter');
+        setHeadlineColor(config.headline_color || '#ffffff');
+        setSubheadlineFont(config.subheadline_font || 'Inter');
+        setSubheadlineColor(config.subheadline_color || '#ffffff');
+      }
+      
+      // Load tabs configuration
+      if (initial.collections_config?.tabs) {
+        setTabs(initial.collections_config.tabs);
+      }
     }
   }, [initial]);
 
