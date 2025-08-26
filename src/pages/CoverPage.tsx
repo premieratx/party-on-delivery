@@ -102,6 +102,8 @@ export default function CoverPage() {
   console.log('🎨 USING YOUR EXACT SAVED STYLES:');
   console.log('Theme:', theme);
   console.log('Saved styles:', savedStyles);
+  console.log('🔍 Raw checklist from pageData:', pageData.checklist);
+  console.log('🔍 Parsed features array:', features);
   
   // Apply YOUR EXACT SIZING from saved styles
   const logoSize = savedStyles.sizing?.logoSize || 149;
