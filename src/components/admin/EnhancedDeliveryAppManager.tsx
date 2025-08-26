@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
+import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
 
 
 interface Tab {
@@ -281,7 +281,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
       {/* Delivery App Creator */}
       {showEditor && (
-        <UnifiedDeliveryAppCreator
+        <UnifiedDeliveryAppEditor
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingApp}
@@ -414,7 +414,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
       {/* Editor Modal */}
       {showEditor && (
-        <UnifiedDeliveryAppCreator 
+        <UnifiedDeliveryAppEditor 
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingApp}
