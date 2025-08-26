@@ -389,11 +389,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       setTitleSize(32);
       setSubtitleSize(16);
       setChecklistSize(14);
-      setTitleOffsetY(-40);   // Better positioned headline
-      setSubtitleOffsetY(-20); // Closer to headline
-      setChecklistOffsetY(10); // Slightly below center
-      setButtonsOffsetY(60);   // Well positioned above bottom
-      setLogoOffsetY(-60);     // Better logo position at top
+      // Perfect vertical spacing within phone frame (approx 600px height)
+      setLogoOffsetY(-120);    // Logo at top of frame
+      setTitleOffsetY(-80);    // Headline below logo  
+      setSubtitleOffsetY(-50); // Sub-headline below title
+      setChecklistOffsetY(-10); // Features in middle area
+      setButtonsOffsetY(40);   // Buttons near bottom but visible
       setIsActive(true);
       setFreeShippingEnabled(false);
     }
