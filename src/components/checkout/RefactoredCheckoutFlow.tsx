@@ -351,33 +351,18 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             )}
           </div>
 
-          {/* Right Column - Clean Total Display */}
+          {/* Right Column - Always Show Product List */}
           <div className="xl:col-span-2 space-y-4">
-            {currentStep === 'payment' && (
-              <div className="lg:sticky lg:top-4">
-                <CleanCheckoutTotal
-                  subtotal={cartSubtotal}
-                  deliveryFee={finalDeliveryFee}
-                  salesTax={calculatedSalesTax}
-                  tipAmount={tipAmount}
-                  appliedDiscount={appliedDiscount}
-                />
-              </div>
-            )}
-            
-            {/* Show order summary only on non-payment steps */}
-            {currentStep !== 'payment' && (
-              <div className="lg:sticky lg:top-4">
-                <ImprovedCheckoutSummary
-                  cartItems={cartItems}
-                  subtotal={cartSubtotal}
-                  deliveryFee={finalDeliveryFee}
-                  salesTax={calculatedSalesTax}
-                  appliedDiscount={appliedDiscount}
-                  onUpdateQuantity={onUpdateQuantity}
-                />
-              </div>
-            )}
+            <div className="lg:sticky lg:top-4">
+              <ImprovedCheckoutSummary
+                cartItems={cartItems}
+                subtotal={cartSubtotal}
+                deliveryFee={finalDeliveryFee}
+                salesTax={calculatedSalesTax}
+                appliedDiscount={appliedDiscount}
+                onUpdateQuantity={onUpdateQuantity}
+              />
+            </div>
           </div>
         </div>
         
