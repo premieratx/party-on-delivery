@@ -134,14 +134,23 @@ export default function CoverPage() {
         <div className="relative z-10 flex min-h-screen flex-col justify-between items-center px-6 py-8 md:py-4">
           
           {/* TOP SECTION: Logo + Title */}
-          <div className="flex-shrink-0 text-center w-full">
+          <div 
+            className="flex-shrink-0 text-center w-full"
+            style={{ transform: `translateY(${logoVerticalPos}px)` }}
+          >
             {/* Logo with responsive sizing */}
             {logoUrl && (
               <div className="mb-6 md:mb-4">
                 <img 
                   src={logoUrl} 
                   alt="Logo" 
-                  className="mx-auto object-contain w-20 h-20 md:w-24 md:h-24"
+                  className="mx-auto object-contain"
+                  style={{ 
+                    width: `${logoSize}px`, 
+                    height: `${logoSize}px`,
+                    maxWidth: '120px',
+                    maxHeight: '120px'
+                  }}
                   onError={(e) => {
                     console.error('Logo failed to load:', logoUrl);
                     e.currentTarget.style.display = 'none';
@@ -151,11 +160,12 @@ export default function CoverPage() {
             )}
 
             {/* Title with responsive styling */}
-            <div>
+            <div style={{ transform: `translateY(${headlineVerticalPos}px)` }}>
               <h1 
-                className="font-bold mb-4 px-4 leading-tight text-2xl md:text-xl"
+                className="font-bold mb-4 px-4 leading-tight"
                 style={{ 
-                  color: themeColors.primary || '#F5B800'
+                  color: themeColors.primary || '#F5B800',
+                  fontSize: `${headlineSize}px`
                 }}
               >
                 {title}
@@ -164,9 +174,10 @@ export default function CoverPage() {
             
             {/* Subtitle with responsive styling */}
             {subtitle && (
-              <div>
+              <div style={{ transform: `translateY(${subtitleVerticalPos}px)` }}>
                 <p 
-                  className="text-white/80 mb-6 px-4 text-base md:text-sm leading-relaxed"
+                  className="text-white/80 mb-6 px-4 leading-relaxed"
+                  style={{ fontSize: `${subtitleSize}px` }}
                 >
                   {subtitle}
                 </p>
@@ -176,7 +187,10 @@ export default function CoverPage() {
 
           {/* MIDDLE SECTION: Features (compact layout) */}
           {features.length > 0 && (
-            <div className="flex-1 px-2 my-6 w-full max-w-sm">
+            <div 
+              className="flex-1 px-2 my-6 w-full max-w-sm"
+              style={{ transform: `translateY(${featuresVerticalPos}px)` }}
+            >
               <div className="space-y-4">
                 {features.slice(0, 3).map((feature: any, index: number) => {
                   // Handle both string and object formats
@@ -203,7 +217,10 @@ export default function CoverPage() {
 
           {/* BOTTOM SECTION: Buttons (always visible) */}
           {buttons.length > 0 && (
-            <div className="flex-shrink-0 flex flex-col gap-4 w-full max-w-sm">
+            <div 
+              className="flex-shrink-0 flex flex-col gap-4 w-full max-w-sm"
+              style={{ transform: `translateY(${buttonsVerticalPos}px)` }}
+            >
               {buttons.slice(0, 2).map((button: any, index: number) => (
                 <Button
                   key={index}
