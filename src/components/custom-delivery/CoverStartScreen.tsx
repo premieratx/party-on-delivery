@@ -193,9 +193,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
         {/* Content - Fixed Phone Layout with proper mobile spacing and mandatory margins */}
         <div 
-          className="relative z-10 flex h-full flex-col items-center px-4 justify-center space-y-2" 
+          className="relative z-10 flex h-full flex-col items-center px-4 justify-start space-y-2" 
           style={{ 
-            paddingTop: '15px', 
+            paddingTop: '0px', 
             paddingBottom: '15px',
             touchAction: 'none',
             userSelect: 'none',
@@ -210,8 +210,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           <div 
             className={`flex-shrink-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
-              transform: `translateY(${logoOffsetY || 0}px)`,
-              animationDelay: `${getAnimationDelay(0)}ms`
+              transform: `translateY(${Math.max((logoOffsetY || 0), -50)}px)`,
+              animationDelay: `${getAnimationDelay(0)}ms`,
+              marginTop: '15px'
             }}
           >
             <div className="mb-2">
