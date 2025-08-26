@@ -211,9 +211,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             className={`flex-shrink-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
               position: 'absolute',
-              top: '15px', // FIXED: Always 15px from top
+              top: '15px', // FIXED: Always 15px from top - ignoring logoOffsetY
               left: '50%',
-              transform: `translateX(-50%) translateY(${Math.max((logoOffsetY || 0), 0)}px)`,
+              transform: 'translateX(-50%)', // Removed logoOffsetY to keep pixel perfect
               animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
