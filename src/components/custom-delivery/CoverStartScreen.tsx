@@ -135,61 +135,37 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content - Enhanced Figma Layout with Animations */}
-        <div className="relative z-10 flex h-full flex-col items-center px-6 py-8" style={{ minHeight: '100vh' }}>
+        {/* Content - Fixed Phone Layout (matches CoverPage.tsx) */}
+        <div className="relative z-10 flex h-full flex-col justify-between items-center px-6 py-8">
           
-          {/* Logo with enhanced Figma styling - Always show (placeholder or actual) */}
+          {/* TOP SECTION: Logo + Title */}
           <div 
-            className="flex justify-center mb-6 cover-scale-in stagger-1"
+            className="flex-shrink-0 text-center w-full"
             style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
           >
-            <div className="relative inline-block">
+            {/* Logo with enhanced styling */}
+            <div className="mb-6">
               {logoUrl ? (
-                <>
-                  {logoBgColor && logoBgMode !== 'none' && (
-                    logoBgMode === 'rectangle' ? (
-                      <div
-                        className="absolute inset-0 -m-2 rounded-xl shadow-lg"
-                        style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          backgroundColor: logoBgColor,
-                          WebkitMaskImage: `url(${logoUrl})`,
-                          maskImage: `url(${logoUrl})`,
-                          WebkitMaskRepeat: 'no-repeat',
-                          maskRepeat: 'no-repeat',
-                          WebkitMaskPosition: 'center',
-                          maskPosition: 'center',
-                          WebkitMaskSize: 'contain',
-                          maskSize: 'contain',
-                        }}
-                        aria-hidden="true"
-                      />
-                    )
-                  )}
-                  <img 
-                    src={logoUrl} 
-                    alt="Logo" 
-                    className="relative object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
-                    style={{ 
-                      height: `${logoHeight || 120}px`,
-                      width: 'auto', // Maintains aspect ratio
-                      maxWidth: '200px' // Prevents logos from being too wide
-                    }}
-                  />
-                </>
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  className="mx-auto object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
+                  style={{ 
+                    height: `${logoHeight || 120}px`,
+                    width: 'auto',
+                    maxWidth: '120px',
+                    maxHeight: '120px'
+                  }}
+                />
               ) : (
                 /* Logo Placeholder Circle */
                 <div 
-                  className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg"
+                  className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg mx-auto"
                   style={{ 
                     height: `${logoHeight || 120}px`,
                     width: `${logoHeight || 120}px`,
-                    maxWidth: '200px'
+                    maxWidth: '120px',
+                    maxHeight: '120px'
                   }}
                 >
                   <svg 
@@ -203,115 +179,76 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                   </svg>
                 </div>
               )}
-            </div>    
-          </div>
+            </div>
 
-          {/* Title with gradient and glow effects from Figma */}
-          <div 
-            className="text-center mb-4 cover-fade-in stagger-2"
-            style={{ transform: `translateY(${titleOffsetY || 0}px)` }}
-          >
-            <h1 
-              className="font-bold bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl animate-pulse"
-              style={{ 
-                fontSize: titleSizeProp ? `${titleSizeProp}px` : '28px',
-                textShadow: '0 0 30px rgba(59,130,246,0.6), 0 0 60px rgba(59,130,246,0.4), 0 4px 8px rgba(0,0,0,0.8)',
-                lineHeight: '1.2'
-              }}
-            >
-              {title}
-            </h1>
-          </div>
-
-          {/* Subtitle with enhanced styling */}
-          {subtitle && (
-            <div 
-              className="text-center mb-8 cover-fade-in stagger-3"
-              style={{ transform: `translateY(${subtitleOffsetY || 0}px)` }}
-            >
-              <p 
-                className="text-gray-200 leading-relaxed font-medium px-6"
+            {/* Title with gradient effects */}
+            <div style={{ transform: `translateY(${titleOffsetY || 0}px)` }}>
+              <h1 
+                className="font-bold mb-4 px-4 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
                 style={{ 
-                  fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '15px',
-                  textShadow: '0 2px 8px rgba(0,0,0,0.9)',
-                  lineHeight: '1.4'
+                  fontSize: titleSizeProp ? `${titleSizeProp}px` : '32px'
                 }}
               >
-                {subtitle}
-              </p>
+                {title}
+              </h1>
             </div>
-          )}
+            
+            {/* Subtitle with enhanced styling */}
+            {subtitle && (
+              <div style={{ transform: `translateY(${subtitleOffsetY || 0}px)` }}>
+                <p 
+                  className="text-white/80 mb-6 px-4 leading-relaxed"
+                  style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '16px' }}
+                >
+                  {subtitle}
+                </p>
+              </div>
+            )}
+          </div>
 
-          {/* Checklist with enhanced animations and Figma styling */}
+          {/* MIDDLE SECTION: Features */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className="w-full flex-1 px-2 my-6"
+              className="flex-1 px-2 my-6 w-full max-w-sm"
               style={{ transform: `translateY(${checklistOffsetY || 0}px)` }}
             >
-              <div className="space-y-3">
-                {checklistItems.filter(Boolean).slice(0, 6).map((item, index) => {
-                  console.log(`🔍 Rendering checklist item ${index}:`, item);
-                  return (
-                    <div 
-                      key={index} 
-                      className={`flex items-center space-x-3 cover-fade-in stagger-${Math.min(index + 4, 5)} group bg-white/10 backdrop-blur-sm rounded-lg p-3`}
-                      style={{ animationDelay: `${index * 80}ms` }}
-                    >
-                      <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+              <div className="space-y-4">
+                {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-4">
                         <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <span 
-                        className="text-gray-100 font-medium group-hover:text-white transition-colors duration-200 flex-1"
-                        style={{ 
-                          fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px',
-                          textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {item}
-                      </span>
+                      <h3 className="text-base font-bold text-white">{item}</h3>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Action buttons with enhanced Figma styling and animations */}
+          {/* BOTTOM SECTION: Buttons */}
           <div 
-            className="w-full flex-shrink-0 mt-auto pb-4"
+            className="flex-shrink-0 flex flex-col gap-4 w-full max-w-sm"
             style={{ transform: `translateY(${buttonsOffsetY || 0}px)` }}
           >
-            <div className="flex flex-col gap-3">
-              {buttons.slice(0, 3).map((button, index) => (
+            <div className="flex flex-col gap-4">
+              {buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
                   onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
-                  className={`
-                    w-full h-12 rounded-2xl font-semibold text-base transition-all duration-300
-                    transform hover:scale-[1.02] hover:shadow-2xl active:scale-95
-                    cover-scale-in stagger-${Math.min(index + 4, 5)}
-                    relative overflow-hidden group
-                    ${!button.bgColor || button.bgColor === 'primary'
-                      ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white shadow-[0_8px_32px_rgba(59,130,246,0.5)] border border-blue-400/40' 
-                      : 'bg-white/10 text-white border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 shadow-[0_8px_32px_rgba(255,255,255,0.15)]'
-                    }
-                  `}
+                  className="w-full text-lg font-semibold h-14 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40"
                   style={{
                     backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
-                    color: button.textColor || undefined,
-                    textShadow: (!button.bgColor || button.bgColor === 'primary') ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.7)',
-                    boxShadow: (!button.bgColor || button.bgColor === 'primary')
-                      ? '0 8px 32px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 0 1px rgba(59,130,246,0.3)' 
-                      : '0 8px 32px rgba(255,255,255,0.15), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 0 1px rgba(255,255,255,0.1)'
+                    color: button.textColor || '#FFFFFF'
                   }}
                 >
                   <span className="relative z-10">{button.text}</span>
-                  {(!button.bgColor || button.bgColor === 'primary') && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  )}
                 </button>
               ))}
             </div>

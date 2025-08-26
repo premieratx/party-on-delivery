@@ -130,8 +130,8 @@ export default function CoverPage() {
           background: `linear-gradient(135deg, ${themeColors.primary}20, ${themeColors.secondary}15, ${themeColors.accent}10)`
         }}
       >
-        {/* Content - Responsive Layout that fits screen */}
-        <div className="relative z-10 flex min-h-screen flex-col justify-between items-center px-6 py-8 md:py-4">
+        {/* Content - Fixed Phone Layout (always stays in frame) */}
+        <div className="relative z-10 flex h-full flex-col justify-between items-center px-6 py-8">
           
           {/* TOP SECTION: Logo + Title */}
           <div 
