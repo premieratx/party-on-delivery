@@ -482,19 +482,22 @@ serve(async (req) => {
           rate: 0.0825
         }] : [],
         
-        // Shipping lines (delivery fee only - tip handled separately)
-        shipping_lines: orderAmounts.delivery_fee > 0 ? [{
-          title: "Local Delivery",
-          price: orderAmounts.delivery_fee.toFixed(2),
-          code: "LOCAL_DELIVERY"
-        }] : [],
+        // Shipping lines (delivery fee AND driver tip - both must be included for correct totals)
+        shipping_lines: [
+          ...(orderAmounts.delivery_fee > 0 ? [{
+            title: "Local Delivery",
+            price: orderAmounts.delivery_fee.toFixed(2),
+            code: "LOCAL_DELIVERY"
+          }] : []),
+          ...(orderAmounts.tip_amount > 0 ? [{
+            title: "Driver Tip",
+            price: orderAmounts.tip_amount.toFixed(2),
+            code: "DRIVER_TIP"
+          }] : [])
+        ],
         
-        // Custom attributes to store tip (since Shopify doesn't have native tip field)
+        // Custom attributes for delivery details (tip now included in shipping_lines above)
         note_attributes: [
-          {
-            name: "Driver Tip",
-            value: `$${orderAmounts.tip_amount.toFixed(2)}`
-          },
           {
             name: "Delivery Date", 
             value: deliveryDate
@@ -506,28 +509,33 @@ serve(async (req) => {
           {
             name: "Delivery Address",
             value: `${street}, ${city}, ${state} ${zip}`
+          },
+          {
+            name: "Special Instructions",
+            value: deliveryInstructions
           }
-        ].filter(attr => attr.value && attr.value !== '$0.00'),
+        ].filter(attr => attr.value && attr.value.trim() !== ''),
         
-        // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
-        note: `DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
+        // Order notes with detailed breakdown
+        note: `DELIVERY ORDER (CST) - ${deliveryDate}T05:00:00.000Z at ${deliveryTime}
 
-📍 DELIVERY ADDRESS: 
+📍 DELIVERY ADDRESS:
 ${street}
 ${city}, ${state} ${zip}
 ${deliveryInstructions ? `🗒️ SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : ''}
 
 💰 PAYMENT BREAKDOWN:
 • Subtotal: $${orderAmounts.subtotal.toFixed(2)}
-• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}  
+• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}
 • Tax: $${orderAmounts.sales_tax.toFixed(2)}
 • Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
 • TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)}
 
-💳 STRIPE CONFIRMATION: ${paymentIntentId || sessionId}
+💳 STRIPE CONFIRMATION:
+${paymentIntentId || sessionId}
 ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
 
-⚠️ NOTE: Driver tip ($${orderAmounts.tip_amount.toFixed(2)}) included in total payment - not a line item.`,
+⚠️ NOTE: Driver tip ($${orderAmounts.tip_amount.toFixed(2)}) included in total payment - now appears in shipping section.`,
         
         // Financial status - paid
         financial_status: "paid",
