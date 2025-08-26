@@ -25,8 +25,8 @@ export function CustomDeliveryIntro({
   // Debug logging to check what values we're receiving
   console.log('🔍 CustomDeliveryIntro props received:', {
     appName,
-    heroHeading,
-    heroSubheading,
+    heroHeading: `"${heroHeading}"`,
+    heroSubheading: `"${heroSubheading}"`,
     logoUrl,
     mainAppConfig
   });
@@ -38,33 +38,47 @@ export function CustomDeliveryIntro({
     return 'Start Order Now';
   };
 
-  // Helper function to get the actual heading with proper fallback
+  // FIXED: Helper function to get the actual heading with proper fallback
   const getActualHeading = () => {
+    console.log('🔥 HEADING DEBUG - heroHeading prop:', `"${heroHeading}"`);
+    console.log('🔥 HEADING DEBUG - mainAppConfig.hero_heading:', `"${mainAppConfig?.hero_heading}"`);
+    console.log('🔥 HEADING DEBUG - appName fallback:', `"${appName}"`);
+    
     // Priority: heroHeading prop -> mainAppConfig.hero_heading -> appName fallback
+    // CRITICAL: Only use appName as last resort if both are truly empty
     let heading = '';
-    if (heroHeading && heroHeading.trim()) {
+    if (heroHeading && heroHeading.trim() && heroHeading.trim() !== '') {
       heading = heroHeading.trim();
-    } else if (mainAppConfig?.hero_heading && mainAppConfig.hero_heading.trim()) {
+      console.log('✅ Using heroHeading prop:', `"${heading}"`);
+    } else if (mainAppConfig?.hero_heading && mainAppConfig.hero_heading.trim() && mainAppConfig.hero_heading.trim() !== '') {
       heading = mainAppConfig.hero_heading.trim();
+      console.log('✅ Using mainAppConfig.hero_heading:', `"${heading}"`);
     } else {
       heading = appName || 'Delivery Service';
+      console.log('⚠️ Fallback to appName:', `"${heading}"`);
     }
-    console.log('📝 Final heading selected:', heading);
+    
     return heading;
   };
 
-  // Helper function to get the actual subheading with proper fallback
+  // FIXED: Helper function to get the actual subheading with proper fallback
   const getActualSubheading = () => {
+    console.log('🔥 SUBHEADING DEBUG - heroSubheading prop:', `"${heroSubheading}"`);
+    console.log('🔥 SUBHEADING DEBUG - mainAppConfig.hero_subheading:', `"${mainAppConfig?.hero_subheading}"`);
+    
     // Priority: heroSubheading prop -> mainAppConfig.hero_subheading -> default fallback
     let subheading = '';
-    if (heroSubheading && heroSubheading.trim()) {
+    if (heroSubheading && heroSubheading.trim() && heroSubheading.trim() !== '') {
       subheading = heroSubheading.trim();
-    } else if (mainAppConfig?.hero_subheading && mainAppConfig.hero_subheading.trim()) {
+      console.log('✅ Using heroSubheading prop:', `"${subheading}"`);
+    } else if (mainAppConfig?.hero_subheading && mainAppConfig.hero_subheading.trim() && mainAppConfig.hero_subheading.trim() !== '') {
       subheading = mainAppConfig.hero_subheading.trim();
+      console.log('✅ Using mainAppConfig.hero_subheading:', `"${subheading}"`);
     } else {
       subheading = 'Premium Curated Experience';
+      console.log('⚠️ Fallback to default subheading:', `"${subheading}"`);
     }
-    console.log('📝 Final subheading selected:', subheading);
+    
     return subheading;
   };
 

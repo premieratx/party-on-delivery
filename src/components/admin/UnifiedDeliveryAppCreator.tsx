@@ -530,8 +530,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         app_slug: appSlug,
         logo_url: logoUrl,
         main_app_config: {
-          hero_heading: heroHeading.trim() || 'Premium Delivery Service',
-          hero_subheading: heroSubheading.trim() || 'Fast & Reliable',
+          hero_heading: heroHeading.trim(), // SAVE EXACT VALUE - NO FALLBACKS
+          hero_subheading: heroSubheading.trim(), // SAVE EXACT VALUE - NO FALLBACKS
           logo_size: Number(logoSize) || 50,
           headline_size: Number(headlineSize) || 24,
           subheadline_size: Number(subheadlineSize) || 14,

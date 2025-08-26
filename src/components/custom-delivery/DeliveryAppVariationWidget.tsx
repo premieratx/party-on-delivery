@@ -106,6 +106,7 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
         }
 
         console.log('✅ Raw loaded app config:', data);
+        console.log('🔥 CRITICAL DEBUG - Raw main_app_config from DB:', data.main_app_config);
         
         // Ensure main_app_config is properly parsed as JSON if it's a string
         let parsedData = { ...data };
@@ -124,6 +125,9 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
           console.log('⚠️ No main_app_config found, using empty object');
           parsedData.main_app_config = {};
         }
+
+        console.log('🔥 CRITICAL DEBUG - Final parsed hero_heading:', (parsedData.main_app_config as any)?.hero_heading);
+        console.log('🔥 CRITICAL DEBUG - Final parsed hero_subheading:', (parsedData.main_app_config as any)?.hero_subheading);
         
         // Ensure collections_config is properly parsed as JSON if it's a string
         if (typeof data.collections_config === 'string') {
@@ -230,8 +234,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
       {currentStep === 'intro' && (
         <CustomDeliveryIntro
           appName={appConfig.app_name}
-          heroHeading={appConfig.main_app_config?.hero_heading}
-          heroSubheading={appConfig.main_app_config?.hero_subheading}
+          heroHeading={appConfig.main_app_config?.hero_heading || ''}
+          heroSubheading={appConfig.main_app_config?.hero_subheading || ''}
           logoUrl={appConfig.logo_url}
           mainAppConfig={appConfig.main_app_config}
           onStartOrder={handleStartOrder}
