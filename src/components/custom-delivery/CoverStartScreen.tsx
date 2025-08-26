@@ -206,13 +206,15 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           } as React.CSSProperties}
         >
           
-          {/* Logo Section */}
+          {/* Logo Section - FIXED 15px from top */}
           <div 
             className={`flex-shrink-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
-              transform: `translateY(${Math.max((logoOffsetY || 0), -50)}px)`,
-              animationDelay: `${getAnimationDelay(0)}ms`,
-              marginTop: '15px'
+              position: 'absolute',
+              top: '15px', // FIXED: Always 15px from top
+              left: '50%',
+              transform: `translateX(-50%) translateY(${Math.max((logoOffsetY || 0), 0)}px)`,
+              animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
             <div className="mb-2">
@@ -321,25 +323,23 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Buttons Section - Positioned absolutely at bottom with 15px margin */}
+          {/* Buttons Section - FIXED 15px from bottom, ignore offset */}
           <div 
-            className={`absolute bottom-0 left-4 right-4 transition-all duration-700 ${getAnimationClass(4)}`}
+            className={`absolute left-4 right-4 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
-              transform: `translateY(${buttonsOffsetY || 0}px)`,
-              animationDelay: `${getAnimationDelay(4)}ms`,
-              marginBottom: '15px'
+              bottom: '15px', // FIXED: Always 15px from bottom
+              animationDelay: `${getAnimationDelay(4)}ms`
             }}
           >
             <div className="flex flex-col gap-2.5 w-full max-w-xs mx-auto">
-              {buttons.slice(0, 2).map((button, index) => (
+              {buttons && buttons.length > 0 && buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
                   onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
-                  className={`w-full text-sm font-semibold h-11 rounded-full shadow-lg transition-all duration-700 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40 ${getAnimationClass(4)}`}
+                  className="w-full text-sm font-semibold h-11 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40"
                   style={{
                     backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
-                    color: button.textColor || '#FFFFFF',
-                    animationDelay: `${getAnimationDelay(4) + (index * 150)}ms`
+                    color: button.textColor || '#FFFFFF'
                   }}
                 >
                   <span className="relative z-10">{button.text}</span>
