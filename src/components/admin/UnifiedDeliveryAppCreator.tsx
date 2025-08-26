@@ -285,7 +285,11 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   // Load initial configuration when editing an existing app or when initial data changes
   useEffect(() => {
+    console.log('🔄 DeliveryApp useEffect triggered with initial:', initial);
     if (initial) {
+      console.log('📥 Loading existing delivery app configuration...');
+      console.log('📊 Initial main_app_config:', initial.main_app_config);
+      
       // Load basic app data
       setAppName(initial.app_name || '');
       setAppSlug(initial.app_slug || '');
@@ -299,8 +303,9 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       // Load styling configuration if it exists
       if (initial.main_app_config) {
         const config = initial.main_app_config;
-        console.log('Loading config:', config); // Debug log
+        console.log('🎨 Loading styling config:', config);
         
+        console.log('Setting logoSize from:', config.logo_size, 'to state');
         setLogoSize(config.logo_size ?? 50);
         setHeadlineSize(config.headline_size ?? 24);
         setSubheadlineSize(config.subheadline_size ?? 14);
@@ -310,16 +315,25 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         setBackgroundImageUrl(config.background_image_url || '');
         setBackgroundOpacity(config.background_opacity ?? 0.7);
         setOverlayColor(config.overlay_color || '#000000');
+        
+        console.log('🎨 Setting font/color config:');
+        console.log('- headline_font:', config.headline_font);
+        console.log('- headline_color:', config.headline_color);
         setHeadlineFont(config.headline_font || 'Inter');
         setHeadlineColor(config.headline_color || '#ffffff');
         setSubheadlineFont(config.subheadline_font || 'Inter');
         setSubheadlineColor(config.subheadline_color || '#ffffff');
+        
+        console.log('✅ Configuration loaded successfully');
       }
       
       // Load tabs configuration
       if (initial.collections_config?.tabs) {
+        console.log('📑 Loading tabs:', initial.collections_config.tabs);
         setTabs(initial.collections_config.tabs);
       }
+    } else {
+      console.log('🆕 No initial data - creating new delivery app');
     }
   }, [initial]);
 
@@ -495,7 +509,15 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     setSaving(true);
 
     try {
-      console.log('💾 Saving delivery app...', { appName, appSlug, theme });
+      console.log('💾 Saving delivery app...', { 
+        appName, 
+        appSlug, 
+        theme,
+        logoSize,
+        headlineSize,
+        headlineColor,
+        headlineFont
+      });
 
       // Convert data to proper JSON format for Supabase
       const appData = {
