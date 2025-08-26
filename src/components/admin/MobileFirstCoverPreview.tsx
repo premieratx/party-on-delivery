@@ -179,17 +179,13 @@ export const MobileFirstCoverPreview: React.FC<MobileFirstCoverPreviewProps> = (
               </div>
             )}
 
-            {/* Buttons */}
+            {/* Buttons - Fixed at bottom with 15px margin like the real version */}
             {buttons.length > 0 && (
               <div 
-                className="absolute w-[280px] transition-all duration-200"
-                style={{
-                  left: `${getElementPosition('buttons').x}%`,
-                  top: `${getElementPosition('buttons').y}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
+                className="absolute bottom-0 left-4 right-4"
+                style={{ marginBottom: '15px' }}
               >
-                <div className="space-y-4">
+                <div className="flex flex-col gap-2.5 w-full max-w-xs mx-auto">
                   {buttons.slice(0, 2).map((button, idx) => (
                     <button
                       key={idx}

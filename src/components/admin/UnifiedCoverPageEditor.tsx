@@ -304,15 +304,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   ]);
 
   // Enhanced positioning and sizing controls - optimized for fixed iPhone frame (390x844)
-  // Centered positioning with all elements visible in frame by default
-  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 28);
-  const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 16);
-  const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 14);
-  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? -20);
-  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? 0);
-  const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 20);
-  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 80);
-  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -80);
+  // Centered positioning with all elements visible in frame by default - ADJUSTED FOR SINGLE SCREEN
+  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 24);
+  const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 14);
+  const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 12);
+  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? -30);
+  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? -10);
+  const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 10);
+  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 40);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -60);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
   const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);
