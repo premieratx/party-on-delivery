@@ -19,7 +19,8 @@ import {
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
+// CRITICAL: Always use UnifiedDeliveryAppCreator - NEVER UnifiedDeliveryAppEditor!
+import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
 
 
 interface Tab {
@@ -279,9 +280,9 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
         </Card>
       )}
 
-      {/* Delivery App Creator */}
+      {/* CRITICAL: Use UnifiedDeliveryAppCreator - NEVER UnifiedDeliveryAppEditor! */}
       {showEditor && (
-        <UnifiedDeliveryAppEditor
+        <UnifiedDeliveryAppCreator
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingApp}
@@ -412,9 +413,9 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Editor Modal */}
+      {/* CRITICAL: Use UnifiedDeliveryAppCreator - NEVER UnifiedDeliveryAppEditor! */}
       {showEditor && (
-        <UnifiedDeliveryAppEditor 
+        <UnifiedDeliveryAppCreator 
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingApp}

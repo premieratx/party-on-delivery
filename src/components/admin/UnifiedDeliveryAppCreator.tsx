@@ -53,7 +53,21 @@ interface UnifiedDeliveryAppCreatorProps {
 }
 
 
-// Enhanced Preview Component with proper responsive handling
+// 10 Font Options
+const FONT_OPTIONS = [
+  { value: 'Inter', label: 'Inter (Modern)', family: 'Inter, sans-serif' },
+  { value: 'Roboto', label: 'Roboto (Clean)', family: 'Roboto, sans-serif' },
+  { value: 'Open Sans', label: 'Open Sans (Friendly)', family: 'Open Sans, sans-serif' },
+  { value: 'Lato', label: 'Lato (Professional)', family: 'Lato, sans-serif' },
+  { value: 'Montserrat', label: 'Montserrat (Geometric)', family: 'Montserrat, sans-serif' },
+  { value: 'Poppins', label: 'Poppins (Rounded)', family: 'Poppins, sans-serif' },
+  { value: 'Playfair Display', label: 'Playfair (Elegant)', family: 'Playfair Display, serif' },
+  { value: 'Merriweather', label: 'Merriweather (Readable)', family: 'Merriweather, serif' },
+  { value: 'Source Sans Pro', label: 'Source Sans (Tech)', family: 'Source Sans Pro, sans-serif' },
+  { value: 'Nunito', label: 'Nunito (Friendly)', family: 'Nunito, sans-serif' }
+];
+
+// Enhanced Preview Component with proper responsive handling + fonts + colors
 const DeliveryAppLivePreview: React.FC<{
   appName: string;
   heroHeading: string;
@@ -68,6 +82,10 @@ const DeliveryAppLivePreview: React.FC<{
   backgroundImageUrl?: string;
   backgroundOpacity: number;
   overlayColor: string;
+  headlineFont: string;
+  headlineColor: string;
+  subheadlineFont: string;
+  subheadlineColor: string;
   tabs: DeliveryAppTab[];
   theme: 'original' | 'gold' | 'platinum';
   device: 'mobile' | 'tablet' | 'desktop';
@@ -85,6 +103,10 @@ const DeliveryAppLivePreview: React.FC<{
   backgroundImageUrl,
   backgroundOpacity,
   overlayColor,
+  headlineFont,
+  headlineColor,
+  subheadlineFont,
+  subheadlineColor,
   tabs, 
   theme, 
   device 
@@ -149,19 +171,23 @@ const DeliveryAppLivePreview: React.FC<{
               </div>
             )}
             <h1 
-              className="font-bold mb-3 text-white leading-tight"
+              className="font-bold mb-3 leading-tight"
               style={{ 
                 fontSize: `${Math.min(headlineSize, 24)}px`,
-                transform: `translateY(${headlineVerticalPos}px)`
+                transform: `translateY(${headlineVerticalPos}px)`,
+                fontFamily: FONT_OPTIONS.find(f => f.value === headlineFont)?.family || 'Inter, sans-serif',
+                color: headlineColor
               }}
             >
               {heroHeading || appName}
             </h1>
             <p 
-              className="text-white/90 mb-4 max-w-xs mx-auto"
+              className="mb-4 max-w-xs mx-auto"
               style={{ 
                 fontSize: `${Math.min(subheadlineSize, 14)}px`,
-                transform: `translateY(${subheadlineVerticalPos}px)`
+                transform: `translateY(${subheadlineVerticalPos}px)`,
+                fontFamily: FONT_OPTIONS.find(f => f.value === subheadlineFont)?.family || 'Inter, sans-serif',
+                color: subheadlineColor
               }}
             >
               {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
@@ -226,6 +252,11 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.7);
   const [overlayColor, setOverlayColor] = useState('#000000');
+  // NEW: Font and color controls
+  const [headlineFont, setHeadlineFont] = useState('Inter');
+  const [headlineColor, setHeadlineColor] = useState('#ffffff');
+  const [subheadlineFont, setSubheadlineFont] = useState('Inter');
+  const [subheadlineColor, setSubheadlineColor] = useState('#ffffff');
   const [tabs, setTabs] = useState<DeliveryAppTab[]>(initial?.collections_config?.tabs || [
     { name: 'Beer', collection_handle: '', icon: '🍺' },
     { name: 'Seltzers', collection_handle: '', icon: '🥤' },
@@ -429,7 +460,12 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           subheadline_vertical_pos: subheadlineVerticalPos,
           background_image_url: backgroundImageUrl,
           background_opacity: backgroundOpacity,
-          overlay_color: overlayColor
+          overlay_color: overlayColor,
+          // NEW: Save font and color settings
+          headline_font: headlineFont,
+          headline_color: headlineColor,
+          subheadline_font: subheadlineFont,
+          subheadline_color: subheadlineColor
         })),
         collections_config: JSON.parse(JSON.stringify({
           tab_count: tabs.length,
@@ -647,7 +683,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                   </CardContent>
                 </Card>
 
-                {/* Text Sizing & Position */}
+                {/* Text Sizing & Position - FIXED SLIDERS */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Text Sizing & Position</CardTitle>
@@ -675,6 +711,97 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                           step={2}
                           className="w-full"
                         />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Subheadline Size: {subheadlineSize}px</Label>
+                      <Slider
+                        value={[subheadlineSize]}
+                        onValueChange={(value) => setSubheadlineSize(value[0])}
+                        max={24}
+                        min={12}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* NEW: Font & Color Controls */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Font & Color Controls</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Headline Font & Color */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Headline Font</Label>
+                        <Select value={headlineFont} onValueChange={setHeadlineFont}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FONT_OPTIONS.map((font) => (
+                              <SelectItem key={font.value} value={font.value}>
+                                {font.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Headline Color</Label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            value={headlineColor}
+                            onChange={(e) => setHeadlineColor(e.target.value)}
+                            className="w-12 h-8 rounded border border-border cursor-pointer"
+                          />
+                          <Input
+                            value={headlineColor}
+                            onChange={(e) => setHeadlineColor(e.target.value)}
+                            placeholder="#ffffff"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Subheadline Font & Color */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Subheadline Font</Label>
+                        <Select value={subheadlineFont} onValueChange={setSubheadlineFont}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FONT_OPTIONS.map((font) => (
+                              <SelectItem key={font.value} value={font.value}>
+                                {font.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Subheadline Color</Label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            value={subheadlineColor}
+                            onChange={(e) => setSubheadlineColor(e.target.value)}
+                            className="w-12 h-8 rounded border border-border cursor-pointer"
+                          />
+                          <Input
+                            value={subheadlineColor}
+                            onChange={(e) => setSubheadlineColor(e.target.value)}
+                            placeholder="#ffffff"
+                            className="flex-1"
+                          />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -813,6 +940,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                     backgroundImageUrl={backgroundImageUrl}
                     backgroundOpacity={backgroundOpacity}
                     overlayColor={overlayColor}
+                    headlineFont={headlineFont}
+                    headlineColor={headlineColor}
+                    subheadlineFont={subheadlineFont}
+                    subheadlineColor={subheadlineColor}
                     tabs={tabs}
                     theme={theme}
                     device={previewDevice}
