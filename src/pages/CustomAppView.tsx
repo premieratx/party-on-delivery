@@ -162,6 +162,7 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
       heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
       heroSubheading={appConfig.main_app_config?.hero_subheading || appConfig.description || "Premium Curated Experience"}
       logoUrl={appConfig.logo_url}
+      appConfig={appConfig}
       collectionsConfig={appConfig.collections_config}
       cartItemCount={getTotalItems()}
       cartItems={cartItems}

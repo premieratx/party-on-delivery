@@ -348,14 +348,28 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     (typeof appConfig.hero_config === 'string' ? 
       JSON.parse(appConfig.hero_config) : appConfig.hero_config) : {};
 
+  // Also check main_app_config for styling (backward compatibility)
+  const mainConfig = appConfig?.main_app_config || {};
+
+  // Debug styling data
+  console.log('🎨 STYLING DEBUG - heroConfig:', heroConfig);
+  console.log('🎨 STYLING DEBUG - mainConfig:', mainConfig);
+
   // Helper function to generate responsive text styles
   const getResponsiveTextStyle = (type: 'headline' | 'subheadline' | 'scrollingText') => {
     const config = heroConfig[`${type}Style`] || {};
-    const color = heroConfig[`${type}Color`] || '#FFFFFF';
-    const font = heroConfig[`${type}Font`] || 'Inter';
-    const size = heroConfig[`${type}Size`] || (type === 'headline' ? 48 : type === 'subheadline' ? 24 : 16);
-    
-    return {
+    // Check both hero_config and main_app_config for styling
+    const color = heroConfig[`${type}Color`] || 
+                 mainConfig[`${type}_color`] || 
+                 (type === 'headline' ? '#FFFFFF' : type === 'subheadline' ? '#E2E8F0' : '#FBBF24');
+    const font = heroConfig[`${type}Font`] || 
+                mainConfig[`${type}_font`] || 
+                'Inter';
+    const size = heroConfig[`${type}Size`] || 
+                mainConfig[`${type}_size`] || 
+                (type === 'headline' ? 48 : type === 'subheadline' ? 24 : 16);
+
+    const finalStyle = {
       color,
       fontFamily: font,
       fontSize: `clamp(${size * 0.6}px, ${size * 0.8}vw, ${size}px)`, // Responsive sizing
@@ -364,6 +378,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       textDecoration: config.underlined ? 'underline' : 'none',
       lineHeight: type === 'headline' ? '1.1' : '1.5'
     };
+
+    console.log(`🎨 STYLING DEBUG - ${type} style:`, { color, font, size, finalStyle });
+    return finalStyle;
   };
 
   return (

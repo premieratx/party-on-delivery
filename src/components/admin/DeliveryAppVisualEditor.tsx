@@ -325,7 +325,19 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
         app_slug: initial?.app_slug || config.appName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
         main_app_config: {
           hero_heading: config.heroHeading,
-          hero_subheading: config.heroSubheading
+          hero_subheading: config.heroSubheading,
+          logo_size: config.logoSize,
+          headline_size: config.headlineSize,
+          subheadline_size: config.subheadlineSize,
+          logo_vertical_pos: config.logoVerticalPosition,
+          headline_vertical_pos: config.headlineVerticalPosition,
+          subheadline_vertical_pos: config.subheadlineVerticalPosition,
+          headline_font: config.headlineFont,
+          headline_color: config.headlineColor,
+          subheadline_font: config.subheadlineFont,
+          subheadline_color: config.subheadlineColor,
+          background_image_url: config.backgroundUrl,
+          background_opacity: 50
         },
         logo_url: config.logoUrl,
         hero_config: {
