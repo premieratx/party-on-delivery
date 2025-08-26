@@ -106,16 +106,16 @@ export default function CoverPage() {
   console.log('🔍 Parsed features array:', features);
   
   // Apply YOUR EXACT SIZING from saved styles
-  const logoSize = savedStyles.sizing?.logoSize || 149;
-  const headlineSize = savedStyles.sizing?.headlineSize || 34;
-  const subtitleSize = savedStyles.sizing?.subtitleSize || 20;
+  const logoSize = pageData.logo_height || savedStyles.title_size || 120;
+  const headlineSize = savedStyles.title_size || 32;
+  const subtitleSize = savedStyles.subtitle_size || 16;
   
-  // Apply YOUR EXACT POSITIONING
-  const logoVerticalPos = savedStyles.positioning?.logoVerticalPos || -20;
-  const headlineVerticalPos = savedStyles.positioning?.headlineVerticalPos || -50;
-  const subtitleVerticalPos = savedStyles.positioning?.subtitleVerticalPos || 0;
-  const featuresVerticalPos = savedStyles.positioning?.featuresVerticalPos || -32;
-  const buttonsVerticalPos = savedStyles.positioning?.buttonsVerticalPos || -50;
+  // Apply YOUR EXACT POSITIONING - using correct field names from editor
+  const logoVerticalPos = savedStyles.logo_offset_y || savedStyles.positioning?.logoVerticalPos || -80;
+  const headlineVerticalPos = savedStyles.title_offset_y || savedStyles.positioning?.headlineVerticalPos || -50;
+  const subtitleVerticalPos = savedStyles.subtitle_offset_y || savedStyles.positioning?.subtitleVerticalPos || -30;
+  const featuresVerticalPos = savedStyles.checklist_offset_y || savedStyles.positioning?.featuresVerticalPos || 0;
+  const buttonsVerticalPos = savedStyles.buttons_offset_y || savedStyles.positioning?.buttonsVerticalPos || 50;
 
   // Get YOUR EXACT SAVED THEME VARIANT
   const themeVariant = TEMPLATE_VARIANTS[theme as keyof typeof TEMPLATE_VARIANTS] || TEMPLATE_VARIANTS.gold;

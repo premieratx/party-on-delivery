@@ -385,15 +385,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
         { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
       ]);
-      // Apply optimized positioning defaults
+      // Apply optimized positioning defaults for perfect phone frame fit
       setTitleSize(32);
       setSubtitleSize(16);
       setChecklistSize(14);
-      setTitleOffsetY(-50);
-      setSubtitleOffsetY(-30);
-      setChecklistOffsetY(0);
-      setButtonsOffsetY(50); // Positions buttons well above bottom
-      setLogoOffsetY(-100);
+      setTitleOffsetY(-40);   // Better positioned headline
+      setSubtitleOffsetY(-20); // Closer to headline
+      setChecklistOffsetY(10); // Slightly below center
+      setButtonsOffsetY(60);   // Well positioned above bottom
+      setLogoOffsetY(-60);     // Better logo position at top
       setIsActive(true);
       setFreeShippingEnabled(false);
     }
