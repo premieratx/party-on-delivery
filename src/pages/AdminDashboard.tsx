@@ -14,7 +14,6 @@ import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 // EnhancedCoverPageCreator removed - standalone implementation only
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
-import { UnifiedDeliveryAppCreator } from '@/components/admin/UnifiedDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -51,7 +50,6 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { activeTab, updateActiveTab } = useAdminState('overview');
-  const [showDeliveryCreator, setShowDeliveryCreator] = useState(false);
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
@@ -321,10 +319,6 @@ export default function AdminDashboard() {
           <TabsContent value="delivery" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Delivery App Management</h2>
-              <Button onClick={() => setShowDeliveryCreator(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Delivery App
-              </Button>
             </div>
             <EnhancedDeliveryAppManager />
           </TabsContent>
@@ -359,17 +353,6 @@ export default function AdminDashboard() {
       {/* Creator Modals */}
       {showCoverCreator && (
         <div>Cover page creation moved to EnhancedCoverPageManager</div>
-      )}
-      
-      {showDeliveryCreator && (
-        <UnifiedDeliveryAppCreator 
-          open={showDeliveryCreator}
-          onOpenChange={setShowDeliveryCreator}
-          onSaved={() => {
-            setShowDeliveryCreator(false);
-            loadDashboardData(); // Refresh data after creation
-          }}
-        />
       )}
       
       {showPostCheckoutCreator && (

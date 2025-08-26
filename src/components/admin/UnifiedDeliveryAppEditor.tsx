@@ -150,6 +150,11 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
   const [headlineColor, setHeadlineColor] = useState('#000000');
   const [subheadlineFont, setSubheadlineFont] = useState('Inter');
   const [subheadlineColor, setSubheadlineColor] = useState('#666666');
+  
+  // Position controls for precise element positioning
+  const [logoVerticalPos, setLogoVerticalPos] = useState(0);
+  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
+  const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(0);
 
   // Collections state
   const [collections, setCollections] = useState([
@@ -196,6 +201,9 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setHeadlineColor(styles.headlineColor || '#000000');
       setSubheadlineFont(styles.subheadlineFont || 'Inter');
       setSubheadlineColor(styles.subheadlineColor || '#666666');
+      setLogoVerticalPos(styles.logoVerticalPos || 0);
+      setHeadlineVerticalPos(styles.headlineVerticalPos || 0);
+      setSubheadlineVerticalPos(styles.subheadlineVerticalPos || 0);
       
       if (initial.collections_config?.tabs) {
         setCollections(initial.collections_config.tabs);
@@ -223,6 +231,9 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setHeadlineColor('#000000');
       setSubheadlineFont('Inter');
       setSubheadlineColor('#666666');
+      setLogoVerticalPos(0);
+      setHeadlineVerticalPos(0);
+      setSubheadlineVerticalPos(0);
     }
   }, [open, initial]);
 
@@ -339,7 +350,10 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
           headlineFont: headlineFont,
           headlineColor: headlineColor,
           subheadlineFont: subheadlineFont,
-          subheadlineColor: subheadlineColor
+          subheadlineColor: subheadlineColor,
+          logoVerticalPos: logoVerticalPos,
+          headlineVerticalPos: headlineVerticalPos,
+          subheadlineVerticalPos: subheadlineVerticalPos
         }
       };
 
@@ -424,31 +438,33 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
           {/* App Header */}
           <div className="p-4 text-center relative z-10" style={{ color: theme.colors.text }}>
             {logoUrl && (
-              <Draggable bounds="parent" defaultPosition={{ x: 0, y: 0 }}>
-                <div className="absolute cursor-move">
-                  <img 
-                    src={logoUrl} 
-                    alt="Logo" 
-                    className="object-contain rounded-lg resize-handle"
-                    style={{ 
-                      width: `${logoSize}px`,
-                      height: `${logoSize}px`,
-                      minWidth: '32px',
-                      minHeight: '32px',
-                      maxWidth: '128px',
-                      maxHeight: '128px'
-                    }}
-                  />
-                </div>
-              </Draggable>
+              <div 
+                className="flex justify-center mb-4"
+                style={{ transform: `translateY(${logoVerticalPos}px)` }}
+              >
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  className="object-contain rounded-lg"
+                  style={{ 
+                    width: `${logoSize}px`,
+                    height: `${logoSize}px`,
+                    minWidth: '32px',
+                    minHeight: '32px',
+                    maxWidth: '128px',
+                    maxHeight: '128px'
+                  }}
+                />
+              </div>
             )}
-            <div className={logoUrl ? 'mt-20' : ''}>
+            <div className={logoUrl ? 'mt-0' : ''}>
               <h1 
                 className="font-bold mb-2" 
                 style={{ 
                   color: headlineColor,
                   fontSize: `${headlineSize}px`,
-                  fontFamily: FONT_OPTIONS.find(f => f.value === headlineFont)?.family || 'Inter, sans-serif'
+                  fontFamily: FONT_OPTIONS.find(f => f.value === headlineFont)?.family || 'Inter, sans-serif',
+                  transform: `translateY(${headlineVerticalPos}px)`
                 }}
               >
                 {heroHeading || 'Welcome to Our Store'}
@@ -458,7 +474,8 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                 style={{ 
                   fontSize: `${subheadlineSize}px`,
                   color: subheadlineColor,
-                  fontFamily: FONT_OPTIONS.find(f => f.value === subheadlineFont)?.family || 'Inter, sans-serif'
+                  fontFamily: FONT_OPTIONS.find(f => f.value === subheadlineFont)?.family || 'Inter, sans-serif',
+                  transform: `translateY(${subheadlineVerticalPos}px)`
                 }}
               >
                 {heroSubheading || 'Premium delivery service'}
@@ -701,6 +718,54 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                           className="mt-2"
                         />
                       </div>
+                    </div>
+
+                    {/* Position Controls */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Move className="w-4 h-4" />
+                          Logo Position: {logoVerticalPos}px
+                        </Label>
+                        <Slider
+                          value={[logoVerticalPos]}
+                          onValueChange={(value) => setLogoVerticalPos(value[0])}
+                          min={-50}
+                          max={50}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Move className="w-4 h-4" />
+                          Headline Position: {headlineVerticalPos}px
+                        </Label>
+                        <Slider
+                          value={[headlineVerticalPos]}
+                          onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                          min={-50}
+                          max={50}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Move className="w-4 h-4" />
+                          Subheadline Position: {subheadlineVerticalPos}px
+                        </Label>
+                        <Slider
+                          value={[subheadlineVerticalPos]}
+                          onValueChange={(value) => setSubheadlineVerticalPos(value[0])}
+                          min={-50}
+                          max={50}
+                          step={1}
+                          className="mt-2"
+                         />
+                       </div>
                     </div>
 
                     {/* Background Controls */}

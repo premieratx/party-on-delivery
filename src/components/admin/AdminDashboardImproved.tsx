@@ -26,7 +26,7 @@ import {
 
 import { UnifiedCoverPageEditor } from './UnifiedCoverPageEditor';
 import { EnhancedPostCheckoutManager } from './EnhancedPostCheckoutManager';
-import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
+import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
 
 interface AdminDashboardImprovedProps {
   onNavigate?: (page: string) => void;
@@ -76,7 +76,7 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
   if (showAppCreator) {
     return (
       <div className="min-h-screen bg-background">
-        <UnifiedDeliveryAppCreator
+        <UnifiedDeliveryAppEditor
           open={showAppCreator}
           onOpenChange={setShowAppCreator}
           initial={editingApp}
