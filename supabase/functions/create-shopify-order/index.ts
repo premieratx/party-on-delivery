@@ -467,7 +467,9 @@ serve(async (req) => {
         // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
         note: `DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
-📍 DELIVERY ADDRESS: ${deliveryAddress}
+📍 DELIVERY ADDRESS: 
+${street}
+${city}, ${state} ${zip}
 ${deliveryInstructions ? `🗒️ SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : ''}
 
 💰 PAYMENT BREAKDOWN:
