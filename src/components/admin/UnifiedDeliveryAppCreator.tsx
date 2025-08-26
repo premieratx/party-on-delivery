@@ -172,39 +172,39 @@ const DeliveryAppLivePreview: React.FC<{
                 className="flex justify-center mb-4"
                 style={{ transform: `translateY(${logoVerticalPos}px)` }}
               >
-                <img 
-                  src={logoUrl} 
-                  alt={appName} 
-                  className="object-contain transition-all duration-300" 
-                  style={{ 
-                    height: `${Math.min(logoSize, 60)}px`,
-                    maxHeight: `${Math.min(logoSize, 60)}px`
-                  }}
-                />
+                 <img 
+                   src={logoUrl} 
+                   alt={appName} 
+                   className="object-contain transition-all duration-300" 
+                   style={{ 
+                     height: `${logoSize}px`,
+                     maxHeight: `${logoSize}px`
+                   }}
+                 />
               </div>
             )}
-            <h1 
-              className="font-bold mb-3 leading-tight"
-              style={{ 
-                fontSize: `${Math.min(headlineSize, 24)}px`,
-                transform: `translateY(${headlineVerticalPos}px)`,
-                fontFamily: FONT_OPTIONS.find(f => f.value === headlineFont)?.family || 'Inter, sans-serif',
-                color: headlineColor
-              }}
-            >
-              {heroHeading}
-            </h1>
-            <p 
-              className="mb-4 max-w-xs mx-auto"
-              style={{ 
-                fontSize: `${Math.min(subheadlineSize, 14)}px`,
-                transform: `translateY(${subheadlineVerticalPos}px)`,
-                fontFamily: FONT_OPTIONS.find(f => f.value === subheadlineFont)?.family || 'Inter, sans-serif',
-                color: subheadlineColor
-              }}
-            >
-              {heroSubheading}
-            </p>
+             <h1 
+               className="font-bold mb-3 leading-tight"
+               style={{ 
+                 fontSize: `${headlineSize}px`,
+                 transform: `translateY(${headlineVerticalPos}px)`,
+                 fontFamily: FONT_OPTIONS.find(f => f.value === headlineFont)?.family || 'Inter, sans-serif',
+                 color: headlineColor
+               }}
+             >
+               {heroHeading}
+             </h1>
+             <p 
+               className="mb-4 max-w-xs mx-auto"
+               style={{ 
+                 fontSize: `${subheadlineSize}px`,
+                 transform: `translateY(${subheadlineVerticalPos}px)`,
+                 fontFamily: FONT_OPTIONS.find(f => f.value === subheadlineFont)?.family || 'Inter, sans-serif',
+                 color: subheadlineColor
+               }}
+             >
+               {heroSubheading}
+             </p>
           </div>
         </div>
 
