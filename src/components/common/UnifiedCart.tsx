@@ -113,11 +113,10 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           style={{ 
             /* Ensure mobile browsers respect the scrolling area */
             WebkitOverflowScrolling: 'touch',
-            maxHeight: 'calc(100vh - 120px)', /* Account for header + footer */
             overscrollBehavior: 'contain'
           }}
         >
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 pb-safe">{/* Add bottom padding for safe area */}
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 pb-24">{/* Add bottom padding for sticky checkout button */}
             {cartItems.length === 0 ? (
               <div className="text-center py-8 sm:py-12">
                 <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
