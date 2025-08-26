@@ -109,6 +109,10 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
   const theme = COVER_THEMES[selectedTheme as keyof typeof COVER_THEMES] || COVER_THEMES.gold;
   const device = DEVICE_CONFIGS[activeDevice as keyof typeof DEVICE_CONFIGS] || DEVICE_CONFIGS.iphone14;
   const isMobile = ['iphone14', 'galaxyS23', 'tablet'].includes(activeDevice);
+  
+  // Use mobile dimensions as the constraint for all screen sizes to ensure consistency
+  const constrainedHeight = Math.min(device.previewHeight, 700); // Max height based on mobile
+  const constrainedWidth = Math.min(device.previewWidth, 350);
 
   // Initialize particles
   useEffect(() => {
@@ -287,11 +291,11 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
 
   const renderButtons = () => {
     return renderAnimatedElement('buttons', (
-      <div className="space-y-4 px-4 w-full max-w-sm">
+      <div className="space-y-2 px-4 w-full max-w-sm">
         {buttons.map((button, idx) => (
           <button
             key={idx}
-            className="w-full py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 animate-scale-in"
+            className="w-full py-3 px-6 rounded-xl font-bold text-base transition-all duration-300 transform hover:scale-105 animate-scale-in"
             style={{
               backgroundColor: button.style === 'filled' ? theme.buttonBg : 'transparent',
               color: button.style === 'filled' ? theme.buttonText : theme.buttonOutlineText,
@@ -328,8 +332,8 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
           isMobile ? 'border-2 shadow-2xl' : 'border border-gray-200 shadow-lg'
         }`}
         style={{
-          width: fullscreenPreview && isMobile ? Math.min(device.previewWidth * 1.2, 420) : Math.min(device.previewWidth, 400),
-          height: fullscreenPreview && isMobile ? Math.min(device.previewHeight * 1.2, 800) : Math.min(device.previewHeight, 750),
+          width: constrainedWidth,
+          height: constrainedHeight,
           borderRadius: isMobile ? '2.5rem' : '1rem',
           background: bgImageUrl ? `url(${bgImageUrl})` : bgVideoUrl ? 'black' : theme.background,
           backgroundSize: 'cover',
@@ -355,14 +359,16 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
         {renderParticles()}
         {renderWaves()}
         
-        {/* Content Container with Animation - Centered Layout */}
-        <div className="relative z-10 h-full flex flex-col justify-center items-center space-y-8 p-8">
-          <div className="w-full space-y-8 animate-fade-in">
+        {/* Content Container with Animation - Centered Layout with proper spacing */}
+        <div className="relative z-10 h-full flex flex-col justify-center items-center p-4 overflow-hidden">
+          <div className="w-full space-y-4 animate-fade-in flex flex-col items-center max-h-full">
             {renderLogo()}
             {renderTitle()}
             {renderSubtitle()}
             {renderChecklist()}
-            {renderButtons()}
+            <div className="pb-4">
+              {renderButtons()}
+            </div>
           </div>
         </div>
 

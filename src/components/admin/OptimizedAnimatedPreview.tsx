@@ -114,6 +114,10 @@ export const OptimizedAnimatedPreview: React.FC<OptimizedAnimatedPreviewProps> =
     [activeDevice]
   );
 
+  // Use mobile dimensions as the constraint for all screen sizes to ensure consistency
+  const constrainedHeight = useMemo(() => Math.min(device.previewHeight, 700), [device.previewHeight]); // Max height based on mobile
+  const constrainedWidth = useMemo(() => Math.min(device.previewWidth, 350), [device.previewWidth]);
+
   // Optimized particles initialization - only when theme changes
   useEffect(() => {
     if (theme.particles) {
@@ -331,8 +335,8 @@ export const OptimizedAnimatedPreview: React.FC<OptimizedAnimatedPreviewProps> =
           isMobile ? 'border-2 shadow-2xl' : 'border border-gray-200 shadow-lg'
         }`}
         style={{
-          width: fullscreenPreview && isMobile ? Math.min(device.previewWidth * 1.2, 420) : Math.min(device.previewWidth, 400),
-          height: fullscreenPreview && isMobile ? Math.min(device.previewHeight * 1.2, 800) : Math.min(device.previewHeight, 750),
+          width: constrainedWidth,
+          height: constrainedHeight,
           borderRadius: isMobile ? '2.5rem' : '1rem',
           background: bgImageUrl ? `url(${bgImageUrl})` : bgVideoUrl ? 'black' : theme.background,
           backgroundSize: 'cover',
