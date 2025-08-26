@@ -135,26 +135,25 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content - Fixed Phone Layout (matches CoverPage.tsx) */}
-        <div className="relative z-10 flex h-full flex-col justify-between items-center px-6 py-8">
+        {/* Content - Fixed Phone Layout with proper spacing */}
+        <div className="relative z-10 flex h-full flex-col items-center px-6 py-4 justify-center space-y-6">
           
-          {/* TOP SECTION: Logo + Title */}
-          <div 
-            className="flex-shrink-0 text-center w-full"
-            style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
-          >
-            {/* Logo with enhanced styling */}
-            <div className="mb-6">
+          {/* Logo Section */}
+          <div className="flex-shrink-0 text-center">
+            <div 
+              className="mb-2"
+              style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
+            >
               {logoUrl ? (
                 <img 
                   src={logoUrl} 
                   alt="Logo" 
                   className="mx-auto object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
                   style={{ 
-                    height: `${logoHeight || 120}px`,
+                    height: `${Math.min(logoHeight || 80, 80)}px`,
                     width: 'auto',
-                    maxWidth: '120px',
-                    maxHeight: '120px'
+                    maxWidth: '80px',
+                    maxHeight: '80px'
                   }}
                 />
               ) : (
@@ -162,10 +161,10 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 <div 
                   className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg mx-auto"
                   style={{ 
-                    height: `${logoHeight || 120}px`,
-                    width: `${logoHeight || 120}px`,
-                    maxWidth: '120px',
-                    maxHeight: '120px'
+                    height: `${Math.min(logoHeight || 80, 80)}px`,
+                    width: `${Math.min(logoHeight || 80, 80)}px`,
+                    maxWidth: '80px',
+                    maxHeight: '80px'
                   }}
                 >
                   <svg 
@@ -180,25 +179,28 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Title with gradient effects */}
-            <div style={{ transform: `translateY(${titleOffsetY || 0}px)` }}>
-              <h1 
-                className="font-bold mb-4 px-4 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
-                style={{ 
-                  fontSize: titleSizeProp ? `${titleSizeProp}px` : '32px'
-                }}
-              >
-                {title}
-              </h1>
-            </div>
+          {/* Title Section */}
+          <div 
+            className="text-center"
+            style={{ transform: `translateY(${titleOffsetY || 0}px)` }}
+          >
+            <h1 
+              className="font-bold mb-3 px-4 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
+              style={{ 
+                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, 28)}px` : '28px'
+              }}
+            >
+              {title}
+            </h1>
             
-            {/* Subtitle with enhanced styling */}
+            {/* Subtitle */}
             {subtitle && (
               <div style={{ transform: `translateY(${subtitleOffsetY || 0}px)` }}>
                 <p 
-                  className="text-white/80 mb-6 px-4 leading-relaxed"
-                  style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '16px' }}
+                  className="text-white/80 mb-4 px-4 leading-relaxed"
+                  style={{ fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, 16)}px` : '16px' }}
                 >
                   {subtitle}
                 </p>
@@ -206,25 +208,25 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* MIDDLE SECTION: Features */}
+          {/* Features Section */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className="flex-1 px-2 my-6 w-full max-w-sm"
+              className="w-full max-w-sm flex-shrink-0"
               style={{ transform: `translateY(${checklistOffsetY || 0}px)` }}
             >
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
                   <div 
                     key={index} 
-                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+                    className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
                   >
                     <div className="flex items-center">
-                      <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-4">
+                      <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-3">
                         <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h3 className="text-base font-bold text-white">{item}</h3>
+                      <h3 className="text-sm font-bold text-white">{item}</h3>
                     </div>
                   </div>
                 ))}
@@ -232,17 +234,17 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* BOTTOM SECTION: Buttons */}
+          {/* Buttons Section */}
           <div 
-            className="flex-shrink-0 flex flex-col gap-4 w-full max-w-sm"
+            className="w-full max-w-sm flex-shrink-0"
             style={{ transform: `translateY(${buttonsOffsetY || 0}px)` }}
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
                   onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
-                  className="w-full text-lg font-semibold h-14 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40"
+                  className="w-full text-base font-semibold h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40"
                   style={{
                     backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
                     color: button.textColor || '#FFFFFF'
