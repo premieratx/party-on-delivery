@@ -158,8 +158,12 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
         logoHeight={coverPage.logo_height}
         backgroundImageUrl={coverPage.bg_image_url}
         backgroundVideoUrl={coverPage.bg_video_url}
-        checklistItems={Array.isArray(coverPage.checklist) ? coverPage.checklist : 
-          (typeof coverPage.checklist === 'string' ? JSON.parse(coverPage.checklist) : [])}
+        checklistItems={(() => {
+          const checklist = Array.isArray(coverPage.checklist) ? coverPage.checklist : 
+            (typeof coverPage.checklist === 'string' ? JSON.parse(coverPage.checklist) : []);
+          console.log('🔍 Checklist items being passed to CoverStartScreen:', checklist);
+          return checklist;
+        })()}
         buttons={convertButtons(Array.isArray(coverPage.buttons) ? coverPage.buttons : 
           (typeof coverPage.buttons === 'string' ? JSON.parse(coverPage.buttons) : []))}
         titleSize={coverPage.styles?.title_size}

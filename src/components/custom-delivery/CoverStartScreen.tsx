@@ -246,29 +246,32 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
               style={{ transform: `translateY(${checklistOffsetY || 0}px)` }}
             >
               <div className="space-y-3">
-                {checklistItems.filter(Boolean).slice(0, 6).map((item, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex items-center space-x-3 cover-fade-in stagger-${Math.min(index + 4, 5)} group bg-white/10 backdrop-blur-sm rounded-lg p-3`}
-                    style={{ animationDelay: `${index * 80}ms` }}
-                  >
-                    <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
-                      <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <span 
-                      className="text-gray-100 font-medium group-hover:text-white transition-colors duration-200 flex-1"
-                      style={{ 
-                        fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                        lineHeight: '1.4'
-                      }}
+                {checklistItems.filter(Boolean).slice(0, 6).map((item, index) => {
+                  console.log(`🔍 Rendering checklist item ${index}:`, item);
+                  return (
+                    <div 
+                      key={index} 
+                      className={`flex items-center space-x-3 cover-fade-in stagger-${Math.min(index + 4, 5)} group bg-white/10 backdrop-blur-sm rounded-lg p-3`}
+                      style={{ animationDelay: `${index * 80}ms` }}
                     >
-                      {item}
-                    </span>
-                  </div>
-                ))}
+                      <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                        <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span 
+                        className="text-gray-100 font-medium group-hover:text-white transition-colors duration-200 flex-1"
+                        style={{ 
+                          fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px',
+                          textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                          lineHeight: '1.4'
+                        }}
+                      >
+                        {item}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
