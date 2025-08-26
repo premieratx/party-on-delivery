@@ -432,60 +432,10 @@ serve(async (req) => {
       lineItems.push(lineItem);
     }
 
-    // CRITICAL FIX: Ensure delivery fee and tip are in dollars, not cents
-    const deliveryFeeInDollars = orderAmounts.delivery_fee;
-    const tipAmountInDollars = orderAmounts.tip_amount;
-    
-    logStep("DECIMAL FIX: Using correct dollar amounts", {
-      originalDeliveryFee: orderAmounts.delivery_fee,
-      deliveryFeeInDollars,
-      originalTipAmount: orderAmounts.tip_amount,
-      tipAmountInDollars
-    });
-
-    // CRITICAL FIX: Add delivery fee, tip, and sales tax as line items
-    // This ensures Shopify's total calculation matches our payment total
-    
-    // Add delivery fee as line item (even if $0)
-    if (deliveryFeeInDollars >= 0) {
-      lineItems.push({
-        title: "Delivery Fee",
-        price: deliveryFeeInDollars.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-    
-    // Add driver tip as line item
-    if (tipAmountInDollars > 0) {
-      lineItems.push({
-        title: "Driver Tip",
-        price: tipAmountInDollars.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-    
-    // Add sales tax as line item
-    if (orderAmounts.sales_tax > 0) {
-      lineItems.push({
-        title: "Sales Tax",
-        price: orderAmounts.sales_tax.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-    
-    logStep("Line items prepared (PRODUCTS + FEES)", { 
+    logStep("Line items prepared (PRODUCTS ONLY)", { 
       itemCount: lineItems.length,
-      totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
-      deliveryFeeAmount: deliveryFeeInDollars,
-      tipAmount: tipAmountInDollars,
-      salesTaxAmount: orderAmounts.sales_tax,
-      note: "All components included as line items for accurate Shopify totals"
+      productSubtotal: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
+      note: "Only actual products included as line items - delivery fee, tip, and tax handled separately"
     });
 
     // Extract affiliate code if present
@@ -521,16 +471,23 @@ serve(async (req) => {
         email: customerEmail,
         phone: customerPhone,
         
-        // PROPER SHOPIFY ORDER STRUCTURE (matching screenshot)
+        // PROPER SHOPIFY ORDER STRUCTURE - using correct tax and shipping lines
         subtotal_price: orderAmounts.subtotal.toFixed(2),
-        total_tax: orderAmounts.sales_tax.toFixed(2),
         total_price: orderAmounts.total_amount.toFixed(2),
+        
+        // Tax lines (proper Shopify structure for sales tax)
+        tax_lines: orderAmounts.sales_tax > 0 ? [{
+          title: "Sales Tax",
+          price: orderAmounts.sales_tax.toFixed(2),
+          rate: 0.0825 // 8.25% default - will be calculated by Shopify
+        }] : [],
         
         // Shipping lines (delivery fee) - NOT line items
         shipping_lines: orderAmounts.delivery_fee > 0 ? [{
-          title: "Local Delivery (Items 0.0 lb, Package 0.0 lb)",
+          title: "Local Delivery",
           price: orderAmounts.delivery_fee.toFixed(2),
-          code: "LOCAL_DELIVERY"
+          code: "LOCAL_DELIVERY",
+          source: "shopify"
         }] : [],
         
         // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
