@@ -376,17 +376,49 @@ serve(async (req) => {
       tipAmountInDollars
     });
 
-    // CRITICAL FIX: DO NOT add delivery fee, tip, or sales tax as line items!
-    // These are NOT products and should not be taxable line items.
-    // All details are already in the order notes section below.
+    // CRITICAL FIX: Add delivery fee, tip, and sales tax as line items
+    // This ensures Shopify's total calculation matches our payment total
     
-    logStep("Line items prepared (PRODUCTS ONLY)", { 
+    // Add delivery fee as line item (even if $0)
+    if (deliveryFeeInDollars >= 0) {
+      lineItems.push({
+        title: "Delivery Fee",
+        price: deliveryFeeInDollars.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+    
+    // Add driver tip as line item
+    if (tipAmountInDollars > 0) {
+      lineItems.push({
+        title: "Driver Tip",
+        price: tipAmountInDollars.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+    
+    // Add sales tax as line item
+    if (orderAmounts.sales_tax > 0) {
+      lineItems.push({
+        title: "Sales Tax",
+        price: orderAmounts.sales_tax.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+    
+    logStep("Line items prepared (PRODUCTS + FEES)", { 
       itemCount: lineItems.length,
       totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
       deliveryFeeAmount: deliveryFeeInDollars,
       tipAmount: tipAmountInDollars,
       salesTaxAmount: orderAmounts.sales_tax,
-      note: "Delivery fee, tips, and tax are in order notes, NOT line items"
+      note: "All components included as line items for accurate Shopify totals"
     });
 
     // Extract affiliate code if present
