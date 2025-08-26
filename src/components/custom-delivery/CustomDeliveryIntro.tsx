@@ -22,11 +22,33 @@ export function CustomDeliveryIntro({
   onStartOrder, 
   onGoHome 
 }: CustomDeliveryIntroProps) {
+  // Debug logging to check what values we're receiving
+  console.log('🔍 CustomDeliveryIntro props:', {
+    appName,
+    heroHeading,
+    heroSubheading,
+    mainAppConfig
+  });
+
   const getButtonText = () => {
     if (appName.toLowerCase().includes('airbnb')) {
       return 'Stock My BnB Now';
     }
     return 'Start Order Now';
+  };
+
+  // Helper function to get the actual heading with proper fallback
+  const getActualHeading = () => {
+    const heading = heroHeading?.trim() || mainAppConfig?.hero_heading?.trim() || appName;
+    console.log('📝 Using heading:', heading);
+    return heading;
+  };
+
+  // Helper function to get the actual subheading with proper fallback
+  const getActualSubheading = () => {
+    const subheading = heroSubheading?.trim() || mainAppConfig?.hero_subheading?.trim() || 'Premium Curated Experience';
+    console.log('📝 Using subheading:', subheading);
+    return subheading;
   };
 
   return (
@@ -49,14 +71,19 @@ export function CustomDeliveryIntro({
         <div className="max-w-2xl mx-auto text-center space-y-8">
           {/* Logo */}
           {logoUrl && (
-            <div className="mb-6 flex justify-center">
+            <div 
+              className="mb-6 flex justify-center"
+              style={{
+                transform: `translateY(${mainAppConfig?.logo_vertical_pos || 0}px)`
+              }}
+            >
               <img 
                 src={logoUrl} 
                 alt="Logo" 
-                className="h-16 w-auto object-contain"
+                className="w-auto object-contain"
                 style={{
                   height: `${(mainAppConfig?.logo_size || 50) * 1.2}px`,
-                  maxHeight: '80px'
+                  maxHeight: '100px'
                 }}
               />
             </div>
@@ -69,20 +96,22 @@ export function CustomDeliveryIntro({
               style={{
                 fontSize: `${(mainAppConfig?.headline_size || 24) * 1.5}px`,
                 fontFamily: mainAppConfig?.headline_font ? `${mainAppConfig.headline_font}, sans-serif` : undefined,
-                color: mainAppConfig?.headline_color || undefined
+                color: mainAppConfig?.headline_color || undefined,
+                transform: `translateY(${mainAppConfig?.headline_vertical_pos || 0}px)`
               }}
             >
-              {heroHeading || mainAppConfig?.hero_heading || appName}
+              {getActualHeading()}
             </h1>
             <p 
               className="text-xl text-muted-foreground"
               style={{
                 fontSize: `${(mainAppConfig?.subheadline_size || 14) * 1.2}px`,
                 fontFamily: mainAppConfig?.subheadline_font ? `${mainAppConfig.subheadline_font}, sans-serif` : undefined,
-                color: mainAppConfig?.subheadline_color || undefined
+                color: mainAppConfig?.subheadline_color || undefined,
+                transform: `translateY(${mainAppConfig?.subheadline_vertical_pos || 0}px)`
               }}
             >
-              {heroSubheading || mainAppConfig?.hero_subheading || 'Delivery service'}
+              {getActualSubheading()}
             </p>
           </div>
 
