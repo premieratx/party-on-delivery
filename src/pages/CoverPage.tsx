@@ -92,6 +92,9 @@ export default function CoverPage() {
   const subtitle = pageData.subtitle || '';
   const logoUrl = pageData.logo_url || '';
   
+  console.log('🔍 Features from database:', features);
+  console.log('🔍 Features type:', typeof features);
+  
   // Parse YOUR EXACT SAVED STYLES
   const savedStyles = pageData.styles || {};
   const theme = pageData.theme || pageData.unified_theme || 'gold';
@@ -173,17 +176,25 @@ export default function CoverPage() {
           {features.length > 0 && (
             <div className="flex-1 px-2 my-6 w-full max-w-sm">
               <div className="space-y-4">
-                {features.slice(0, 3).map((feature: any, index: number) => (
-                  <div 
-                    key={index} 
-                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
-                  >
-                    <div className="flex items-center">
-                      <span className="text-xl mr-4">{feature.emoji || '⭐'}</span>
-                      <h3 className="text-base font-bold text-white">{feature.title || 'Feature'}</h3>
+                {features.slice(0, 3).map((feature: any, index: number) => {
+                  // Handle both string and object formats
+                  const featureText = typeof feature === 'string' ? feature : (feature.title || feature.text || 'Feature');
+                  const featureEmoji = (typeof feature === 'object' && feature.emoji) || '⭐';
+                  
+                  console.log(`🔍 Rendering feature ${index}:`, featureText);
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+                    >
+                      <div className="flex items-center">
+                        <span className="text-xl mr-4">{featureEmoji}</span>
+                        <h3 className="text-base font-bold text-white">{featureText}</h3>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
