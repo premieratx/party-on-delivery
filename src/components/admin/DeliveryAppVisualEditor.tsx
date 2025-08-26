@@ -554,8 +554,8 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
                         <Slider
                           value={[config.logoSize]}
                           onValueChange={(value) => updateConfig({ logoSize: value[0] })}
-                          min={32}
-                          max={200}
+                          min={24}
+                          max={400}
                           step={4}
                           className="mt-2"
                         />
@@ -586,8 +586,8 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
                         <Slider
                           value={[config.headlineSize]}
                           onValueChange={(value) => updateConfig({ headlineSize: value[0] })}
-                          min={24}
-                          max={96}
+                          min={16}
+                          max={200}
                           step={2}
                           className="mt-2"
                         />
@@ -679,8 +679,8 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
                         <Slider
                           value={[config.subheadlineSize]}
                           onValueChange={(value) => updateConfig({ subheadlineSize: value[0] })}
-                          min={12}
-                          max={48}
+                          min={10}
+                          max={120}
                           step={1}
                           className="mt-2"
                         />
