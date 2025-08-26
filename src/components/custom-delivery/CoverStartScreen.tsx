@@ -101,7 +101,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   }, [buttons]);
 
   return (
-    <PhoneFrameLayout>
+    <div className="w-full h-full">
       {/* Background */}
       <div className="relative h-full overflow-hidden" style={{ backgroundColor: backgroundColor || undefined }}>
         <div className="absolute inset-0">
@@ -133,7 +133,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         <div className="absolute inset-0 bg-black/70" />
 
         {/* Content - Enhanced Figma Layout with Animations */}
-        <div className="relative z-10 flex h-full flex-col justify-center items-center px-6 py-4">
+        <div className="relative z-10 flex h-full flex-col items-center px-6 py-8" style={{ minHeight: '100vh' }}>
           
           {/* Logo with enhanced Figma styling */}
           {logoUrl && (
@@ -216,7 +216,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           {/* Checklist with enhanced animations and Figma styling */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className="w-full flex-1 overflow-y-auto px-2 my-4"
+              className="w-full flex-1 px-2 my-6"
               style={{ transform: `translateY(${checklistOffsetY || 0}px)` }}
             >
               <div className="space-y-3">
@@ -249,7 +249,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
           {/* Action buttons with enhanced Figma styling and animations */}
           <div 
-            className="w-full flex-shrink-0"
+            className="w-full flex-shrink-0 mt-auto pb-4"
             style={{ transform: `translateY(${buttonsOffsetY || 0}px)` }}
           >
             <div className="flex flex-col gap-3">
@@ -286,7 +286,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           </div>
         </div>
       </div>
-    </PhoneFrameLayout>
+    </div>
   );
 };
 

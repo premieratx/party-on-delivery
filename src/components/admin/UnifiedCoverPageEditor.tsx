@@ -1106,9 +1106,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto flex items-start justify-center">
-            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
-              <CoverStartScreen
+          <div className="flex-1 overflow-hidden flex items-center justify-center">
+            <div className="w-[375px] h-[667px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden relative">
+              <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
+                <CoverStartScreen
                 title={title}
                 subtitle={subtitle}
                 logoUrl={logoUrl}
@@ -1127,6 +1128,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 logoOffsetY={logoOffsetY}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
               />
+              </div>
             </div>
           </div>
         </div>
@@ -1164,8 +1166,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 </Button>
               </div>
             </div>
-            <div className="flex-1 bg-black flex items-center justify-center">
-              <CoverStartScreen
+            <div className="flex-1 bg-black flex items-center justify-center p-8">
+              <div className="w-full max-w-md h-full max-h-[667px] relative">
+                <CoverStartScreen
                 title={title}
                 subtitle={subtitle}
                 logoUrl={logoUrl}
@@ -1184,6 +1187,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 logoOffsetY={logoOffsetY}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
               />
+              </div>
             </div>
           </div>
         </DialogContent>
