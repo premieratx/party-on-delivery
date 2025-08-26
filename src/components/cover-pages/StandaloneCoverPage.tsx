@@ -151,16 +151,8 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
         </div>
       )}
 
-      {/* Centered Phone Frame with Animated Golden Border */}
+      {/* Centered Phone Frame */}
       <div className="relative">
-        {/* Animated Golden Border */}
-        <div className="absolute inset-0 p-1 rounded-[3rem] bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 animate-pulse">
-          <div className="absolute inset-0 rounded-[2.8rem] bg-gradient-to-r from-yellow-300 via-transparent to-yellow-300 animate-spin" style={{
-            animation: 'spin 8s linear infinite',
-            background: 'conic-gradient(from 0deg, #fbbf24, #f59e0b, #d97706, #92400e, #fbbf24)'
-          }}></div>
-        </div>
-        
         {/* Phone Frame */}
         <div className="relative w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden">
           <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">

@@ -170,8 +170,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content - Fixed Phone Layout with proper spacing */}
-        <div className="relative z-10 flex h-full flex-col items-center px-6 py-4 justify-center space-y-6">
+        {/* Content - Fixed Phone Layout with proper mobile spacing */}
+        <div className="relative z-10 flex h-full flex-col items-center px-4 py-8 justify-center space-y-4">
           
           {/* Logo Section */}
           <div 
@@ -188,10 +188,10 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                   alt="Logo" 
                   className="mx-auto object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
                   style={{ 
-                    height: `${Math.min(logoHeight || 80, 80)}px`,
+                    height: `${Math.min(logoHeight || 60, 60)}px`,
                     width: 'auto',
-                    maxWidth: '80px',
-                    maxHeight: '80px'
+                    maxWidth: '60px',
+                    maxHeight: '60px'
                   }}
                 />
               ) : (
@@ -199,10 +199,10 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 <div 
                   className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg mx-auto"
                   style={{ 
-                    height: `${Math.min(logoHeight || 80, 80)}px`,
-                    width: `${Math.min(logoHeight || 80, 80)}px`,
-                    maxWidth: '80px',
-                    maxHeight: '80px'
+                    height: `${Math.min(logoHeight || 60, 60)}px`,
+                    width: `${Math.min(logoHeight || 60, 60)}px`,
+                    maxWidth: '60px',
+                    maxHeight: '60px'
                   }}
                 >
                   <svg 
@@ -228,9 +228,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             }}
           >
             <h1 
-              className="font-bold mb-3 px-4 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
+              className="font-bold mb-2 px-3 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
               style={{ 
-                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, 28)}px` : '28px'
+                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, 24)}px` : '24px'
               }}
             >
               {title}
@@ -246,8 +246,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 }}
               >
                 <p 
-                  className="text-white/80 mb-4 px-4 leading-relaxed"
-                  style={{ fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, 16)}px` : '16px' }}
+                  className="text-white/80 mb-3 px-3 leading-relaxed"
+                  style={{ fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, 14)}px` : '14px' }}
                 >
                   {subtitle}
                 </p>
@@ -258,17 +258,17 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           {/* Features Section */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className={`w-full max-w-sm flex-shrink-0 transition-all duration-700 ${getAnimationClass(3)}`}
+              className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(3)}`}
               style={{ 
                 transform: `translateY(${checklistOffsetY || 0}px)`,
                 animationDelay: `${getAnimationDelay(3)}ms`
               }}
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
                   <div 
                     key={index} 
-                    className={`bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 transition-all duration-700 ${getAnimationClass(3)}`}
+                    className={`bg-white/10 backdrop-blur-sm rounded-xl p-2.5 border border-white/20 transition-all duration-700 ${getAnimationClass(3)}`}
                     style={{ 
                       animationDelay: `${getAnimationDelay(3) + (index * 100)}ms`
                     }}
@@ -288,19 +288,19 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           )}
 
           {/* Buttons Section */}
-          <div 
-            className={`w-full max-w-sm flex-shrink-0 transition-all duration-700 ${getAnimationClass(4)}`}
+            <div 
+            className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
               transform: `translateY(${buttonsOffsetY || 0}px)`,
               animationDelay: `${getAnimationDelay(4)}ms`
             }}
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               {buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
                   onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
-                  className={`w-full text-base font-semibold h-12 rounded-full shadow-lg transition-all duration-700 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40 ${getAnimationClass(4)}`}
+                  className={`w-full text-sm font-semibold h-11 rounded-full shadow-lg transition-all duration-700 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40 ${getAnimationClass(4)}`}
                   style={{
                     backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
                     color: button.textColor || '#FFFFFF',
