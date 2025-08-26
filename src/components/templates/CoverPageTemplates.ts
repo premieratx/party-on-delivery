@@ -29,6 +29,16 @@ export const DEFAULT_COVER_TEMPLATE = {
   styles: {
     variant: 'gold',
     logoEmoji: '✨',
+    // Condensed sizing to fit vertical constraints
+    logoSize: 50,
+    headlineSize: 24,
+    subheadlineSize: 14,
+    // Reset all positioning to zero for full control
+    logoVerticalPos: 0,
+    headlineVerticalPos: 0,
+    subheadlineVerticalPos: 0,
+    buttonVerticalPos: 0,
+    buttonSpacing: 10,
     customColors: {
       primary: '#d4af37',
       secondary: '#8b5cf6',
