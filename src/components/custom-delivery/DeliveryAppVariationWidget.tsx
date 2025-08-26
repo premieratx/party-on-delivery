@@ -128,6 +128,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
 
         console.log('🔥 CRITICAL DEBUG - Final parsed hero_heading:', (parsedData.main_app_config as any)?.hero_heading);
         console.log('🔥 CRITICAL DEBUG - Final parsed hero_subheading:', (parsedData.main_app_config as any)?.hero_subheading);
+        console.log('🎯 FIXED - Direct hero_heading from DB:', (parsedData as any).hero_heading);
+        console.log('🎯 FIXED - Direct hero_subheading from DB:', (parsedData as any).hero_subheading);
         
         // Ensure collections_config is properly parsed as JSON if it's a string
         if (typeof data.collections_config === 'string') {
@@ -234,8 +236,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
       {currentStep === 'intro' && (
         <CustomDeliveryIntro
           appName={appConfig.app_name}
-          heroHeading={appConfig.main_app_config?.hero_heading || ''}
-          heroSubheading={appConfig.main_app_config?.hero_subheading || ''}
+          heroHeading={(appConfig as any).hero_heading || ''}
+          heroSubheading={(appConfig as any).hero_subheading || ''}
           logoUrl={appConfig.logo_url}
           mainAppConfig={appConfig.main_app_config}
           onStartOrder={handleStartOrder}
