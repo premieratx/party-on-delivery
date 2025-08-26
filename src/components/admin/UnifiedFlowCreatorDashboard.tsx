@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
+import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
 import { UnifiedCoverPageCreator } from './UnifiedCoverPageCreator';
 import { UnifiedPostCheckoutCreator } from './UnifiedPostCheckoutCreator';
 import { UNIFIED_THEMES } from '@/lib/themeSystem';
@@ -428,7 +428,7 @@ export const UnifiedFlowCreatorDashboard: React.FC = () => {
       </Tabs>
 
       {/* Creators */}
-      <UnifiedDeliveryAppEditor
+      <UnifiedDeliveryAppCreator
         open={showDeliveryCreator}
         onOpenChange={setShowDeliveryCreator}
         initial={editingItem}
