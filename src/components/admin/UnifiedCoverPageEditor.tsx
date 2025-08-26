@@ -286,12 +286,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const [fullscreenPreview, setFullscreenPreview] = useState(false);
   const [controlsExpanded, setControlsExpanded] = useState(true);
 
-  // Form state
+  // Form state with better defaults for new cover pages
   const [slug, setSlug] = useState(initial?.slug || "");
-  const [title, setTitle] = useState(initial?.title || "");
-  const [subtitle, setSubtitle] = useState(initial?.subtitle || "");
+  const [title, setTitle] = useState(initial?.title || "Elite Concierge");
+  const [subtitle, setSubtitle] = useState(initial?.subtitle || "Luxury Lifestyle Services");
   const [logoUrl, setLogoUrl] = useState(initial?.logo_url || "");
-  const [logoHeight, setLogoHeight] = useState<number>(initial?.logo_height ?? 160);
+  const [logoHeight, setLogoHeight] = useState<number>(initial?.logo_height ?? 120);
   const [bgImageUrl, setBgImageUrl] = useState(initial?.bg_image_url || "");
   const [bgVideoUrl, setBgVideoUrl] = useState(initial?.bg_video_url || "");
   const [checklist, setChecklist] = useState<string[]>(initial?.checklist || ["Premium Alcohol Delivery", "White-Glove Service", "Exclusive Member Access"]);
@@ -301,14 +301,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   ]);
 
   // Enhanced positioning and sizing controls - optimized for fixed iPhone frame (390x844)
-  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 32);
+  // Centered positioning with all elements visible in frame by default
+  const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 28);
   const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 16);
   const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 14);
-  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? -50);
-  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? -30);
-  const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 0);
-  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 50);
-  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -100);
+  const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? -20);
+  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? 0);
+  const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 20);
+  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>(initial?.styles?.buttons_offset_y ?? 80);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>(initial?.styles?.logo_offset_y ?? -80);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
   const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);

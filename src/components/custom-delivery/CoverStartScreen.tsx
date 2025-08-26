@@ -135,51 +135,73 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         {/* Content - Enhanced Figma Layout with Animations */}
         <div className="relative z-10 flex h-full flex-col items-center px-6 py-8" style={{ minHeight: '100vh' }}>
           
-          {/* Logo with enhanced Figma styling */}
-          {logoUrl && (
-            <div 
-              className="flex justify-center mb-6 cover-scale-in stagger-1"
-              style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
-            >
-              <div className="relative inline-block">
-                {logoBgColor && logoBgMode !== 'none' && (
-                  logoBgMode === 'rectangle' ? (
-                    <div
-                      className="absolute inset-0 -m-2 rounded-xl shadow-lg"
-                      style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundColor: logoBgColor,
-                        WebkitMaskImage: `url(${logoUrl})`,
-                        maskImage: `url(${logoUrl})`,
-                        WebkitMaskRepeat: 'no-repeat',
-                        maskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center',
-                        maskPosition: 'center',
-                        WebkitMaskSize: 'contain',
-                        maskSize: 'contain',
-                      }}
-                      aria-hidden="true"
-                    />
-                  )
-                )}
-                <img 
-                  src={logoUrl} 
-                  alt="Logo" 
-                  className="relative object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
+          {/* Logo with enhanced Figma styling - Always show (placeholder or actual) */}
+          <div 
+            className="flex justify-center mb-6 cover-scale-in stagger-1"
+            style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
+          >
+            <div className="relative inline-block">
+              {logoUrl ? (
+                <>
+                  {logoBgColor && logoBgMode !== 'none' && (
+                    logoBgMode === 'rectangle' ? (
+                      <div
+                        className="absolute inset-0 -m-2 rounded-xl shadow-lg"
+                        style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundColor: logoBgColor,
+                          WebkitMaskImage: `url(${logoUrl})`,
+                          maskImage: `url(${logoUrl})`,
+                          WebkitMaskRepeat: 'no-repeat',
+                          maskRepeat: 'no-repeat',
+                          WebkitMaskPosition: 'center',
+                          maskPosition: 'center',
+                          WebkitMaskSize: 'contain',
+                          maskSize: 'contain',
+                        }}
+                        aria-hidden="true"
+                      />
+                    )
+                  )}
+                  <img 
+                    src={logoUrl} 
+                    alt="Logo" 
+                    className="relative object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
+                    style={{ 
+                      height: `${logoHeight || 120}px`,
+                      width: 'auto', // Maintains aspect ratio
+                      maxWidth: '200px' // Prevents logos from being too wide
+                    }}
+                  />
+                </>
+              ) : (
+                /* Logo Placeholder Circle */
+                <div 
+                  className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg"
                   style={{ 
                     height: `${logoHeight || 120}px`,
-                    width: 'auto', // Maintains aspect ratio
-                    maxWidth: '200px' // Prevents logos from being too wide
+                    width: `${logoHeight || 120}px`,
+                    maxWidth: '200px'
                   }}
-                />
-              </div>
-            </div>
-          )}
+                >
+                  <svg 
+                    className="text-white/60" 
+                    width="50%" 
+                    height="50%" 
+                    fill="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+              )}
+            </div>    
+          </div>
 
           {/* Title with gradient and glow effects from Figma */}
           <div 
