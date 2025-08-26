@@ -238,8 +238,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
       {currentStep === 'intro' && (
         <CustomDeliveryIntro
           appName={appConfig.app_name}
-          heroHeading={(appConfig as any).hero_heading || ''}
-          heroSubheading={(appConfig as any).hero_subheading || ''}
+          heroHeading={appConfig.main_app_config?.hero_heading || ''}
+          heroSubheading={appConfig.main_app_config?.hero_subheading || ''}
           logoUrl={appConfig.logo_url}
           mainAppConfig={appConfig.main_app_config}
           onStartOrder={handleStartOrder}
