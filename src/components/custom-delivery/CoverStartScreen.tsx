@@ -30,6 +30,8 @@ export interface CoverStartScreenProps {
   titleSize?: number;
   subtitleSize?: number;
   checklistSize?: number;
+  titleFont?: string;
+  subtitleFont?: string;
   backgroundColor?: string;
   titleOffsetY?: number;
   subtitleOffsetY?: number;
@@ -58,6 +60,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   titleSize: titleSizeProp,
   subtitleSize: subtitleSizeProp,
   checklistSize: checklistSizeProp,
+  titleFont,
+  subtitleFont,
   backgroundColor,
   titleOffsetY,
   subtitleOffsetY,
@@ -270,7 +274,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             <h1 
               className="font-bold mb-2 px-3 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
               style={{ 
-                fontSize: titleSizeProp ? `${titleSizeProp}px` : '24px'
+                fontSize: titleSizeProp ? `${titleSizeProp}px` : '24px',
+                fontFamily: titleFont || 'system-ui'
               }}
             >
               {title}
@@ -284,12 +289,15 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                    animationDelay: `${getAnimationDelay(2)}ms` // Removed subtitleOffsetY
                  }}
                >
-                <p 
-                  className="text-white/80 mb-3 px-3 leading-relaxed"
-                  style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px' }}
-                >
-                  {subtitle}
-                </p>
+                 <p 
+                   className="text-white/80 mb-3 px-3 leading-relaxed"
+                   style={{ 
+                     fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px',
+                     fontFamily: subtitleFont || 'system-ui'
+                   }}
+                 >
+                   {subtitle}
+                 </p>
               </div>
             )}
           </div>

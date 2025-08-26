@@ -221,6 +221,8 @@ export interface CoverPageConfig {
     title_size?: number; 
     subtitle_size?: number; 
     checklist_size?: number; 
+    title_font?: string;
+    subtitle_font?: string;
     spacing_y?: number;
     background_color?: string;
     title_offset_y?: number;
@@ -308,6 +310,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 24);
   const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 14);
   const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 12);
+  const [titleFont, setTitleFont] = useState<string>(initial?.styles?.title_font ?? 'system-ui');
+  const [subtitleFont, setSubtitleFont] = useState<string>(initial?.styles?.subtitle_font ?? 'system-ui');
   const [titleOffsetY, setTitleOffsetY] = useState<number>(initial?.styles?.title_offset_y ?? -30);
   const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>(initial?.styles?.subtitle_offset_y ?? -10);
   const [checklistOffsetY, setChecklistOffsetY] = useState<number>(initial?.styles?.checklist_offset_y ?? 10);
@@ -365,6 +369,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       setTitleSize(initial.styles?.title_size ?? 48);
       setSubtitleSize(initial.styles?.subtitle_size ?? 20);
       setChecklistSize(initial.styles?.checklist_size ?? 16);
+      setTitleFont(initial.styles?.title_font ?? 'system-ui');
+      setSubtitleFont(initial.styles?.subtitle_font ?? 'system-ui');
       setTitleOffsetY(initial.styles?.title_offset_y ?? 0);
       setSubtitleOffsetY(initial.styles?.subtitle_offset_y ?? 0);
       setChecklistOffsetY(initial.styles?.checklist_offset_y ?? 0);
@@ -400,6 +406,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       setTitleSize(28);           // Slightly smaller for better fit
       setSubtitleSize(16);
       setChecklistSize(14);
+      setTitleFont('system-ui');
+      setSubtitleFont('system-ui');
       // Centered layout with minimal offsets - all elements now properly contained
       setLogoOffsetY(-20);        // Slight upward adjustment from center
       setTitleOffsetY(-10);       // Title slightly above center
@@ -554,6 +562,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           title_size: titleSize,
           subtitle_size: subtitleSize,
           checklist_size: checklistSize,
+          title_font: titleFont,
+          subtitle_font: subtitleFont,
           // Save device-specific positions
           desktop_title_offset_y: titleOffsetY,
           desktop_subtitle_offset_y: subtitleOffsetY,
@@ -958,6 +968,56 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
                     </div>
 
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-sm font-semibold text-muted-foreground">Font Controls</h4>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Headline Font</Label>
+                        <Select value={titleFont} onValueChange={setTitleFont}>
+                          <SelectTrigger className="bg-background/50 border-border/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="system-ui">System UI</SelectItem>
+                            <SelectItem value="serif">Serif</SelectItem>
+                            <SelectItem value="sans-serif">Sans Serif</SelectItem>
+                            <SelectItem value="monospace">Monospace</SelectItem>
+                            <SelectItem value="'Georgia', serif">Georgia</SelectItem>
+                            <SelectItem value="'Times New Roman', serif">Times New Roman</SelectItem>
+                            <SelectItem value="'Arial', sans-serif">Arial</SelectItem>
+                            <SelectItem value="'Helvetica', sans-serif">Helvetica</SelectItem>
+                            <SelectItem value="'Inter', sans-serif">Inter</SelectItem>
+                            <SelectItem value="'Roboto', sans-serif">Roboto</SelectItem>
+                            <SelectItem value="'Playfair Display', serif">Playfair Display</SelectItem>
+                            <SelectItem value="'Montserrat', sans-serif">Montserrat</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-medium">Subheadline Font</Label>
+                        <Select value={subtitleFont} onValueChange={setSubtitleFont}>
+                          <SelectTrigger className="bg-background/50 border-border/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="system-ui">System UI</SelectItem>
+                            <SelectItem value="serif">Serif</SelectItem>
+                            <SelectItem value="sans-serif">Sans Serif</SelectItem>
+                            <SelectItem value="monospace">Monospace</SelectItem>
+                            <SelectItem value="'Georgia', serif">Georgia</SelectItem>
+                            <SelectItem value="'Times New Roman', serif">Times New Roman</SelectItem>
+                            <SelectItem value="'Arial', sans-serif">Arial</SelectItem>
+                            <SelectItem value="'Helvetica', sans-serif">Helvetica</SelectItem>
+                            <SelectItem value="'Inter', sans-serif">Inter</SelectItem>
+                            <SelectItem value="'Roboto', sans-serif">Roboto</SelectItem>
+                            <SelectItem value="'Playfair Display', serif">Playfair Display</SelectItem>
+                            <SelectItem value="'Montserrat', sans-serif">Montserrat</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
                     {/* Positioning Controls - Universal */}
                     <div className="space-y-4 border-t pt-4">
                       <h4 className="text-sm font-semibold text-muted-foreground">Position Controls</h4>
@@ -1193,11 +1253,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 titleSize={titleSize}
                 subtitleSize={subtitleSize}
                 checklistSize={checklistSize}
-                titleOffsetY={titleOffsetY}
-                subtitleOffsetY={subtitleOffsetY}
-                checklistOffsetY={checklistOffsetY}
-                buttonsOffsetY={buttonsOffsetY}
-                logoOffsetY={logoOffsetY}
+                titleFont={titleFont}
+                subtitleFont={subtitleFont}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
                 entranceAnimation={entranceAnimation}
                 animationDuration={animationDuration}
@@ -1259,11 +1316,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 titleSize={titleSize}
                 subtitleSize={subtitleSize}
                 checklistSize={checklistSize}
-                titleOffsetY={titleOffsetY}
-                subtitleOffsetY={subtitleOffsetY}
-                checklistOffsetY={checklistOffsetY}
-                buttonsOffsetY={buttonsOffsetY}
-                logoOffsetY={logoOffsetY}
+                titleFont={titleFont}
+                subtitleFont={subtitleFont}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
                 entranceAnimation={entranceAnimation}
                 animationDuration={animationDuration}
