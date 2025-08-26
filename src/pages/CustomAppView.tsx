@@ -22,12 +22,12 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
         
         // If this is homepage, find the default delivery app
         if (isHomepage) {
-          console.log('🏠 Loading homepage - finding default delivery app...');
+          console.log('🏠 Loading homepage - finding delivery app with is_homepage=true...');
           const { data: homepageApp, error: homepageError } = await supabase
             .from('delivery_app_variations')
-            .select('app_slug')
+            .select('app_slug, app_name')
             .eq('is_active', true)
-            .order('created_at', { ascending: true })
+            .eq('is_homepage', true)
             .limit(1);
             
           if (homepageError) {
@@ -37,9 +37,23 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
           
           if (homepageApp && homepageApp.length > 0) {
             targetSlug = homepageApp[0].app_slug;
-            console.log(`🏠 Using default delivery app: ${targetSlug}`);
+            console.log(`🏠 Using homepage delivery app: ${homepageApp[0].app_name} (${targetSlug})`);
           } else {
-            throw new Error('No active delivery apps found');
+            console.warn('⚠️ No delivery app set as homepage, falling back to first active app');
+            // Fallback to first active app if no homepage is set
+            const { data: fallbackApp, error: fallbackError } = await supabase
+              .from('delivery_app_variations')
+              .select('app_slug, app_name')
+              .eq('is_active', true)
+              .order('created_at', { ascending: true })
+              .limit(1);
+              
+            if (fallbackError || !fallbackApp || fallbackApp.length === 0) {
+              throw new Error('No active delivery apps found');
+            }
+            
+            targetSlug = fallbackApp[0].app_slug;
+            console.log(`🏠 Using fallback delivery app: ${fallbackApp[0].app_name} (${targetSlug})`);
           }
         }
 

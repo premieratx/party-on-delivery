@@ -12,6 +12,7 @@ import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryA
 import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
+import { HomepageTestComponent } from '@/components/admin/HomepageTestComponent';
 // EnhancedCoverPageCreator removed - standalone implementation only
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
 import { UnifiedDeliveryAppCreator } from '@/components/admin/UnifiedDeliveryAppCreator';
@@ -344,6 +345,7 @@ export default function AdminDashboard() {
             <div className="grid gap-6">
               {/* Customer Flow Manager removed - standalone architecture */}
               <HomepageAppSwitcher />
+              <HomepageTestComponent />
             </div>
           </TabsContent>
 

@@ -176,27 +176,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     }
   };
 
-  const handleSetHomepage = async (app: DeliveryApp) => {
-    try {
-      setLoading(true);
-      
-      // Just activate this app for now (no homepage concept in current schema)
-      const { error } = await supabase
-        .from('delivery_app_variations')
-        .update({ is_active: true })
-        .eq('id', app.id);
-
-      if (error) throw error;
-
-      toast.success(`"${app.app_name}" is now active`);
-      loadDeliveryApps();
-    } catch (error) {
-      console.error('Error setting active app:', error);
-      toast.error('Failed to update app');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Removed handleSetHomepage - homepage is now managed in Settings tab only
 
   const handleToggleActive = async (app: DeliveryApp) => {
     try {
@@ -274,7 +254,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
         <div>
           <h3 className="text-2xl font-bold">Delivery App Manager</h3>
           <p className="text-muted-foreground">
-            Create and manage delivery applications and configure homepage settings
+            Create and manage delivery applications. To set a homepage app, use the Settings tab.
           </p>
         </div>
         {/* Button removed - AdminDashboard tab has the main create button */}
@@ -410,14 +390,6 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                             disabled={loading}
                           >
                             <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSetHomepage(app)}
-                            disabled={loading}
-                          >
-                            <Home className="h-3 w-3" />
                           </Button>
                           <Button
                             size="sm"
