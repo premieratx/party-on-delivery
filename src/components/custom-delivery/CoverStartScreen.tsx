@@ -193,10 +193,10 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
         {/* Content - Fixed Phone Layout with proper mobile spacing and mandatory margins */}
         <div 
-          className="relative z-10 flex h-full flex-col items-center px-4 justify-start space-y-2" 
+          className="relative z-10 flex h-full flex-col items-center px-4" 
           style={{ 
             paddingTop: '0px', 
-            paddingBottom: '15px',
+            paddingBottom: '0px',
             touchAction: 'none',
             userSelect: 'none',
             overscrollBehavior: 'none',
@@ -321,12 +321,16 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Buttons Section */}
-            <div 
+          {/* Spacer to push buttons to bottom */}
+          <div className="flex-1"></div>
+          
+          {/* Buttons Section - Fixed 15px from bottom */}
+          <div 
             className={`w-full max-w-xs flex-shrink-0 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
               transform: `translateY(${buttonsOffsetY || 0}px)`,
-              animationDelay: `${getAnimationDelay(4)}ms`
+              animationDelay: `${getAnimationDelay(4)}ms`,
+              marginBottom: '15px'
             }}
           >
             <div className="flex flex-col gap-2.5">
