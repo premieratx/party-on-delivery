@@ -70,6 +70,8 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
         }
 
         console.log('✅ Cover page loaded:', data);
+        console.log('🔍 Checklist data from database:', data.checklist);
+        console.log('🔍 Checklist type:', typeof data.checklist);
         setCoverPage(data);
       } catch (err: any) {
         console.error('❌ Error loading cover page:', err);

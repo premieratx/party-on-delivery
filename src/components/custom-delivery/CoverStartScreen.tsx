@@ -64,6 +64,9 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   logoBgColor,
   logoBgMode = 'auto',
 }) => {
+  console.log('🎯 CoverStartScreen received checklistItems:', checklistItems);
+  console.log('🎯 CoverStartScreen checklistItems type:', typeof checklistItems);
+  console.log('🎯 CoverStartScreen checklistItems length:', checklistItems?.length);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [showVideo, setShowVideo] = React.useState(false);
   const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
