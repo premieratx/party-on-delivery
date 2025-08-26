@@ -471,23 +471,22 @@ serve(async (req) => {
         email: customerEmail,
         phone: customerPhone,
         
-        // PROPER SHOPIFY ORDER STRUCTURE - using correct tax and shipping lines
-        subtotal_price: orderAmounts.subtotal.toFixed(2),
+        // PROPER SHOPIFY ORDER STRUCTURE - adjust subtotal to include tip
+        subtotal_price: (orderAmounts.subtotal + orderAmounts.tip_amount).toFixed(2),
         total_price: orderAmounts.total_amount.toFixed(2),
         
         // Tax lines (proper Shopify structure for sales tax)
         tax_lines: orderAmounts.sales_tax > 0 ? [{
           title: "Sales Tax",
           price: orderAmounts.sales_tax.toFixed(2),
-          rate: 0.0825 // 8.25% default - will be calculated by Shopify
+          rate: 0.0825
         }] : [],
         
-        // Shipping lines (delivery fee) - NOT line items
+        // Shipping lines (delivery fee only)
         shipping_lines: orderAmounts.delivery_fee > 0 ? [{
           title: "Local Delivery",
           price: orderAmounts.delivery_fee.toFixed(2),
-          code: "LOCAL_DELIVERY",
-          source: "shopify"
+          code: "LOCAL_DELIVERY"
         }] : [],
         
         // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
