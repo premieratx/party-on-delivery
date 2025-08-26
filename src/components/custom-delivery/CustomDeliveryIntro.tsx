@@ -5,11 +5,23 @@ import { ArrowLeft } from 'lucide-react';
 
 interface CustomDeliveryIntroProps {
   appName: string;
+  heroHeading?: string;
+  heroSubheading?: string;
+  logoUrl?: string;
+  mainAppConfig?: any;
   onStartOrder: () => void;
   onGoHome: () => void;
 }
 
-export function CustomDeliveryIntro({ appName, onStartOrder, onGoHome }: CustomDeliveryIntroProps) {
+export function CustomDeliveryIntro({ 
+  appName, 
+  heroHeading, 
+  heroSubheading, 
+  logoUrl, 
+  mainAppConfig,
+  onStartOrder, 
+  onGoHome 
+}: CustomDeliveryIntroProps) {
   const getButtonText = () => {
     if (appName.toLowerCase().includes('airbnb')) {
       return 'Stock My BnB Now';
@@ -35,13 +47,42 @@ export function CustomDeliveryIntro({ appName, onStartOrder, onGoHome }: CustomD
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="max-w-2xl mx-auto text-center space-y-8">
+          {/* Logo */}
+          {logoUrl && (
+            <div className="mb-6 flex justify-center">
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                className="h-16 w-auto object-contain"
+                style={{
+                  height: `${(mainAppConfig?.logo_size || 50) * 1.2}px`,
+                  maxHeight: '80px'
+                }}
+              />
+            </div>
+          )}
+
           {/* Title */}
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              {appName}
+            <h1 
+              className="font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
+              style={{
+                fontSize: `${(mainAppConfig?.headline_size || 24) * 1.5}px`,
+                fontFamily: mainAppConfig?.headline_font ? `${mainAppConfig.headline_font}, sans-serif` : undefined,
+                color: mainAppConfig?.headline_color || undefined
+              }}
+            >
+              {heroHeading || mainAppConfig?.hero_heading || appName}
             </h1>
-            <p className="text-xl text-muted-foreground">
-              Delivery service
+            <p 
+              className="text-xl text-muted-foreground"
+              style={{
+                fontSize: `${(mainAppConfig?.subheadline_size || 14) * 1.2}px`,
+                fontFamily: mainAppConfig?.subheadline_font ? `${mainAppConfig.subheadline_font}, sans-serif` : undefined,
+                color: mainAppConfig?.subheadline_color || undefined
+              }}
+            >
+              {heroSubheading || mainAppConfig?.hero_subheading || 'Delivery service'}
             </p>
           </div>
 

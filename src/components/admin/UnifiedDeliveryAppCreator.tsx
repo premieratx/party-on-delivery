@@ -788,17 +788,57 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                         />
                       </div>
                     </div>
-                    <div>
-                      <Label>Subheadline Size: {subheadlineSize}px</Label>
-                      <Slider
-                        value={[subheadlineSize]}
-                        onValueChange={(value) => setSubheadlineSize(value[0])}
-                        max={24}
-                        min={12}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
+                     <div>
+                       <Label>Subheadline Size: {subheadlineSize}px</Label>
+                       <Slider
+                         value={[subheadlineSize]}
+                         onValueChange={(value) => setSubheadlineSize(value[0])}
+                         max={24}
+                         min={12}
+                         step={1}
+                         className="w-full"
+                       />
+                     </div>
+
+                     {/* Position Controls */}
+                     <div className="space-y-4 pt-4 border-t">
+                       <Label className="text-sm font-semibold">Vertical Positioning</Label>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div>
+                           <Label>Logo Position: {logoVerticalPos}px</Label>
+                           <Slider
+                             value={[logoVerticalPos]}
+                             onValueChange={(value) => setLogoVerticalPos(value[0])}
+                             max={50}
+                             min={-50}
+                             step={5}
+                             className="w-full"
+                           />
+                         </div>
+                         <div>
+                           <Label>Headline Position: {headlineVerticalPos}px</Label>
+                           <Slider
+                             value={[headlineVerticalPos]}
+                             onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                             max={50}
+                             min={-50}
+                             step={5}
+                             className="w-full"
+                           />
+                         </div>
+                       </div>
+                       <div>
+                         <Label>Subheadline Position: {subheadlineVerticalPos}px</Label>
+                         <Slider
+                           value={[subheadlineVerticalPos]}
+                           onValueChange={(value) => setSubheadlineVerticalPos(value[0])}
+                           max={50}
+                           min={-50}
+                           step={5}
+                           className="w-full"
+                         />
+                       </div>
+                     </div>
                   </CardContent>
                 </Card>
 

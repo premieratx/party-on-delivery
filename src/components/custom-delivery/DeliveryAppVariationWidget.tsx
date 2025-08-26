@@ -37,6 +37,26 @@ interface DeliveryAppVariationWidgetProps {
 
 interface DeliveryAppConfig {
   app_name: string;
+  hero_heading?: string;
+  hero_subheading?: string;
+  logo_url?: string;
+  main_app_config?: {
+    hero_heading?: string;
+    hero_subheading?: string;
+    logo_size?: number;
+    headline_size?: number;
+    subheadline_size?: number;
+    logo_vertical_pos?: number;
+    headline_vertical_pos?: number;
+    subheadline_vertical_pos?: number;
+    background_image_url?: string;
+    background_opacity?: number;
+    overlay_color?: string;
+    headline_font?: string;
+    headline_color?: string;
+    subheadline_font?: string;
+    subheadline_color?: string;
+  };
   collections_config: {
     tab_count: number;
     tabs: Array<{
@@ -68,21 +88,38 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
 
   // Load app configuration
   useEffect(() => {
-    // DISABLED TO PREVENT PRELOADING
-    console.log('🚫 DeliveryAppVariationWidget loadAppConfig DISABLED');
-    setLoading(false);
-    setAppConfig({
-      app_name: 'Party On Delivery',
-      collections_config: {
-        tab_count: 4,
-        tabs: [
-          { name: 'Beer', collection_handle: 'beer' },
-          { name: 'Wine', collection_handle: 'wine' },
-          { name: 'Spirits', collection_handle: 'spirits' },
-          { name: 'Cocktails', collection_handle: 'cocktails' }
-        ]
+    async function loadAppConfig() {
+      try {
+        console.log('🔄 Loading delivery app config for slug:', appSlug);
+        
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('*')
+          .eq('app_slug', appSlug)
+          .eq('is_active', true)
+          .single();
+
+        if (error) {
+          console.error('❌ Error loading app config:', error);
+          setAppConfig(null);
+          return;
+        }
+
+        console.log('✅ Loaded app config:', data);
+        setAppConfig(data as any);
+      } catch (error) {
+        console.error('💥 Failed to load app config:', error);
+        setAppConfig(null);
+      } finally {
+        setLoading(false);
       }
-    });
+    }
+
+    if (appSlug) {
+      loadAppConfig();
+    } else {
+      setLoading(false);
+    }
   }, [appSlug]);
 
   const handleStartOrder = () => {
@@ -160,6 +197,10 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
       {currentStep === 'intro' && (
         <CustomDeliveryIntro
           appName={appConfig.app_name}
+          heroHeading={appConfig.main_app_config?.hero_heading}
+          heroSubheading={appConfig.main_app_config?.hero_subheading}
+          logoUrl={appConfig.logo_url}
+          mainAppConfig={appConfig.main_app_config}
           onStartOrder={handleStartOrder}
           onGoHome={handleGoHome}
         />
