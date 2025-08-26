@@ -237,6 +237,9 @@ export interface CoverPageConfig {
     logo_bg_mode?: 'auto' | 'rectangle' | 'none';
     element_positions?: DraggableElement[];
     theme?: string;
+    // NEW: Animation properties
+    entrance_animation?: boolean;
+    animation_duration?: number;
   };
   is_default_homepage?: boolean;
   flow_name?: string;
@@ -314,6 +317,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);
 
+  // NEW: Entrance Animation Controls
+  const [entranceAnimation, setEntranceAnimation] = useState<boolean>(initial?.styles?.entrance_animation ?? false);
+  const [animationDuration, setAnimationDuration] = useState<number>(initial?.styles?.animation_duration ?? 2000);
+
   // Element positions for drag mode
   const [elementPositions, setElementPositions] = useState<DraggableElement[]>([
     { id: 'logo', type: 'logo', x: 50, y: 20 },
@@ -366,6 +373,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       setIsActive(initial.is_active ?? true);
       setFreeShippingEnabled(initial.free_shipping_enabled ?? false);
       
+      // Load animation settings
+      setEntranceAnimation(initial.styles?.entrance_animation ?? false);
+      setAnimationDuration(initial.styles?.animation_duration ?? 2000);
+      
       // Load element positions if available
       if (initial.styles?.element_positions) {
         setElementPositions(initial.styles.element_positions);
@@ -397,6 +408,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       setButtonsOffsetY(10);      // Buttons at bottom but visible
       setIsActive(true);
       setFreeShippingEnabled(false);
+      
+      // Animation defaults
+      setEntranceAnimation(false);
+      setAnimationDuration(2000);
     }
   }, [open, embedded, initial]);
 
@@ -561,6 +576,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           checklist_offset_y: checklistOffsetY,
           buttons_offset_y: buttonsOffsetY,
           logo_offset_y: logoOffsetY,
+          // NEW: Save animation settings
+          entrance_animation: entranceAnimation,
+          animation_duration: animationDuration,
           theme: selectedTheme
         } as any,
         created_by: 'admin',
@@ -1063,6 +1081,44 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       />
                     </div>
 
+                    {/* NEW: Entrance Animation Controls */}
+                    <div className="space-y-4 pt-4 border-t border-border/30">
+                      <Label className="text-sm font-semibold flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Entrance Animations
+                      </Label>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium">Enable Sequential Animation</Label>
+                          <p className="text-xs text-muted-foreground">Logo → Title → Subtitle → Features → Buttons</p>
+                        </div>
+                        <Switch
+                          checked={entranceAnimation}
+                          onCheckedChange={setEntranceAnimation}
+                        />
+                      </div>
+
+                      {entranceAnimation && (
+                        <div>
+                          <Label className="text-sm font-medium">
+                            Animation Duration: {animationDuration}ms
+                          </Label>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Total time for all elements to animate in
+                          </p>
+                          <Slider
+                            value={[animationDuration]}
+                            onValueChange={(value) => setAnimationDuration(value[0])}
+                            max={5000}
+                            min={1000}
+                            step={250}
+                            className="mt-2"
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     {/* Removed drag mode - elements are centered with vertical positioning only */}
                   </div>
                 </TabsContent>
@@ -1138,6 +1194,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 buttonsOffsetY={buttonsOffsetY}
                 logoOffsetY={logoOffsetY}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
+                entranceAnimation={entranceAnimation}
+                animationDuration={animationDuration}
               />
               </div>
             </div>
@@ -1197,6 +1255,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 buttonsOffsetY={buttonsOffsetY}
                 logoOffsetY={logoOffsetY}
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
+                entranceAnimation={entranceAnimation}
+                animationDuration={animationDuration}
               />
               </div>
             </div>

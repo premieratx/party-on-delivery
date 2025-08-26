@@ -151,37 +151,50 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
         </div>
       )}
 
-      {/* Centered Phone Frame - Exactly matching editor preview */}
-      <div className="w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden relative">
-        <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
-          <CoverStartScreen
-            appName={coverPage.title}
-            title={coverPage.title}
-            subtitle={coverPage.subtitle}
-            logoUrl={coverPage.logo_url}
-            logoHeight={coverPage.logo_height}
-            backgroundImageUrl={coverPage.bg_image_url}
-            backgroundVideoUrl={coverPage.bg_video_url}
-            checklistItems={(() => {
-              const checklist = Array.isArray(coverPage.checklist) ? coverPage.checklist : 
-                (typeof coverPage.checklist === 'string' ? JSON.parse(coverPage.checklist) : []);
-              console.log('🔍 Checklist items being passed to CoverStartScreen:', checklist);
-              return checklist;
-            })()}
-            buttons={convertButtons(Array.isArray(coverPage.buttons) ? coverPage.buttons : 
-              (typeof coverPage.buttons === 'string' ? JSON.parse(coverPage.buttons) : []))}
-            titleSize={coverPage.styles?.title_size}
-            subtitleSize={coverPage.styles?.subtitle_size}
-            checklistSize={coverPage.styles?.checklist_size}
-            backgroundColor={coverPage.styles?.background_color}
-            titleOffsetY={coverPage.styles?.title_offset_y}
-            subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
-            checklistOffsetY={coverPage.styles?.checklist_offset_y}
-            buttonsOffsetY={coverPage.styles?.buttons_offset_y}
-            logoOffsetY={coverPage.styles?.logo_offset_y}
-            logoBgColor={coverPage.styles?.logo_bg_color}
-            logoBgMode={coverPage.styles?.logo_bg_mode}
-          />
+      {/* Centered Phone Frame with Animated Golden Border */}
+      <div className="relative">
+        {/* Animated Golden Border */}
+        <div className="absolute inset-0 p-1 rounded-[3rem] bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 animate-pulse">
+          <div className="absolute inset-0 rounded-[2.8rem] bg-gradient-to-r from-yellow-300 via-transparent to-yellow-300 animate-spin" style={{
+            animation: 'spin 8s linear infinite',
+            background: 'conic-gradient(from 0deg, #fbbf24, #f59e0b, #d97706, #92400e, #fbbf24)'
+          }}></div>
+        </div>
+        
+        {/* Phone Frame */}
+        <div className="relative w-[390px] h-[844px] transition-all duration-300 shadow-2xl bg-black rounded-[2.5rem] overflow-hidden">
+          <div className="absolute inset-2 rounded-[1.5rem] overflow-hidden">
+            <CoverStartScreen
+              appName={coverPage.title}
+              title={coverPage.title}
+              subtitle={coverPage.subtitle}
+              logoUrl={coverPage.logo_url}
+              logoHeight={coverPage.logo_height}
+              backgroundImageUrl={coverPage.bg_image_url}
+              backgroundVideoUrl={coverPage.bg_video_url}
+              checklistItems={(() => {
+                const checklist = Array.isArray(coverPage.checklist) ? coverPage.checklist : 
+                  (typeof coverPage.checklist === 'string' ? JSON.parse(coverPage.checklist) : []);
+                console.log('🔍 Checklist items being passed to CoverStartScreen:', checklist);
+                return checklist;
+              })()}
+              buttons={convertButtons(Array.isArray(coverPage.buttons) ? coverPage.buttons : 
+                (typeof coverPage.buttons === 'string' ? JSON.parse(coverPage.buttons) : []))}
+              titleSize={coverPage.styles?.title_size}
+              subtitleSize={coverPage.styles?.subtitle_size}
+              checklistSize={coverPage.styles?.checklist_size}
+              backgroundColor={coverPage.styles?.background_color}
+              titleOffsetY={coverPage.styles?.title_offset_y}
+              subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
+              checklistOffsetY={coverPage.styles?.checklist_offset_y}
+              buttonsOffsetY={coverPage.styles?.buttons_offset_y}
+              logoOffsetY={coverPage.styles?.logo_offset_y}
+              logoBgColor={coverPage.styles?.logo_bg_color}
+              logoBgMode={coverPage.styles?.logo_bg_mode}
+              entranceAnimation={coverPage.styles?.entrance_animation}
+              animationDuration={coverPage.styles?.animation_duration}
+            />
+          </div>
         </div>
       </div>
 

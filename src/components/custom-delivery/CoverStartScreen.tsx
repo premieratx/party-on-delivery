@@ -38,6 +38,9 @@ export interface CoverStartScreenProps {
   logoOffsetY?: number;
   logoBgColor?: string;
   logoBgMode?: 'auto' | 'rectangle' | 'none';
+  // NEW: Entrance Animation Props
+  entranceAnimation?: boolean;
+  animationDuration?: number;
 }
 
 // No default checklist - must be provided via props
@@ -63,13 +66,45 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   logoOffsetY,
   logoBgColor,
   logoBgMode = 'auto',
+  // NEW: Animation props
+  entranceAnimation = false,
+  animationDuration = 2000,
 }) => {
   console.log('🎯 CoverStartScreen received checklistItems:', checklistItems);
   console.log('🎯 CoverStartScreen checklistItems type:', typeof checklistItems);
   console.log('🎯 CoverStartScreen checklistItems length:', checklistItems?.length);
+  console.log('🎬 Entrance animation enabled:', entranceAnimation);
+  
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [showVideo, setShowVideo] = React.useState(false);
   const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
+
+  // Animation state
+  const [animationsStarted, setAnimationsStarted] = React.useState(!entranceAnimation);
+  
+  // Start animations on mount if enabled
+  React.useEffect(() => {
+    if (entranceAnimation) {
+      const timer = setTimeout(() => {
+        setAnimationsStarted(true);
+      }, 300); // Small delay to ensure proper rendering
+      return () => clearTimeout(timer);
+    }
+  }, [entranceAnimation]);
+
+  // Calculate staggered delays for sequential animation
+  const getAnimationDelay = (index: number) => {
+    if (!entranceAnimation || animationsStarted) return 0;
+    const delayPerElement = Math.max(animationDuration / 6, 200); // At least 200ms per element
+    return index * delayPerElement;
+  };
+
+  const getAnimationClass = (index: number) => {
+    if (!entranceAnimation) return '';
+    return animationsStarted 
+      ? `animate-fade-in` 
+      : 'opacity-0 translate-y-4';
+  };
 
   React.useEffect(() => {
     if (videoRef.current) {
@@ -139,11 +174,14 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         <div className="relative z-10 flex h-full flex-col items-center px-6 py-4 justify-center space-y-6">
           
           {/* Logo Section */}
-          <div className="flex-shrink-0 text-center">
-            <div 
-              className="mb-2"
-              style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
-            >
+          <div 
+            className={`flex-shrink-0 text-center transition-all duration-700 ${getAnimationClass(0)}`}
+            style={{ 
+              transform: `translateY(${logoOffsetY || 0}px)`,
+              animationDelay: `${getAnimationDelay(0)}ms`
+            }}
+          >
+            <div className="mb-2">
               {logoUrl ? (
                 <img 
                   src={logoUrl} 
@@ -183,8 +221,11 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
           {/* Title Section */}
           <div 
-            className="text-center"
-            style={{ transform: `translateY(${titleOffsetY || 0}px)` }}
+            className={`text-center transition-all duration-700 ${getAnimationClass(1)}`}
+            style={{ 
+              transform: `translateY(${titleOffsetY || 0}px)`,
+              animationDelay: `${getAnimationDelay(1)}ms`
+            }}
           >
             <h1 
               className="font-bold mb-3 px-4 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
@@ -197,7 +238,13 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             
             {/* Subtitle */}
             {subtitle && (
-              <div style={{ transform: `translateY(${subtitleOffsetY || 0}px)` }}>
+              <div 
+                className={`transition-all duration-700 ${getAnimationClass(2)}`}
+                style={{ 
+                  transform: `translateY(${subtitleOffsetY || 0}px)`,
+                  animationDelay: `${getAnimationDelay(2)}ms`
+                }}
+              >
                 <p 
                   className="text-white/80 mb-4 px-4 leading-relaxed"
                   style={{ fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, 16)}px` : '16px' }}
@@ -211,14 +258,20 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           {/* Features Section */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
-              className="w-full max-w-sm flex-shrink-0"
-              style={{ transform: `translateY(${checklistOffsetY || 0}px)` }}
+              className={`w-full max-w-sm flex-shrink-0 transition-all duration-700 ${getAnimationClass(3)}`}
+              style={{ 
+                transform: `translateY(${checklistOffsetY || 0}px)`,
+                animationDelay: `${getAnimationDelay(3)}ms`
+              }}
             >
               <div className="space-y-3">
                 {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
                   <div 
                     key={index} 
-                    className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
+                    className={`bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 transition-all duration-700 ${getAnimationClass(3)}`}
+                    style={{ 
+                      animationDelay: `${getAnimationDelay(3) + (index * 100)}ms`
+                    }}
                   >
                     <div className="flex items-center">
                       <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-3">
@@ -236,18 +289,22 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
           {/* Buttons Section */}
           <div 
-            className="w-full max-w-sm flex-shrink-0"
-            style={{ transform: `translateY(${buttonsOffsetY || 0}px)` }}
+            className={`w-full max-w-sm flex-shrink-0 transition-all duration-700 ${getAnimationClass(4)}`}
+            style={{ 
+              transform: `translateY(${buttonsOffsetY || 0}px)`,
+              animationDelay: `${getAnimationDelay(4)}ms`
+            }}
           >
             <div className="flex flex-col gap-3">
               {buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
                   onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
-                  className="w-full text-base font-semibold h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40"
+                  className={`w-full text-base font-semibold h-12 rounded-full shadow-lg transition-all duration-700 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40 ${getAnimationClass(4)}`}
                   style={{
                     backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
-                    color: button.textColor || '#FFFFFF'
+                    color: button.textColor || '#FFFFFF',
+                    animationDelay: `${getAnimationDelay(4) + (index * 150)}ms`
                   }}
                 >
                   <span className="relative z-10">{button.text}</span>
