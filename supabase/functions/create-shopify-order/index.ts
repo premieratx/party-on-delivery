@@ -570,8 +570,25 @@ serve(async (req) => {
           code: "LOCAL_DELIVERY"
         }] : [],
         
-        // Driver tip tracking - Store in note attributes only (NOT as line item or tax)
-        // Tip amount is included in total_price but not itemized in Shopify breakdown
+        // Tip handling - Use Shopify's order adjustments to make tip appear in breakdown
+        ...(orderAmounts.tip_amount > 0 ? {
+          order_adjustments: [{
+            amount: orderAmounts.tip_amount.toFixed(2),
+            tax_amount: "0.00", // Tips are not taxed
+            kind: "shipping_discount", // Use shipping_discount type to appear in breakdown
+            reason: "Driver Tip",
+            amount_set: {
+              shop_money: {
+                amount: orderAmounts.tip_amount.toFixed(2),
+                currency_code: "USD"
+              },
+              presentment_money: {
+                amount: orderAmounts.tip_amount.toFixed(2),
+                currency_code: "USD"
+              }
+            }
+          }]
+        } : {}),
         
         // Custom attributes - delivery details displayed prominently
         note_attributes: [
