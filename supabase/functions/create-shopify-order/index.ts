@@ -249,14 +249,7 @@ serve(async (req) => {
       deliveryTime
     });
 
-    // Extract order amounts
-    orderAmounts = {
-      subtotal: parseFloat(metadata.subtotal || '0'),
-      sales_tax: parseFloat(metadata.sales_tax || '0'),
-      delivery_fee: parseFloat(metadata.delivery_fee || '0'),
-      tip_amount: parseFloat(metadata.tip_amount || '0'),
-      total_amount: paymentAmount
-    };
+    // orderAmounts already set above - no need to redeclare
     
     logStep("Order amounts extracted", orderAmounts);
 
