@@ -58,7 +58,7 @@ serve(async (req) => {
       title: item.title || item.name,
       quantity: item.quantity,
       price: parseFloat(item.price || "0").toFixed(2),
-      variant_id: item.variant_id || null,
+      variant_id: item.variant_id || item.variant || null,
       requires_shipping: true
     }));
 
@@ -72,7 +72,7 @@ serve(async (req) => {
           email: customerInfo.email,
           first_name: customerInfo.firstName || "Customer",
           last_name: customerInfo.lastName || "",
-          phone: customerInfo.phone || ""
+          phone: customerInfo.phone || "+15551234567"
         },
         billing_address: {
           first_name: customerInfo.firstName || "Customer",
@@ -84,7 +84,7 @@ serve(async (req) => {
           province: "TX",
           country: "US",
           zip: "78701",
-          phone: customerInfo.phone || ""
+          phone: customerInfo.phone || "+15551234567"
         },
         shipping_address: {
           first_name: customerInfo.firstName || "Customer",
@@ -97,7 +97,7 @@ serve(async (req) => {
           province: "TX",
           country: "US",
           zip: "78701",
-          phone: customerInfo.phone || ""
+          phone: customerInfo.phone || "+15551234567"
         },
         email: customerInfo.email,
         subtotal_price: amounts?.subtotal?.toFixed(2) || "0.00",
