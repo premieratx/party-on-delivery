@@ -336,8 +336,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const mainConfig = appConfig?.main_app_config || {};
 
   // Debug styling data (disabled for production)
-  // console.log('🎨 STYLING DEBUG - heroConfig:', heroConfig);
-  // console.log('🎨 STYLING DEBUG - mainConfig:', mainConfig);
 
   // Helper function to generate responsive text styles
   const getResponsiveTextStyle = (type: 'headline' | 'subheadline' | 'scrollingText') => {
@@ -363,7 +361,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       lineHeight: type === 'headline' ? '1.1' : '1.5'
     };
 
-    // console.log(`🎨 STYLING DEBUG - ${type} style:`, { color, font, size, finalStyle });
+    
     return finalStyle;
   };
 

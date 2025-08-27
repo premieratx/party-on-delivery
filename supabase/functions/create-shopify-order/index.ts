@@ -69,7 +69,9 @@ serve(async (req) => {
         billing_address: {
           first_name: customerInfo.firstName || "Customer",
           last_name: customerInfo.lastName || "",
-          address1: deliveryInfo?.address || "Address Required",
+          address1: typeof deliveryInfo?.address === 'string' 
+            ? deliveryInfo.address 
+            : (deliveryInfo?.address?.address || "Address Required"),
           city: "Austin",
           province: "TX",
           country: "US",
@@ -79,7 +81,9 @@ serve(async (req) => {
         shipping_address: {
           first_name: customerInfo.firstName || "Customer",
           last_name: customerInfo.lastName || "",
-          address1: deliveryInfo?.address || "Address Required",
+          address1: typeof deliveryInfo?.address === 'string' 
+            ? deliveryInfo.address 
+            : (deliveryInfo?.address?.address || "Address Required"),
           address2: deliveryInfo?.instructions || "",
           city: "Austin",
           province: "TX",

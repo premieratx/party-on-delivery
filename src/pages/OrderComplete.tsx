@@ -102,7 +102,9 @@ const OrderComplete = () => {
                 deliveryInfo: {
                   date: parsedData.deliveryDate,
                   time: parsedData.deliveryTime,
-                  address: parsedData.deliveryAddress,
+                  address: typeof parsedData.deliveryAddress === 'string' 
+                    ? parsedData.deliveryAddress 
+                    : (parsedData.deliveryAddress?.address || 'Address Required'),
                   instructions: parsedData.deliveryInstructions || ''
                 },
                 amounts: {
