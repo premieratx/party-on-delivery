@@ -61,15 +61,31 @@ class CustomerDataManager {
     };
 
     try {
-      // Save to multiple locations with debouncing for performance
-      localStorage.setItem('partyondelivery_customer_persistent', JSON.stringify(customerData));
-      localStorage.setItem('partyondelivery_address_persistent', JSON.stringify(addressData));
+      // Try localStorage first, fallback to sessionStorage for incognito mode
+      try {
+        localStorage.setItem('partyondelivery_customer_persistent', JSON.stringify(customerData));
+        localStorage.setItem('partyondelivery_address_persistent', JSON.stringify(addressData));
+        console.log('✅ Customer persistent data saved to localStorage');
+      } catch (localStorageError) {
+        console.warn('⚠️ localStorage failed, using sessionStorage for incognito mode:', localStorageError);
+        try {
+          sessionStorage.setItem('partyondelivery_customer_persistent', JSON.stringify(customerData));
+          sessionStorage.setItem('partyondelivery_address_persistent', JSON.stringify(addressData));
+          console.log('✅ Customer persistent data saved to sessionStorage');
+        } catch (sessionStorageError) {
+          console.error('❌ Both storage methods failed for customer persistent data:', sessionStorageError);
+        }
+      }
       
       // Use async cache updates to improve performance
-      requestAnimationFrame(() => {
-        cacheManager.set('customer_persistent', customerData, 30 * 24 * 60); // 30 days
-        cacheManager.set('address_persistent', addressData, 30 * 24 * 60); // 30 days
-      });
+      try {
+        requestAnimationFrame(() => {
+          cacheManager.set('customer_persistent', customerData, 30 * 24 * 60); // 30 days
+          cacheManager.set('address_persistent', addressData, 30 * 24 * 60); // 30 days
+        });
+      } catch (cacheError) {
+        console.warn('Failed to save to cacheManager:', cacheError);
+      }
       
       console.log('Customer data saved with 30-day expiration');
     } catch (error) {
@@ -83,9 +99,24 @@ class CustomerDataManager {
       // Check for prefilled delivery address from custom site
       const prefilledAddress = localStorage.getItem('prefilled_delivery_address');
       
-      // Try primary storage first
-      const customerData = localStorage.getItem('partyondelivery_customer_persistent');
-      const addressData = localStorage.getItem('partyondelivery_address_persistent');
+      // Try primary storage first, fallback to sessionStorage for incognito mode
+      let customerData: string | null = null;
+      let addressData: string | null = null;
+      let storageType = 'localStorage';
+      
+      try {
+        customerData = localStorage.getItem('partyondelivery_customer_persistent');
+        addressData = localStorage.getItem('partyondelivery_address_persistent');
+      } catch (localStorageError) {
+        console.warn('⚠️ localStorage read failed, trying sessionStorage for incognito mode:', localStorageError);
+        try {
+          customerData = sessionStorage.getItem('partyondelivery_customer_persistent');
+          addressData = sessionStorage.getItem('partyondelivery_address_persistent');
+          storageType = 'sessionStorage';
+        } catch (sessionStorageError) {
+          console.error('❌ Both storage methods failed for customer data load:', sessionStorageError);
+        }
+      }
       
       if (customerData && addressData) {
         const customer = JSON.parse(customerData);
@@ -93,7 +124,7 @@ class CustomerDataManager {
         
         // Check if expired
         if (customer.expiresAt && new Date() < new Date(customer.expiresAt)) {
-          console.log('Loading persistent customer data:', { customer, address });
+          console.log(`✅ Loading persistent customer data from ${storageType}:`, { customer, address });
           
           // Use prefilled address if available
           let finalAddress = {
@@ -294,8 +325,19 @@ function getStoredData<T>(primaryKey: string, backupKey: string, initialValue: T
       }
     }
 
-    // Try primary localStorage
-    const primary = localStorage.getItem(primaryKey);
+    // Try primary storage - both localStorage and sessionStorage for incognito mode
+    let primary: string | null = null;
+    try {
+      primary = localStorage.getItem(primaryKey);
+    } catch (localStorageError) {
+      console.warn(`⚠️ localStorage read failed for ${primaryKey}, trying sessionStorage:`, localStorageError);
+      try {
+        primary = sessionStorage.getItem(primaryKey);
+      } catch (sessionStorageError) {
+        console.error(`❌ Both storage methods failed for ${primaryKey}:`, sessionStorageError);
+      }
+    }
+    
     if (primary && primary !== 'null' && primary !== 'undefined') {
       const parsed = JSON.parse(primary);
       if (typeof parsed === 'object' && parsed && Object.values(parsed).some(v => v && v !== '')) {
@@ -506,10 +548,27 @@ export function useCustomerInfo() {
     
     setCustomerInfoState(newInfo);
     
-    // Enhanced localStorage save with immediate persistence
+    // Enhanced storage save with incognito mode resilience
     try {
-      localStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
-      cacheManager.set('customer_checkout', newInfo, 60); // 1 hour cache for checkout session
+      // Try localStorage first, fallback to sessionStorage for incognito mode
+      try {
+        localStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
+        console.log('✅ Customer info saved to localStorage');
+      } catch (localStorageError) {
+        console.warn('⚠️ localStorage failed, using sessionStorage for incognito mode:', localStorageError);
+        try {
+          sessionStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
+          console.log('✅ Customer info saved to sessionStorage');
+        } catch (sessionStorageError) {
+          console.error('❌ Both storage methods failed for customer info:', sessionStorageError);
+        }
+      }
+      
+      try {
+        cacheManager.set('customer_checkout', newInfo, 60); // 1 hour cache for checkout session
+      } catch (cacheError) {
+        console.warn('Failed to save to cacheManager:', cacheError);
+      }
       
       // Save persistent data with 30-day expiration if data is complete enough
       if (newInfo.firstName && newInfo.email && addressInfo.street) {
@@ -526,10 +585,27 @@ export function useCustomerInfo() {
     
     setAddressInfoState(newInfo);
     
-    // Enhanced localStorage save with immediate persistence
+    // Enhanced storage save with incognito mode resilience
     try {
-      localStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
-      cacheManager.set('address_checkout', newInfo, 60); // 1 hour cache for checkout session
+      // Try localStorage first, fallback to sessionStorage for incognito mode
+      try {
+        localStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
+        console.log('✅ Address info saved to localStorage');
+      } catch (localStorageError) {
+        console.warn('⚠️ localStorage failed, using sessionStorage for incognito mode:', localStorageError);
+        try {
+          sessionStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
+          console.log('✅ Address info saved to sessionStorage');
+        } catch (sessionStorageError) {
+          console.error('❌ Both storage methods failed for address info:', sessionStorageError);
+        }
+      }
+      
+      try {
+        cacheManager.set('address_checkout', newInfo, 60); // 1 hour cache for checkout session
+      } catch (cacheError) {
+        console.warn('Failed to save to cacheManager:', cacheError);
+      }
       
       // Save persistent data with 30-day expiration if customer data is complete enough
       if (customerInfo.firstName && customerInfo.email && newInfo.street) {

@@ -123,7 +123,14 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer]);
 
   // Pricing calculations - use proper delivery fee hook with tip support
-  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const markupPercent = (() => {
+    try {
+      return Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+    } catch (sessionStorageError) {
+      console.warn('⚠️ sessionStorage read failed for markupPercent, using default:', sessionStorageError);
+      return 0;
+    }
+  })();
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
@@ -190,12 +197,33 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
 
   const handleClearAllData = () => {
     console.log('🧹 Clearing all checkout data for fresh start');
-    // Clear all persistent data
-    localStorage.removeItem('partyondelivery_customer');
-    localStorage.removeItem('partyondelivery_address'); 
-    localStorage.removeItem('partyondelivery_delivery_info');
-    localStorage.removeItem('partyondelivery_checkout_state');
-    localStorage.removeItem('persistent-checkout-info');
+    
+    // Clear from both localStorage and sessionStorage to handle incognito mode
+    const storageKeys = [
+      'partyondelivery_customer',
+      'partyondelivery_address', 
+      'partyondelivery_delivery_info',
+      'partyondelivery_checkout_state',
+      'persistent-checkout-info',
+      'partyondelivery_customer_persistent',
+      'partyondelivery_address_persistent'
+    ];
+    
+    storageKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        console.log(`✅ Cleared ${key} from localStorage`);
+      } catch (localStorageError) {
+        console.warn(`⚠️ Failed to clear ${key} from localStorage:`, localStorageError);
+      }
+      
+      try {
+        sessionStorage.removeItem(key);
+        console.log(`✅ Cleared ${key} from sessionStorage`);
+      } catch (sessionStorageError) {
+        console.warn(`⚠️ Failed to clear ${key} from sessionStorage:`, sessionStorageError);
+      }
+    });
     
     // Reset all state
     setConfirmedDateTime(false);
@@ -218,7 +246,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       instructions: ''
     });
     
-    console.log('✅ All checkout data cleared - fresh start enabled');
+    console.log('✅ All checkout data cleared from both storage mechanisms - fresh start enabled');
   };
 
   const handlePaymentSuccess = (paymentIntentId?: string) => {

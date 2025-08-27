@@ -45,11 +45,26 @@ export const usePersistentCheckout = () => {
 
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load persistent data on mount - optimized for speed
+  // Load persistent data on mount - optimized for speed with incognito mode support
   useEffect(() => {
     const loadData = () => {
       try {
-        const saved = localStorage.getItem(CHECKOUT_STORAGE_KEY);
+        let saved: string | null = null;
+        let storageType = 'localStorage';
+        
+        // Try localStorage first, fallback to sessionStorage for incognito mode
+        try {
+          saved = localStorage.getItem(CHECKOUT_STORAGE_KEY);
+        } catch (localStorageError) {
+          console.warn('⚠️ localStorage read failed, trying sessionStorage for incognito mode:', localStorageError);
+          try {
+            saved = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
+            storageType = 'sessionStorage';
+          } catch (sessionStorageError) {
+            console.error('❌ Both storage methods failed during load:', sessionStorageError);
+          }
+        }
+        
         if (saved) {
           const data: PersistentCheckoutData = JSON.parse(saved);
           
@@ -58,15 +73,29 @@ export const usePersistentCheckout = () => {
             // Load data synchronously for instant display
             setCustomerInfo(data.customerInfo);
             setAddressInfo(data.addressInfo);
-            console.log('✅ Fast checkout: Loaded saved data instantly');
+            console.log(`✅ Fast checkout: Loaded saved data instantly from ${storageType}`);
           } else {
-            // Clean up expired data
-            localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+            // Clean up expired data from both storage locations
+            try {
+              if (storageType === 'localStorage') {
+                localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+              } else {
+                sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+              }
+            } catch (cleanupError) {
+              console.warn('Failed to cleanup expired data:', cleanupError);
+            }
           }
         }
       } catch (error) {
         console.warn('Failed to load persistent checkout data:', error);
-        localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+        // Try to clean up both storages if parsing failed
+        try {
+          localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+          sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup corrupted data:', cleanupError);
+        }
       }
       setIsLoaded(true);
     };
@@ -75,7 +104,7 @@ export const usePersistentCheckout = () => {
     loadData();
   }, []);
 
-  // Save data whenever it changes (faster debounced)
+  // Save data whenever it changes (faster debounced) with incognito mode support
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -88,7 +117,20 @@ export const usePersistentCheckout = () => {
             addressInfo,
             lastUsed: Date.now()
           };
-          localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(dataToSave));
+          
+          // Try localStorage first, fallback to sessionStorage for incognito mode
+          try {
+            localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(dataToSave));
+            console.log('✅ Persistent checkout data saved to localStorage');
+          } catch (localStorageError) {
+            console.warn('⚠️ localStorage save failed, using sessionStorage for incognito mode:', localStorageError);
+            try {
+              sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(dataToSave));
+              console.log('✅ Persistent checkout data saved to sessionStorage');
+            } catch (sessionStorageError) {
+              console.error('❌ Both storage methods failed during save:', sessionStorageError);
+            }
+          }
         } catch (error) {
           console.warn('Failed to save persistent checkout data:', error);
         }
@@ -118,8 +160,23 @@ export const usePersistentCheckout = () => {
 
   const clearPersistentData = () => {
     try {
-      localStorage.removeItem(CHECKOUT_STORAGE_KEY);
-      localStorage.removeItem(DELIVERY_APP_REFERRER_KEY);
+      // Clear from both storage mechanisms to be thorough
+      try {
+        localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+        localStorage.removeItem(DELIVERY_APP_REFERRER_KEY);
+        console.log('✅ Persistent data cleared from localStorage');
+      } catch (localStorageError) {
+        console.warn('⚠️ Failed to clear localStorage:', localStorageError);
+      }
+      
+      try {
+        sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+        sessionStorage.removeItem(DELIVERY_APP_REFERRER_KEY);
+        console.log('✅ Persistent data cleared from sessionStorage');
+      } catch (sessionStorageError) {
+        console.warn('⚠️ Failed to clear sessionStorage:', sessionStorageError);
+      }
+      
       setCustomerInfo({
         firstName: '',
         lastName: '',
