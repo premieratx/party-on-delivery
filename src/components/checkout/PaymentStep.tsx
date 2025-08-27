@@ -165,16 +165,21 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         setPaymentError(paymentError.message || 'Payment failed');
       } else {
         console.log('✅ Payment successful!');
+        console.log('🔥🔥🔥 CACHE BUSTER v2025-01-27-17:05 🔥🔥🔥');
         const paymentIntentId = data.client_secret.split('_secret_')[0];
         
         // FIXED: Directly call create-shopify-order instead of relying on webhook
-        console.log('💰 Creating Shopify order directly with PaymentIntent:', paymentIntentId);
+        console.log('💰 🔥 CREATING SHOPIFY ORDER DIRECTLY - NO WEBHOOK:', paymentIntentId);
+        console.log('💰 🔥 SUPABASE CLIENT AVAILABLE:', !!supabase);
         
         try {
+          console.log('🚀 Invoking create-shopify-order edge function...');
           // Call the edge function to create Shopify order
           const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
             body: { paymentIntentId }
           });
+          
+          console.log('📨 Shopify function response:', { shopifyResult, shopifyError });
           
           if (shopifyError) {
             console.error('❌ Shopify order creation failed:', shopifyError);
