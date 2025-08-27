@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { OptimizedImage } from "@/components/common/OptimizedImage";
-import { BottomCartBar } from '@/components/common/BottomCartBar';
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
@@ -757,13 +757,7 @@ export const ProductSearch = () => {
       {/* Unified Cart */}
       <UnifiedCart isOpen={showCart} onClose={() => setShowCart(false)} />
       
-      <BottomCartBar
-        items={cartItems}
-        totalPrice={getTotalPrice()}
-        isVisible={cartItems.length > 0}
-        onOpenCart={() => setShowCart(true)}
-        onCheckout={() => navigate('/?step=checkout')}
-      />
+      {/* Bottom navigation removed - all functions available in top menu */}
     </div>
   );
 };

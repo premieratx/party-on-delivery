@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BottomCartBar } from '@/components/common/BottomCartBar';
+
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import ProductCategories from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
@@ -270,13 +270,7 @@ export const DeliveryWidget: React.FC = () => {
         tipAmount={tipAmount}
         onEmptyCart={handleEmptyCart}
       />
-      <BottomCartBar
-        items={cartItems}
-        totalPrice={getTotalPrice()}
-        isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'address-confirmation'}
-        onOpenCart={() => setIsCartOpen(true)}
-        onCheckout={handleCheckout}
-      />
+      {/* Bottom navigation removed - all functions available in top menu */}
     </div>
   );
 };

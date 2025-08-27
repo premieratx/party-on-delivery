@@ -6,7 +6,7 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { CustomDeliveryIntro } from './CustomDeliveryIntro';
 import { CustomProductCategories } from './CustomProductCategoriesVariation';
 import { CustomDeliveryCart } from './CustomDeliveryCart';
-import { BottomCartBar } from '@/components/common/BottomCartBar';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -280,16 +280,7 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
         }}
       />
 
-      {/* Bottom Cart Bar */}
-      {currentStep === 'products' && getTotalItems() > 0 && (
-        <BottomCartBar
-          items={cartItems}
-          totalPrice={getTotalPrice()}
-          isVisible={true}
-          onOpenCart={() => setIsCartOpen(true)}
-          onCheckout={handleCheckout}
-        />
-      )}
+      {/* Bottom navigation removed - all functions available in top menu */}
     </div>
   );
 }

@@ -52,74 +52,7 @@ export const BottomCartBar = withCartErrorBoundary<BottomCartBarProps>(({
   // Always show the bottom cart bar - never hide it completely
   // This ensures consistent sticky behavior across desktop and mobile
 
-  return (
-    <>
-      {/* Mobile Bottom Bar - HIDDEN as requested */}
-      <div className="hidden lg:hidden">
-        {/* Bottom navigation completely hidden on mobile */}
-      </div>
-
-      {/* Always Sticky Desktop Bottom Bar */}
-      <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {showAdmin && (
-              <button 
-                onClick={() => navigate('/admin')}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors bg-transparent border-0 cursor-pointer"
-              >
-                Admin
-              </button>
-            )}
-            {/* Delivery App Selector moved here */}
-            <div className="scale-75 origin-left">
-              <DeliveryAppSelector 
-                currentAppSlug={currentAppSlug}
-                className="flex-shrink-0"
-              />
-            </div>
-          </div>
-          
-          {/* Actions on the right: Cart, Subtotal, Checkout */}
-          <div className="flex items-center gap-1 sm:gap-3 ml-auto">
-            {/* Cart button - always visible */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { 
-                console.log('🛒 BottomCartBar: Cart button clicked, items:', totalItems); 
-                onOpenCart(); 
-              }}
-              aria-label="Open cart"
-              className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3 touch-manipulation"
-              data-cart-trigger="true"
-              type="button"
-            >
-              <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Cart</span>
-              <span className="text-xs">({totalItems})</span>
-            </Button>
-            
-            {/* Total price - always visible */}
-            <span className="font-semibold text-sm sm:text-lg text-primary">
-              ${formatPrice(adjustedTotal)}
-            </span>
-            
-            {/* Checkout button */}
-            <Button
-              onClick={onCheckout}
-              size="sm"
-              variant="success"
-              className="font-medium flex items-center gap-1 sm:gap-2 sm:min-w-[120px] justify-center h-8 sm:h-9 touch-manipulation checkout-blink"
-              data-checkout-trigger="true"
-              type="button"
-            >
-              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm">{totalItems > 0 ? 'Proceed to Checkout' : 'Checkout Now'}</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  // COMPLETELY DISABLED - Bottom navigation removed as requested
+  // All functionality moved to top navigation
+  return null;
 });

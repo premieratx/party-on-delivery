@@ -8,7 +8,7 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useReliableStorage } from '@/hooks/useReliableStorage';
 import { useUnifiedCart, UnifiedCartItem } from '@/hooks/useUnifiedCart';
 import { getActiveDeliveryInfo, formatDeliveryDate, isDeliveryExpired } from '@/utils/deliveryInfoManager';
-import { BottomCartBar } from '@/components/common/BottomCartBar';
+
 
 export type CustomDeliveryStep = 'order-continuation' | 'products' | 'cart' | 'tabs';
 
@@ -231,14 +231,7 @@ export const CustomDeliveryAppWidget: React.FC = () => {
         onEmptyCart={handleEmptyCart}
       />
       
-      <BottomCartBar
-        items={cartItems}
-        totalPrice={getTotalPrice()}
-        isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'tabs'}
-        onOpenCart={() => setIsCartOpen(true)}
-        onCheckout={handleCheckout}
-        currentAppSlug={undefined} // Generic delivery widget
-      />
+      {/* Bottom navigation removed - all functions available in top menu */}
     </div>
   );
 };

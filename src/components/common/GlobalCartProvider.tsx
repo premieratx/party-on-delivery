@@ -82,11 +82,8 @@ export const GlobalCartProvider: React.FC<GlobalCartProviderProps> = ({ children
         onClose={closeCart}
       />
       
-      {/* Always render swipe-up navigation */}
-      <SwipeUpNavigation
-        cartItemCount={getTotalItems()}
-        onOpenCart={openCart}
-      />
+      {/* Bottom navigation completely disabled as requested */}
+      {/* All navigation functionality available in top menus */}
     </GlobalCartContext.Provider>
   );
 };
