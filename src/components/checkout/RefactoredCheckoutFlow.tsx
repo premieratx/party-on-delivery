@@ -21,6 +21,7 @@ import { StripePaymentWrapper } from './StripePaymentWrapper';
 import { CleanCheckoutTotal } from './CleanCheckoutTotal';
 import { PromoCodeInput } from './PromoCodeInput';
 import { CheckoutSafeguards } from './CheckoutSafeguards';
+import { CheckoutFlowValidator } from './CheckoutFlowValidator';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -401,6 +402,11 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 onResetCheckout={handleEditAll}
                 onClearAllData={handleClearAllData}
               />
+              
+              {/* Development: Checkout Flow Validator */}
+              {process.env.NODE_ENV === 'development' && (
+                <CheckoutFlowValidator />
+              )}
             </div>
           </div>
         </div>
