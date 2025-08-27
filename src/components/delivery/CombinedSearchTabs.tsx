@@ -445,7 +445,10 @@ export const CombinedSearchTabs = ({
         
         {/* Search Bar Section - Only when search is active/expanded */}
         {showSearch && (isSearchExpanded || isSearchActive) && (
-          <div className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b">
+          <div 
+            className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b"
+            data-mobile-search-handler
+          >
             <div className="flex items-center justify-center">
               <AdvancedSearchBar
                 value={searchQuery}
@@ -459,7 +462,7 @@ export const CombinedSearchTabs = ({
                 }}
                 onSubmit={onSearchSubmit}
                 placeholder="Search products..."
-                className="flex-1 max-w-md"
+                className="flex-1 max-w-md mobile-search-input"
                 allProducts={allProducts}
                 autoFocus={isSearchExpanded}
               />
