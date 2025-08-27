@@ -12,6 +12,89 @@ export default function CoverPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Mobile fullscreen setup for cover pages
+  useEffect(() => {
+    // Add mobile-specific meta tags for fullscreen experience
+    const addMobileMetaTags = () => {
+      // Remove existing mobile meta tags
+      const existingMetas = document.querySelectorAll('meta[name="viewport"], meta[name="mobile-web-app-capable"], meta[name="apple-mobile-web-app-capable"], meta[name="apple-mobile-web-app-status-bar-style"]');
+      existingMetas.forEach(meta => meta.remove());
+
+      // Add enhanced mobile meta tags
+      const metas = [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'format-detection', content: 'telephone=no' },
+        { name: 'msapplication-tap-highlight', content: 'no' }
+      ];
+
+      metas.forEach(({ name, content }) => {
+        const meta = document.createElement('meta');
+        meta.name = name;
+        meta.content = content;
+        document.head.appendChild(meta);
+      });
+    };
+
+    // Add CSS to hide browser UI elements
+    const addMobileStyles = () => {
+      const existingStyle = document.getElementById('cover-page-mobile-styles');
+      if (existingStyle) existingStyle.remove();
+
+      const style = document.createElement('style');
+      style.id = 'cover-page-mobile-styles';
+      style.textContent = `
+        /* Hide browser UI on mobile for cover pages */
+        html, body {
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        /* Mobile fullscreen */
+        @media screen and (max-width: 768px) {
+          html {
+            height: 100vh;
+            height: -webkit-fill-available;
+          }
+          
+          body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            position: relative;
+            overflow-x: hidden;
+          }
+          
+          /* Hide scrollbars */
+          ::-webkit-scrollbar {
+            display: none;
+          }
+          
+          /* iOS Safari specific - hide address bar */
+          @supports (-webkit-touch-callout: none) {
+            body {
+              padding-bottom: env(safe-area-inset-bottom);
+              padding-top: env(safe-area-inset-top);
+            }
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    };
+
+    addMobileMetaTags();
+    addMobileStyles();
+
+    // Cleanup function
+    return () => {
+      const style = document.getElementById('cover-page-mobile-styles');
+      if (style) style.remove();
+    };
+  }, []);
+
   useEffect(() => {
     const loadPage = async () => {
       try {
