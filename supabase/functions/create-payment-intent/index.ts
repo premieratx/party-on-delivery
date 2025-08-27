@@ -110,6 +110,7 @@ serve(async (req) => {
       },
       metadata: {
         order_draft_id: draftData?.id || 'unknown',
+        cart_items: JSON.stringify(cartItems || []),  // 🔥 CRITICAL FIX: Add cart items as backup
         affiliate_code: (affiliateCode || '').substring(0, 100),
         customer_email: (customerInfo?.email || '').substring(0, 100),
         customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim().substring(0, 100),
