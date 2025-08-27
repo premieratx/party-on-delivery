@@ -124,7 +124,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
             onChange={handleInputChange}
             onFocus={() => setShowSuggestions(true)}
             placeholder={placeholder}
-            className="pl-10 pr-20"
+            className={`pl-10 pr-20 ${className.includes('mobile-search-input') ? 'mobile-search-input' : ''}`}
             autoComplete="off"
             role="combobox"
             aria-expanded={showSuggestions}
