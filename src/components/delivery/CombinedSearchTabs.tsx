@@ -272,41 +272,75 @@ export const CombinedSearchTabs = ({
   useEffect(() => {
     const handleMobileSearchActivate = (e: Event) => {
       console.log('📱 Mobile search activated from SearchIcon');
+      console.log('📱 Event details:', (e as CustomEvent)?.detail);
+      
+      // Prevent default and stop propagation
       e.preventDefault();
       e.stopPropagation();
       
-      // Force expansion and activation
+      // Force expansion and activation immediately
+      console.log('📱 Setting search expanded to true');
       setIsSearchExpanded(true);
       onSearchActiveChange?.(true);
       
-      // Focus the search input with multiple attempts
-      setTimeout(() => {
+      // Focus the search input with improved logic
+      const focusSearchInput = () => {
+        console.log('🔍 Attempting to focus search input...');
+        
+        // Try multiple selectors to find the search input
         const searchInput = searchInputRef.current ||
                            document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
                            document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
+                           document.querySelector('.mobile-search-input') as HTMLInputElement ||
                            document.querySelector('input[type="text"]') as HTMLInputElement;
         
+        console.log('🔍 Search input found:', !!searchInput, searchInput?.tagName, searchInput?.className);
+        
         if (searchInput) {
+          // Force focus and click
           searchInput.focus();
           searchInput.click();
-          console.log('🎯 Search input focused and clicked');
+          
+          // Also try scrolling into view
+          searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          console.log('✅ Search input focused successfully');
+          return true;
         } else {
-          console.log('❌ Search input not found for focus');
+          console.log('❌ Search input not found');
+          return false;
         }
-      }, 200);
+      };
+      
+      // Try immediate focus first
+      if (!focusSearchInput()) {
+        // Retry after a short delay to allow DOM updates
+        setTimeout(() => {
+          console.log('🔄 Retry 1 - focusing search input');
+          if (!focusSearchInput()) {
+            // Final retry with longer delay
+            setTimeout(() => {
+              console.log('🔄 Final retry - focusing search input');
+              focusSearchInput();
+            }, 300);
+          }
+        }, 150);
+      }
     };
 
-    // Listen on both document and the search handler element
+    // Listen on multiple targets for better compatibility
     const searchHandler = document.querySelector('[data-mobile-search-handler]');
     
     // Add listeners
     document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    window.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
     if (searchHandler) {
       searchHandler.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
     }
     
     return () => {
       document.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
+      window.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
       if (searchHandler) {
         searchHandler.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
       }

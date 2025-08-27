@@ -43,20 +43,9 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
     console.log('📱 Search handler found:', !!searchHandler);
     
     if (searchHandler) {
-      // Always trigger mobile search expansion in delivery app, regardless of variant
-      console.log('🚀 Dispatching mobileSearchActivate event');
+      console.log('🚀 Mobile search activation in delivery app context');
       
-      // Try multiple approaches to trigger search
-      
-      // 1. Direct function call approach - find and call the search activation function
-      const searchButton = searchHandler.querySelector('button[title="Search"]') as HTMLButtonElement;
-      if (searchButton) {
-        console.log('🎯 Direct search button found, triggering click');
-        searchButton.click();
-        return; // Exit early if we found the direct button
-      }
-      
-      // 2. Custom event approach
+      // FIXED: Dispatch custom event immediately - don't try to click the button that might disappear
       const customEvent = new CustomEvent('mobileSearchActivate', { 
         bubbles: true, 
         cancelable: true, 
@@ -67,18 +56,24 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
       document.dispatchEvent(customEvent);
       searchHandler.dispatchEvent(customEvent);
       window.dispatchEvent(customEvent);
+      console.log('📤 mobileSearchActivate event dispatched');
       
-      // 3. Direct DOM manipulation as fallback
-      const searchInput = searchHandler.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
-      if (searchInput) {
-        console.log('🎯 Direct input manipulation fallback');
-        searchInput.focus();
-        searchInput.click();
-        
-        // Trigger any parent components that might be listening
-        const focusEvent = new FocusEvent('focus', { bubbles: true });
-        searchInput.dispatchEvent(focusEvent);
-      }
+      // Also try direct input focus as immediate fallback
+      setTimeout(() => {
+        const searchInput = searchHandler.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
+                           searchHandler.querySelector('.mobile-search-input') as HTMLInputElement ||
+                           document.querySelector('input[type="text"]') as HTMLInputElement;
+                           
+        if (searchInput) {
+          console.log('🎯 Direct input focus fallback');
+          searchInput.focus();
+          searchInput.click();
+          
+          // Trigger focus event
+          const focusEvent = new FocusEvent('focus', { bubbles: true });
+          searchInput.dispatchEvent(focusEvent);
+        }
+      }, 100);
       
     } else {
       // Default navigation to search page
