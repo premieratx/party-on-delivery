@@ -395,7 +395,6 @@ All colors MUST be HSL.
 .animate-liquid-flow {
   animation: liquid-flow 3s ease-in-out infinite;
 }
-}
 
 /* Mobile green circle size reduction and quantity button alignment fixes */
 @media (max-width: 768px) {

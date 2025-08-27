@@ -89,196 +89,174 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         onClick={onClose}
       />
       
-      {/* Cart Sidebar - Fixed positioning independent of page scroll */}
+      {/* Cart Sidebar - Full height with sticky header/footer */}
       <div 
-        className="fixed right-0 top-0 w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate"
-        style={{ position: 'fixed', height: '100vh' }}
+        className="fixed right-0 top-0 w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate h-screen"
       >
         
         {/* Sticky Header */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 z-10">
-          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Your Cart</span>
-            <span className="sm:hidden">Cart</span>
-            <span className="text-sm font-normal">({totalProductCount})</span>
-          </h2>
-          <div className="flex gap-2">
-            {cartItems.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={emptyCart}
-                title="Empty Cart"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+        <div className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0 sticky top-0 z-20">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5" />
+            Your Cart
+            {totalProductCount > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
+                {totalProductCount}
+              </Badge>
             )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onClose}
-              className="h-8 w-8 sm:h-10 sm:w-10"
-            >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </Button>
-          </div>
+          </h2>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 hover:bg-muted/50 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </Button>
         </div>
 
-        {/* Enhanced Scrollable Content - Complete Scroll Isolation */}
+        {/* Scrollable Content */}
         <div 
-          ref={scrollContainerRef} 
-          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
-          style={{ 
-            /* Complete scroll isolation from main page */
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
-            position: 'relative',
-            zIndex: 1,
-            /* Ensure this container creates its own scroll context */
-            willChange: 'scroll-position'
-          }}
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto custom-scrollbar"
         >
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">{/* Removed bottom padding since checkout button is now separate */}
-            {cartItems.length === 0 ? (
-              <div className="text-center py-8 sm:py-12">
-                <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
-                <p className="text-muted-foreground text-sm sm:text-base">Your cart is empty</p>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Add some products to get started</p>
-              </div>
-            ) : (
-              cartItems.map((item) => (
-                <Card key={`${item.id}-${item.variant || ''}`} className="p-2 sm:p-3 shadow-sm">
-                  <div className="flex gap-2">
-                    <img 
-                      src={item.image} 
-                      alt={/* Clean alt text too */
-                        item.title
-                          .replace(/gid:\/\/shopify\/[^\s]+/g, '')
-                          .replace(/https?:\/\/[^\s]+/g, '')
-                          .replace(/\b\d{6,}\b/g, '')
-                          .replace(/shopify[^\s]*/gi, '')
-                          .replace(/\s+/g, ' ')
-                          .trim()
-                      }
-                      className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md bg-muted flex-shrink-0"
-                    />
-                    
-                    <div className="flex-1 space-y-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-medium text-xs leading-tight line-clamp-2">
-                            {/* Clean product title - remove GID URLs and Shopify identifiers */}
-                            {item.title
-                              .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
-                              .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs
-                              .replace(/www\.[^\s]+/g, '') // Remove www URLs
-                              .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
-                              .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
-                              .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
-                              .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
-                              .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
-                              .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
-                              .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
-                              .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
-                              .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
-                              .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
-                              .replace(/\s+/g, ' ') // Normalize whitespace
-                              .replace(/(\d+)\s*Pack/gi, '$1pk')
-                              .replace(/(\d+)\s*oz/gi, '$1oz')
-                              .replace(/(\d+)\s*ml/gi, '$1ml')
-                              .replace(/(\d+)\s*cl/gi, '$1cl')
-                              .replace(/(\d+)\s*liter/gi, '$1L')
-                              .replace(/(\d+)\s*count/gi, '$1ct')
-                              .trim()
-                              .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
-                            }
-                          </h4>
-                          <p className="product-price text-primary font-semibold text-xs">${item.price}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-                          onClick={() => removeItem(item.id, item.variant)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+          {cartItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+              <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Your cart is empty</h3>
+              <p className="text-muted-foreground mb-4">Add some delicious items to get started!</p>
+              <Button 
+                onClick={onClose}
+                variant="outline"
+                className="w-full max-w-xs"
+              >
+                Continue Shopping
+              </Button>
+            </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              {/* Cart Items */}
+              {cartItems.map((item) => (
+                <Card key={`${item.id}-${item.variant || 'default'}`} className="overflow-hidden">
+                  <CardContent className="p-3">
+                    <div className="flex gap-3">
+                      {/* Product Image */}
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {item.image ? (
+                          <img 
+                            src={item.image} 
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <ShoppingCart className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
                       </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => updateQuantity(item.id, item.variant, item.quantity - 1)}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        
-                        <Badge variant="secondary" className="min-w-[28px] justify-center text-xs px-2">
-                          {item.quantity}
-                        </Badge>
-                        
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => updateQuantity(item.id, item.variant, item.quantity + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
 
-          {/* Order Summary - Scrollable with content */}
-          {cartItems.length > 0 && (
-            <div className="border-t p-4 bg-muted/30">
-              <h3 className="font-semibold mb-3">Order Summary</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>${formatPrice(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
-                  <span>${formatPrice(deliveryFee)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sales Tax (8.25%)</span>
-                  <span>${formatPrice(salesTax)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>${formatPrice(finalTotal)}</span>
-                </div>
-                
-                 {/* Checkout Button - Positioned directly below Total */}
-                <div className="pt-4 relative">
-                  <Button 
-                    className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl animate-heartbeat overflow-hidden relative"
-                    size="lg" 
-                    onClick={handleCheckout}
-                  >
-                    {/* Liquid flowing background effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-liquid-flow -translate-x-full"></div>
-                    <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2 relative z-10" />
-                    <span className="hidden sm:inline relative z-10">Proceed to Checkout - </span>
-                    <span className="sm:hidden relative z-10">Checkout - </span>
-                    <span className="relative z-10">${formatPrice(finalTotal)}</span>
-                  </Button>
-                </div>
-              </div>
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm leading-tight truncate">{item.title}</h3>
+                        {item.variant && item.variant !== 'default' && (
+                          <p className="text-xs text-muted-foreground truncate mt-1">{item.variant}</p>
+                        )}
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="font-semibold text-sm">{formatPrice(safeNumber(item.price))}</span>
+                          
+                          {/* Quantity Controls */}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => updateQuantity(item.id, item.variant, Math.max(0, safeNumber(item.quantity) - 1))}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center text-sm font-medium">
+                              {safeNumber(item.quantity)}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => updateQuantity(item.id, item.variant, safeNumber(item.quantity) + 1)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Remove Button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
+                        onClick={() => removeItem(item.id, item.variant)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </div>
-        
+
+        {/* Sticky Footer with Order Summary and Checkout */}
+        {cartItems.length > 0 && (
+          <div className="border-t bg-background flex-shrink-0 sticky bottom-0 z-20">
+            <div className="p-4 space-y-3">
+              {/* Order Summary */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Delivery Fee</span>
+                  <span>{formatPrice(deliveryFee)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Sales Tax</span>
+                  <span>{formatPrice(salesTax)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold text-base">
+                  <span>Total</span>
+                  <span>{formatPrice(finalTotal)}</span>
+                </div>
+              </div>
+
+              {/* Checkout Button */}
+              <Button 
+                className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl animate-heartbeat overflow-hidden relative"
+                size="lg" 
+                onClick={handleCheckout}
+              >
+                {/* Liquid flowing background effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-liquid-flow -translate-x-full"></div>
+                <Check className="w-5 h-5 mr-2 relative z-10" />
+                <span className="relative z-10">Proceed to Checkout - {formatPrice(finalTotal)}</span>
+              </Button>
+
+              {/* Clear Cart Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={emptyCart}
+                className="w-full text-xs hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                Clear Cart
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </RobustCartErrorBoundary>
   );
