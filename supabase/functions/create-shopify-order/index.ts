@@ -324,22 +324,43 @@ serve(async (req) => {
         }
       }
 
-      // Fallback if still empty - USE EVERYTHING WE HAVE
-      if (!fullAddressString) {
+      // Improved fallback system - USE EVERYTHING WE HAVE
+      if (!fullAddressString || fullAddressString === '{}') {
         // Try every possible address field from metadata
-        fullAddressString = metadata.delivery_address || 
-                           metadata.address || 
-                           metadata.customer_address ||
-                           metadata.shipping_address ||
-                           JSON.stringify(metadata.delivery_address || {}) ||
-                           'FALLBACK: Raw metadata available but address parsing failed';
-        street = fullAddressString;
+        const possibleAddresses = [
+          metadata.delivery_address,
+          metadata.address,
+          metadata.customer_address,
+          metadata.shipping_address
+        ];
+        
+        for (const addr of possibleAddresses) {
+          if (addr && typeof addr === 'string' && addr.trim() && addr !== '{}') {
+            fullAddressString = addr.trim();
+            street = fullAddressString;
+            break;
+          } else if (addr && typeof addr === 'object') {
+            const objStr = JSON.stringify(addr);
+            if (objStr !== '{}' && objStr !== 'null') {
+              fullAddressString = objStr;
+              street = fullAddressString;
+              break;
+            }
+          }
+        }
+        
+        // Final fallback if still nothing
+        if (!fullAddressString || fullAddressString === '{}') {
+          fullAddressString = 'Address not provided - check metadata';
+          street = fullAddressString;
+        }
         
         // Log this so we can see what we're missing
-        logStep("CRITICAL: Using ultimate fallback for address", {
+        logStep("CRITICAL: Using fallback for address", {
           attempted_address: fullAddressString,
           all_metadata_keys: Object.keys(metadata),
-          full_metadata: metadata
+          tried_addresses: possibleAddresses,
+          final_result: fullAddressString
         });
       }
 
@@ -490,44 +511,57 @@ serve(async (req) => {
       }
     }
 
-    // Prepare line items for Shopify
-    const lineItems = [];
-    
-    for (const item of cartItems) {
-      const lineItem: any = {
-        title: item.title || item.name || 'Unknown Item',
-        price: item.price.toString(),
-        quantity: item.quantity || 1,
-        requires_shipping: true
-      };
+    // Create line items - products + tip as separate line item (per documentation standard)
+    const lineItems = [
+      // Product line items
+      ...cartItems.map(item => {
+        const lineItem: any = {
+          title: item.title || item.name || 'Unknown Item',
+          price: item.price.toString(),
+          quantity: item.quantity || 1,
+          requires_shipping: true
+        };
 
-      // Handle Shopify product/variant IDs (clean up GIDs)
-      if (item.id && typeof item.id === 'string') {
-        if (item.id.includes('gid://shopify/Product/')) {
-          const productId = item.id.replace('gid://shopify/Product/', '');
-          if (!isNaN(parseInt(productId))) {
-            lineItem.product_id = parseInt(productId);
+        // Handle Shopify product/variant IDs (clean up GIDs)
+        if (item.id && typeof item.id === 'string') {
+          if (item.id.includes('gid://shopify/Product/')) {
+            const productId = item.id.replace('gid://shopify/Product/', '');
+            if (!isNaN(parseInt(productId))) {
+              lineItem.product_id = parseInt(productId);
+            }
           }
         }
-      }
 
-      if (item.variant && typeof item.variant === 'string') {
-        if (item.variant.includes('gid://shopify/ProductVariant/')) {
-          const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
-          if (!isNaN(parseInt(variantId))) {
-            lineItem.variant_id = parseInt(variantId);
-            delete lineItem.product_id; // Use variant_id instead
+        if (item.variant && typeof item.variant === 'string') {
+          if (item.variant.includes('gid://shopify/ProductVariant/')) {
+            const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
+            if (!isNaN(parseInt(variantId))) {
+              lineItem.variant_id = parseInt(variantId);
+              delete lineItem.product_id; // Use variant_id instead
+            }
           }
         }
-      }
 
-      lineItems.push(lineItem);
-    }
+        return lineItem;
+      }),
+      // Driver tip as separate line item (makes it appear in main order breakdown)
+      ...(orderAmounts.tip_amount > 0 ? [{
+        title: "Driver Tip",
+        price: orderAmounts.tip_amount.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false,
+        gift_card: false
+      }] : [])
+    ];
 
-    logStep("Line items prepared (PRODUCTS ONLY)", { 
-      itemCount: lineItems.length,
-      productSubtotal: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
-      note: "Only actual products included as line items - delivery fee, tip, and tax handled separately"
+    logStep("Line items prepared (PRODUCTS + TIP)", { 
+      productItemCount: cartItems.length,
+      totalLineItems: lineItems.length,
+      hasTipLineItem: lineItems.some(item => item.title === "Driver Tip"),
+      productSubtotal: cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
+      tipAmount: orderAmounts.tip_amount,
+      note: "Products + Driver tip as separate line item (per documentation standard)"
     });
 
     // Extract affiliate code if present
@@ -583,21 +617,7 @@ serve(async (req) => {
           code: "LOCAL_DELIVERY"
         }] : [],
         
-        // Tip handling - Use Shopify's NATIVE tip system (same as POS transactions)
-        ...(orderAmounts.tip_amount > 0 ? {
-          tip_payment_gateway: "stripe",
-          tip_payment_method: "credit_card", 
-          current_total_additional_fees_set: {
-            shop_money: {
-              amount: orderAmounts.tip_amount.toFixed(2),
-              currency_code: "USD"
-            },
-            presentment_money: {
-              amount: orderAmounts.tip_amount.toFixed(2),
-              currency_code: "USD" 
-            }
-          }
-        } : {}),
+        // NOTE: Driver tip is now handled as line item above (per documentation standard)
         
         // Custom attributes - delivery details displayed prominently
         note_attributes: [
@@ -675,9 +695,13 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
       }
     };
 
-    logStep("Creating Shopify order", { 
+    logStep("Creating Shopify order with fixed structure", { 
       totalAmount: orderAmounts.total_amount,
-      lineItemCount: lineItems.length
+      lineItemCount: lineItems.length,
+      hasTipLineItem: lineItems.some(item => item.title === "Driver Tip"),
+      tipAmount: orderAmounts.tip_amount,
+      deliveryAddress: fullAddressString,
+      addressComponents: { street, city, state, zip }
     });
 
     try {
