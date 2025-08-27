@@ -420,7 +420,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
             id: index.toString(),
             title: tab.name,
             handle: tab.collection?.handle || '',
-            icon: tab.hasProducts ? `${tab.collection?.products.length || 0}` : '0'
+            icon: '' // No icons to prevent overlap
           }))}
           selectedCategory={activeTab}
           onTabSelect={(index) => {

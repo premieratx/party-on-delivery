@@ -115,7 +115,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
         id: tab.collection_handle,
         title: tab.name,
         handle: tab.collection_handle,
-        icon: tab.icon || '📦',
+        icon: '', // No icons to prevent overlap
         isSearch: false
       }));
     }
@@ -454,7 +454,6 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
           <>
             {currentTab && (
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                {currentTab.icon && <span>{currentTab.icon}</span>}
                 {currentTab.title} ({displayProducts.length})
               </h3>
             )}

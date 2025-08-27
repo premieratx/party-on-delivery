@@ -111,14 +111,14 @@ export const CombinedSearchTabs = ({
     const availableWidth = containerWidth - totalSpacing;
     const averageWidthPerTab = availableWidth / tabCount;
     
-    // Calculate content width requirements for each mode
+    // Calculate content width requirements for each mode (NO ICONS)
     const tabMeasurements = tabs.map(tab => {
       const charCount = tab.title.length;
       return {
-        full: Math.max(charCount * 8 + 64, 100), // 8px per char + icon + generous padding
-        compact: Math.max(charCount * 7 + 48, 80), // 7px per char + icon + padding
-        minimal: Math.max(charCount * 6 + 36, 60), // 6px per char + icon + minimal padding
-        iconOnly: 36 // Just icon + minimal padding
+        full: Math.max(charCount * 9 + 32, 80), // 9px per char + padding (no icon)
+        compact: Math.max(charCount * 8 + 24, 70), // 8px per char + padding (no icon)
+        minimal: Math.max(charCount * 7 + 16, 60), // 7px per char + minimal padding (no icon)
+        iconOnly: Math.max(charCount * 6 + 12, 50) // 6px per char + minimal padding (no icon)
       };
     });
 
@@ -175,42 +175,26 @@ export const CombinedSearchTabs = ({
     let sizeClasses = "";
     switch (tabLayout) {
       case 'full':
-        sizeClasses = "text-sm px-4 py-2.5 h-10 gap-2 min-w-[6rem]";
+        sizeClasses = "text-sm px-6 py-2.5 h-10 min-w-[6rem]";
         break;
       case 'compact':
-        sizeClasses = "text-sm px-3 py-2 h-9 gap-1.5 min-w-[4.5rem]";
+        sizeClasses = "text-sm px-4 py-2 h-9 min-w-[4.5rem]";
         break;
       case 'minimal':
-        sizeClasses = "text-xs px-2 py-1.5 h-8 gap-1 min-w-[3rem]";
+        sizeClasses = "text-xs px-3 py-1.5 h-8 min-w-[3rem]";
         break;
       case 'icon-only':
-        sizeClasses = "text-xs px-1 py-2 h-8 gap-0.5 min-w-[2.5rem]";
+        sizeClasses = "text-xs px-2 py-1.5 h-8 min-w-[2.5rem]";
         break;
       default:
-        sizeClasses = "text-sm px-3 py-2 h-9 gap-1.5";
+        sizeClasses = "text-sm px-4 py-2 h-9";
     }
     
     return `${baseClasses} ${selectedClasses} ${sizeClasses}`;
   };
 
-  // Enhanced icon sizing with better proportions
-  const getIconSize = () => {
-    switch (tabLayout) {
-      case 'full':
-        return 'w-5 h-5 text-lg'; // 20px
-      case 'compact':
-        return 'w-4 h-4 text-base'; // 16px
-      case 'minimal':
-        return 'w-4 h-4 text-sm'; // 16px (keep readable)
-      case 'icon-only':
-        return 'w-4 h-4 text-base'; // 16px (keep readable)
-      default:
-        return 'w-4 h-4 text-sm';
-    }
-  };
-
+  // Always show text without icons
   const shouldShowText = () => {
-    // Always show text on mobile, even in compact modes
     return true;
   };
 
@@ -307,19 +291,24 @@ export const CombinedSearchTabs = ({
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
-            {/* Tabs */}
-            <div className="flex space-x-2 overflow-x-auto scrollbar-hide flex-1">
-              {tabs.map((tab, index) => (
-                <Button
-                  key={tab.id}
-                  variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap px-4 py-2 h-10 min-w-fit flex-shrink-0 transition-all duration-200"
-                  onClick={() => onTabSelect(index)}
-                >
-                  <span className="mr-2 text-lg">{tab.icon || '📦'}</span>
-                  <span>{tab.title}</span>
-                </Button>
-              ))}
+            {/* Tabs with scroll indicator */}
+            <div className="relative flex-1">
+              <div className="flex space-x-2 overflow-x-auto scrollbar-hide" 
+                   style={{ scrollSnapType: 'x mandatory' }}>
+                {tabs.map((tab, index) => (
+                  <Button
+                    key={tab.id}
+                    variant={selectedCategory === index ? "default" : "ghost"}
+                    className="whitespace-nowrap px-6 py-2 h-10 min-w-fit flex-shrink-0 transition-all duration-200"
+                    onClick={() => onTabSelect(index)}
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    <span className="font-medium">{tab.title}</span>
+                  </Button>
+                ))}
+              </div>
+              {/* Scroll indicator */}
+              <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
             
             {/* Search Bar with Cart and Checkout - Prioritize tabs visibility */}
@@ -413,32 +402,32 @@ export const CombinedSearchTabs = ({
           </div>
         )}
 
-        {/* Tabs Section - Always visible on mobile */}
+        {/* Tabs Section with improved responsive design */}
         <div className="container mx-auto px-2 py-1.5 bg-background border-b">
           <div className="flex items-center">
-              {/* Enhanced Responsive Tabs - Show 4.5 tabs with scrolling */}
+            {/* Enhanced Responsive Tabs - No icons, better text spacing */}
+            <div className="relative w-full">
               <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide w-full"
+                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1"
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'
                 }}
-                 onScroll={() => {
-                   if (isMobileDevice) {
-                     unifiedHideKeyboard();
-                     // Force immediate blur of any active input
-                     const activeEl = document.activeElement;
-                     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-                       (activeEl as HTMLElement).blur();
-                     }
-                   }
-                 }}
-                 onTouchStart={() => {
-                   if (isMobileDevice) {
-                     unifiedHideKeyboard();
-                   }
-                 }}
+                onScroll={() => {
+                  if (isMobileDevice) {
+                    unifiedHideKeyboard();
+                    const activeEl = document.activeElement;
+                    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                      (activeEl as HTMLElement).blur();
+                    }
+                  }
+                }}
+                onTouchStart={() => {
+                  if (isMobileDevice) {
+                    unifiedHideKeyboard();
+                  }
+                }}
               >
                 {tabs.map((tab, index) => (
                   <Button
@@ -447,20 +436,24 @@ export const CombinedSearchTabs = ({
                     onClick={() => onTabSelect(index)}
                     title={tab.title}
                     style={{ 
-                      flex: '0 0 calc(22.5% - 3px)', // Show 4.5 tabs (100% / 4.5 = ~22.2%)
-                      minWidth: 'calc(22.5% - 3px)',
+                      flex: '0 0 auto', // Natural width with no forced sizing
+                      minWidth: 'max-content', // Allow natural text width
                       scrollSnapAlign: 'start'
                     }}
                   >
-                    {/* Icon and full text - no truncation */}
-                    <span className="text-xs mr-1 flex-shrink-0" style={{ fontSize: '10px' }}>
-                      {tab.icon || '📦'}
-                    </span>
-                    <span className="font-medium text-xs leading-tight whitespace-nowrap">
+                    {/* Only text - no icons to prevent overlap */}
+                    <span className="font-medium text-xs leading-tight whitespace-nowrap px-1">
                       {tab.title}
                     </span>
                   </Button>
                 ))}
+              </div>
+              
+              {/* Animated scroll indicator */}
+              <div className="absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none animate-pulse" />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground animate-bounce">
+                →
+              </div>
             </div>
           </div>
         </div>

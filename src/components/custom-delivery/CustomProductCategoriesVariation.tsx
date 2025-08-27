@@ -56,25 +56,9 @@ interface ShopifyCollection {
   products: ShopifyProduct[];
 }
 
-// Helper function to get tab icon
+// NO ICONS - returning empty string to prevent overlap
 const getTabIcon = (iconName: string) => {
-  switch (iconName.toLowerCase()) {
-    case 'beer':
-    case 'tailgate beer':
-      return '🍺';
-    case 'cocktail':
-    case 'cocktails':
-      return '🍸';
-    case 'spirits':
-      return '🥃';
-    case 'seltzers':
-    case 'seltzer':
-      return '🥤';
-    case 'party supplies':
-      return '🎉';
-    default:
-      return '📦';
-  }
+  return ''; // No icons to prevent text overlap
 };
 
 export function CustomProductCategories({
@@ -302,7 +286,6 @@ export function CustomProductCategories({
                 onClick={() => setActiveTab(tab.id)}
                 className="shrink-0 flex items-center gap-1"
               >
-                {typeof tab.icon === 'string' ? tab.icon : <tab.icon className="h-4 w-4" />}
                 {tab.name}
               </Button>
             ))}
