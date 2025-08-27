@@ -245,16 +245,35 @@ export const CombinedSearchTabs = ({
 
   // Listen for mobile search activation from SearchIcon component
   useEffect(() => {
-    const handleMobileSearchActivate = () => {
+    const handleMobileSearchActivate = (e: Event) => {
       console.log('📱 Mobile search activated from SearchIcon');
+      e.preventDefault();
       setIsSearchExpanded(true);
       onSearchActiveChange?.(true);
+      
+      // Focus the search input after a short delay to ensure it's rendered
+      setTimeout(() => {
+        const searchInput = document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          console.log('🎯 Search input focused');
+        }
+      }, 100);
     };
 
+    // Listen on both document and the search handler element
     document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    
+    const searchHandler = document.querySelector('[data-mobile-search-handler]');
+    if (searchHandler) {
+      searchHandler.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    }
     
     return () => {
       document.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
+      if (searchHandler) {
+        searchHandler.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
+      }
     };
   }, [onSearchActiveChange]);
 
