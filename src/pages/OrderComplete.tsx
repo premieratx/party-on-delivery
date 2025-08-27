@@ -138,7 +138,7 @@ const OrderComplete = () => {
           
         } else {
           // No session data available - show basic confirmation
-          console.log("🔥 NO SESSION DATA - SHOWING BASIC CONFIRMATION");
+          // console.log("🔥 NO SESSION DATA - SHOWING BASIC CONFIRMATION");
           setOrderData({
             order_number: orderNumber || "Processing...",
             line_items: [],

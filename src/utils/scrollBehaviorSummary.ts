@@ -29,7 +29,7 @@
 // Simple performance tracking without Supabase errors
 export const logScrollBehaviorEvent = (event: string, data: any) => {
   try {
-    console.log(`📊 Scroll Behavior: ${event}`, data);
+    // console.log(`📊 Scroll Behavior: ${event}`, data);
     localStorage.setItem('last_scroll_event', JSON.stringify({
       event,
       data,

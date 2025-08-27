@@ -173,7 +173,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // ONLY use Shopify collections from delivery app config - NO defaults
   const tabs = useMemo(() => {
     if (collectionsConfig?.tabs && collectionsConfig.tabs.length > 0) {
-      console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
+      // console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
       return collectionsConfig.tabs.map((tab, index) => {
         return {
           id: tab.collection_handle || `tab-${index}`,
@@ -195,7 +195,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     ultraFastSearch.warmUpCache().catch(console.error);
     
     const collectionHandles = tabs.map(tab => tab.handle);
-    console.log('🚀 Preloading all collections:', collectionHandles);
+    // console.log('🚀 Preloading all collections:', collectionHandles);
     preloadMultipleCollections(collectionHandles);
   }, [tabs, preloadMultipleCollections]);
 

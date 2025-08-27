@@ -101,17 +101,17 @@ export const useSessionTracking = () => {
 
   const storeSessionId = (sessionId: string) => {
     localStorage.setItem('lastOrderSessionId', sessionId);
-    console.log('🔥 SESSION TRACKING: Stored session ID:', sessionId);
+    // console.log('🔥 SESSION TRACKING: Stored session ID:', sessionId);
   };
 
   const storePaymentIntent = (paymentIntentId: string) => {
     localStorage.setItem('lastPaymentIntent', paymentIntentId);
-    console.log('🔥 SESSION TRACKING: Stored payment intent:', paymentIntentId);
+    // console.log('🔥 SESSION TRACKING: Stored payment intent:', paymentIntentId);
   };
 
   const storeCartTotal = (total: number) => {
     localStorage.setItem('lastCartTotal', total.toString());
-    console.log('🔥 SESSION TRACKING: Stored cart total:', total);
+    // console.log('🔥 SESSION TRACKING: Stored cart total:', total);
   };
 
   return {
