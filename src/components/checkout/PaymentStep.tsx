@@ -11,6 +11,9 @@ import { CartItem } from '../DeliveryWidget';
 import { CustomerInfo } from '@/hooks/useCustomerInfo';
 import { handlePaymentError, safeSupabaseInvoke, PaymentIntentResponse } from '@/utils/apiErrorHandler';
 
+// CACHE BUSTER: Force new deployment
+console.log('🚀 PAYMENT STEP LOADED - BUILD 2025-01-27-17:20:00 🚀');
+
 interface PaymentStepProps {
   cartItems: CartItem[];
   subtotal: number;
