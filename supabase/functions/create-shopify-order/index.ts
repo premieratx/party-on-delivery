@@ -523,7 +523,20 @@ serve(async (req) => {
     // Create Shopify order with EXACT structure matching screenshot
     const orderData = {
       order: {
-        line_items: lineItems, // ONLY actual products - no fees/tips/tax
+        // ONLY actual products as line items (for subtotal calculation)
+        line_items: [
+          ...lineItems,
+          // Add driver tip as a separate line item (this makes it show as separate "Tip" line)
+          ...(orderAmounts.tip_amount > 0 ? [{
+            title: "Driver Tip",
+            price: orderAmounts.tip_amount.toFixed(2),
+            quantity: 1,
+            requires_shipping: false,
+            taxable: false,
+            gift_card: false
+          }] : [])
+        ],
+        
         customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
         billing_address: {
           first_name: firstName,
@@ -550,30 +563,21 @@ serve(async (req) => {
         email: customerEmail,
         phone: customerPhone,
         
-        // CORRECT SHOPIFY ORDER STRUCTURE - subtotal is ONLY product prices
-        subtotal_price: orderAmounts.subtotal.toFixed(2),  // Products only
-        total_price: orderAmounts.total_amount.toFixed(2),  // Full total including tip
+        // EXACT BREAKDOWN - Products subtotal only (without tip)
+        subtotal_price: orderAmounts.subtotal.toFixed(2),  // Products only ($441.88)
+        total_price: orderAmounts.total_amount.toFixed(2),  // Full total ($560.47)
         
-        // Tax lines - BOTH sales tax AND driver tip (displayed as separate line items)
-        tax_lines: [
-          // Sales tax line
-          ...(orderAmounts.sales_tax > 0 ? [{
-            title: "Sales Tax 8.25%", 
-            price: orderAmounts.sales_tax.toFixed(2),
-            rate: 0.0825
-          }] : []),
-          // Driver tip as separate line item (appears in totals section)
-          ...(orderAmounts.tip_amount > 0 ? [{
-            title: "Driver Tip",
-            price: orderAmounts.tip_amount.toFixed(2),
-            rate: 0.0 // Not a percentage, just a flat amount
-          }] : [])
-        ],
+        // Tax lines - ONLY sales tax (no tip here)
+        tax_lines: orderAmounts.sales_tax > 0 ? [{
+          title: "Sales Tax 8.25%", 
+          price: orderAmounts.sales_tax.toFixed(2),  // $38.59
+          rate: 0.0825
+        }] : [],
         
-        // Shipping lines - ONLY delivery fee (this is the "shipping" attribute in checkout)
+        // Shipping lines - ONLY delivery fee ($30.00)
         shipping_lines: orderAmounts.delivery_fee > 0 ? [{
           title: "Delivery Fee",
-          price: orderAmounts.delivery_fee.toFixed(2),
+          price: orderAmounts.delivery_fee.toFixed(2),  // $30.00
           code: "LOCAL_DELIVERY"
         }] : [],
         
