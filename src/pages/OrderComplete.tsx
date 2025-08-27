@@ -39,7 +39,7 @@ const OrderComplete = () => {
         const checkoutData = sessionStorage.getItem('checkout-completion-data');
         if (checkoutData) {
           const parsedData = JSON.parse(checkoutData);
-          console.log("🔥 ✅ USING SESSION DATA:", parsedData);
+          // console.log("🔥 ✅ USING SESSION DATA:", parsedData);
           
           // Create order data from checkout session - INSTANT DISPLAY
           const instantOrderData = {
