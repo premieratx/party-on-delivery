@@ -239,6 +239,20 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         throw new Error('Cart cannot be empty');
       }
       
+      // ENHANCED DEBUGGING: Check what address data we actually have
+      console.log('🔍 Payment Form Address Debug:', {
+        deliveryInfoAddress: deliveryInfo.address,
+        deliveryInfoType: typeof deliveryInfo.address,
+        deliveryInfoLength: deliveryInfo.address ? deliveryInfo.address.length : 0,
+        isEmpty: !deliveryInfo.address || deliveryInfo.address.trim() === '',
+        fullDeliveryInfo: deliveryInfo
+      });
+
+      // Validate address before payment
+      if (!deliveryInfo.address || deliveryInfo.address.trim() === '') {
+        throw new Error('Delivery address is required but not provided. Please go back and confirm your address.');
+      }
+
       // Log the data being sent for debugging
       console.log('💡 Sending payment data:', {
         customerInfo: {

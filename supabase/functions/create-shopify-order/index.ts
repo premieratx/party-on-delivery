@@ -324,30 +324,57 @@ serve(async (req) => {
         }
       }
 
-      // Improved fallback system - USE EVERYTHING WE HAVE
-      if (!fullAddressString || fullAddressString === '{}') {
-        // Try every possible address field from metadata
+      // Enhanced fallback system - check ALL possible sources
+      if (!fullAddressString || fullAddressString === '{}' || fullAddressString.trim() === '') {
+        
+        logStep("CRITICAL: Primary address empty, checking order draft and all metadata sources", {
+          orderDraftId: metadata.order_draft_id,
+          allMetadataKeys: Object.keys(metadata)
+        });
+
+        // STEP 1: Try all possible metadata fields
         const possibleAddresses = [
           metadata.delivery_address,
           metadata.address,
           metadata.customer_address,
-          metadata.shipping_address
+          metadata.shipping_address,
+          metadata.billing_address
         ];
         
         for (const addr of possibleAddresses) {
           if (addr && typeof addr === 'string' && addr.trim() && addr !== '{}') {
             fullAddressString = addr.trim();
             street = fullAddressString;
+            logStep("✅ Found address in metadata fallback", { field: 'string', address: fullAddressString });
             break;
           } else if (addr && typeof addr === 'object') {
             const objStr = JSON.stringify(addr);
             if (objStr !== '{}' && objStr !== 'null') {
               fullAddressString = objStr;
               street = fullAddressString;
+              logStep("✅ Found address object in metadata fallback", { address: fullAddressString });
               break;
             }
           }
         }
+
+        // STEP 2: Final fallback - construct meaningful placeholder
+        if (!fullAddressString || fullAddressString === '{}' || fullAddressString.trim() === '') {
+          const customerParts = [
+            customerName || 'Customer',
+            customerEmail ? `(${customerEmail})` : ''
+          ].filter(Boolean);
+          
+          fullAddressString = `Address required - Customer: ${customerParts.join(' ')} - Please contact customer for address`;
+          street = fullAddressString;
+          
+          logStep("🚨 FINAL FALLBACK: Using customer info as address placeholder", { 
+            fallbackAddress: fullAddressString,
+            customerName,
+            customerEmail 
+          });
+        }
+      }
         
         // Final fallback if still nothing
         if (!fullAddressString || fullAddressString === '{}') {
