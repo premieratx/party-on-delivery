@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface SwipeUpNavigationOptions {
   threshold?: number;
@@ -7,11 +8,19 @@ interface SwipeUpNavigationOptions {
 
 export function useSwipeUpNavigation(options: SwipeUpNavigationOptions = {}) {
   const { threshold = 50, minSwipeDistance = 100 } = options;
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [startY, setStartY] = useState<number | null>(null);
   const [currentY, setCurrentY] = useState<number | null>(null);
 
+  // Disable navigation during checkout to prevent interference
+  const isCheckoutFlow = location.pathname === '/checkout' || location.pathname.includes('/checkout');
+  const shouldDisableNavigation = isCheckoutFlow;
+
   const handleTouchStart = useCallback((e: TouchEvent) => {
+    // Completely disable during checkout
+    if (shouldDisableNavigation) return;
+    
     // Only trigger from bottom 80px of screen
     const windowHeight = window.innerHeight;
     const touchY = e.touches[0].clientY;
@@ -20,10 +29,11 @@ export function useSwipeUpNavigation(options: SwipeUpNavigationOptions = {}) {
       setStartY(touchY);
       setCurrentY(touchY);
     }
-  }, []);
+  }, [shouldDisableNavigation]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (startY === null) return;
+    // Completely disable during checkout
+    if (shouldDisableNavigation || startY === null) return;
     
     const touchY = e.touches[0].clientY;
     setCurrentY(touchY);
@@ -33,10 +43,11 @@ export function useSwipeUpNavigation(options: SwipeUpNavigationOptions = {}) {
     if (swipeDistance > threshold && !isVisible) {
       setIsVisible(true);
     }
-  }, [startY, threshold, isVisible]);
+  }, [startY, threshold, isVisible, shouldDisableNavigation]);
 
   const handleTouchEnd = useCallback(() => {
-    if (startY === null || currentY === null) return;
+    // Completely disable during checkout
+    if (shouldDisableNavigation || startY === null || currentY === null) return;
     
     const swipeDistance = startY - currentY;
     
@@ -47,13 +58,19 @@ export function useSwipeUpNavigation(options: SwipeUpNavigationOptions = {}) {
     
     setStartY(null);
     setCurrentY(null);
-  }, [startY, currentY, minSwipeDistance]);
+  }, [startY, currentY, minSwipeDistance, shouldDisableNavigation]);
 
   const hideNavigation = useCallback(() => {
     setIsVisible(false);
   }, []);
 
   useEffect(() => {
+    // Don't even add event listeners during checkout
+    if (shouldDisableNavigation) {
+      setIsVisible(false);
+      return;
+    }
+    
     const isMobile = window.innerWidth <= 768;
     if (!isMobile) return;
 
@@ -66,11 +83,12 @@ export function useSwipeUpNavigation(options: SwipeUpNavigationOptions = {}) {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, shouldDisableNavigation]);
 
   return {
-    isVisible,
+    isVisible: shouldDisableNavigation ? false : isVisible,
     hideNavigation,
-    setIsVisible
+    setIsVisible: shouldDisableNavigation ? () => {} : setIsVisible,
+    isDisabled: shouldDisableNavigation
   };
 }

@@ -15,7 +15,12 @@ export const SwipeUpNavigation: React.FC<SwipeUpNavigationProps> = ({
   onOpenCart
 }) => {
   const navigate = useNavigate();
-  const { isVisible, hideNavigation } = useSwipeUpNavigation();
+  const { isVisible, hideNavigation, isDisabled } = useSwipeUpNavigation();
+
+  // Completely hide during checkout to prevent any interference
+  if (isDisabled) {
+    return null;
+  }
 
   if (!isVisible) {
     return (
