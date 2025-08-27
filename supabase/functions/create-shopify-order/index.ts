@@ -11,60 +11,12 @@ serve(async (req) => {
   }
 
   try {
-    console.log("🚀 CREATE SHOPIFY ORDER - Starting...");
-    console.log("🔍 REQUEST DEBUG:", {
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries())
-    });
+    console.log("🚀 CREATE SHOPIFY ORDER - FRESH START");
     
-    let body;
-    try {
-      body = await req.json();
-      console.log("📦 FULL REQUEST BODY:", JSON.stringify(body, null, 2));
-      console.log("📦 BODY TYPE CHECK:", {
-        bodyType: typeof body,
-        isObject: typeof body === 'object',
-        isArray: Array.isArray(body),
-        keys: body ? Object.keys(body) : 'no keys'
-      });
-    } catch (jsonError) {
-      console.error("❌ JSON PARSE ERROR:", jsonError.message);
-      throw new Error("Invalid JSON in request body");
-    }
-    
-    console.log("🔍 ADDRESS DEBUG:", {
-      deliveryInfo: body.deliveryInfo,
-      addressType: typeof body.deliveryInfo?.address,
-      addressValue: body.deliveryInfo?.address,
-      willUse: typeof body.deliveryInfo?.address === 'string' 
-        ? body.deliveryInfo.address 
-        : (body.deliveryInfo?.address?.address || "Address Required")
-    });
+    const body = await req.json();
+    console.log("📦 REQUEST BODY:", JSON.stringify(body, null, 2));
 
-    console.log("🔍 DESTRUCTURING DEBUG:", {
-      hasPaymentIntentId: !!body.paymentIntentId,
-      hasCartItems: !!body.cartItems,
-      hasCustomerInfo: !!body.customerInfo,
-      hasDeliveryInfo: !!body.deliveryInfo,
-      hasAmounts: !!body.amounts,
-      cartItemsLength: body.cartItems?.length || 0,
-      customerEmail: body.customerInfo?.email || 'missing'
-    });
-
-    const { 
-      paymentIntentId,
-      cartItems,
-      customerInfo,
-      deliveryInfo,
-      amounts
-    } = body;
-
-    console.log("🔍 AFTER DESTRUCTURING:", {
-      paymentIntentId: !!paymentIntentId,
-      cartItems: cartItems?.length || 0,
-      customerEmail: customerInfo?.email || 'missing'
-    });
+    const { paymentIntentId, cartItems, customerInfo, deliveryInfo, amounts } = body;
 
     // Validate required data
     if (!paymentIntentId) {
@@ -77,7 +29,7 @@ serve(async (req) => {
       throw new Error("Customer email is required");
     }
 
-    console.log("✅ Data validation passed");
+    console.log("✅ Validation passed");
 
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
@@ -85,7 +37,7 @@ serve(async (req) => {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
     }
 
-    console.log("🔑 Shopify token retrieved, length:", shopifyToken.length);
+    console.log("🔑 Token retrieved");
 
     // Create line items for Shopify
     const lineItems = cartItems.map((item: any) => {
@@ -157,34 +109,23 @@ serve(async (req) => {
       }
     };
 
-    console.log("🏪 SENDING TO SHOPIFY:", JSON.stringify(orderData, null, 2));
+    console.log("🏪 Calling Shopify API");
 
-    let response;
-    try {
-      response = await fetch(
-        "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
-        {
-          method: "POST",
-          headers: {
-            "X-Shopify-Access-Token": shopifyToken,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
-    } catch (fetchError) {
-      console.error("❌ FETCH ERROR:", fetchError.message);
-      throw new Error(`Network error calling Shopify: ${fetchError.message}`);
-    }
+    const response = await fetch(
+      "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
+      {
+        method: "POST",
+        headers: {
+          "X-Shopify-Access-Token": shopifyToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ SHOPIFY FULL ERROR RESPONSE:", {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        body: errorText
-      });
+      console.error("❌ Shopify API error:", response.status, errorText);
       throw new Error(`Shopify API error (${response.status}): ${errorText}`);
     }
 
@@ -205,11 +146,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("💥 CRITICAL ERROR:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
+    console.error("💥 ERROR:", error.message);
     return new Response(
       JSON.stringify({
         success: false,
