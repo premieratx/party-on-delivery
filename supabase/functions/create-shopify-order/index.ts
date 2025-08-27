@@ -136,7 +136,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ Shopify API error:", response.status, errorText);
+      console.error("❌ SHOPIFY FULL ERROR:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorBody: errorText,
+        requestData: JSON.stringify(orderData, null, 2)
+      });
       throw new Error(`Shopify API error (${response.status}): ${errorText}`);
     }
 
