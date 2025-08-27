@@ -287,93 +287,94 @@ export const CombinedSearchTabs = ({
     <div className={`bg-background border-b transition-all duration-200 ${
       isSticky || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
     } ${condensed ? 'py-2' : 'py-3'}`}>
-      {/* Desktop Layout */}
-      <div className="hidden md:block">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-4">
-            {/* Tabs with scroll indicator */}
-            <div className="relative flex-1">
-              <div className="flex space-x-2 overflow-x-auto scrollbar-hide" 
-                   style={{ scrollSnapType: 'x mandatory' }}>
-                {tabs.map((tab, index) => (
-                  <Button
-                    key={tab.id}
-                    variant={selectedCategory === index ? "default" : "ghost"}
-                    className="whitespace-nowrap px-6 py-2 h-10 min-w-fit flex-shrink-0 transition-all duration-200"
-                    onClick={() => onTabSelect(index)}
-                    style={{ scrollSnapAlign: 'start' }}
-                  >
-                    <span className="font-medium">{tab.title}</span>
-                  </Button>
-                ))}
-              </div>
-              {/* Scroll indicator */}
-              <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-            </div>
-            
-            {/* Search Bar with Cart and Checkout - Prioritize tabs visibility */}
-            {showSearch && (
-              <div className="flex items-center gap-2 ml-2">
-                {/* Compact Search Bar - shrinks first */}
-                <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
-                  <AdvancedSearchBar
-                    value={searchQuery}
-                    onChange={(newValue) => {
-                      onSearchChange(newValue);
-                      if (newValue.trim()) {
-                        setTimeout(() => onSearchSubmit(), 300);
-                      }
-                    }}
-                    onSubmit={onSearchSubmit}
-                    placeholder="Search products..."
-                    className="w-full"
-                    allProducts={allProducts}
-                  />
-                  {isSearching && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Compact Cart and Checkout - shrink to icons on smaller screens */}
-                <div className="flex items-center gap-1">
-                  {/* Cart Button - Compact */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onOpenCart}
-                    className="h-8 px-2 text-xs bg-background/50 hover:bg-background border-muted-foreground/20 hover:border-primary/50 flex-shrink-0"
-                  >
-                    <ShoppingCart className="w-3 h-3 mr-1" />
-                    <span className="hidden lg:inline text-xs">Cart</span>
-                    {cartItemCount > 0 && (
-                      <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center">
-                        {cartItemCount}
-                      </span>
-                    )}
-                  </Button>
-                  
-                  {/* Checkout Button - Compact with checkmark */}
-                  {cartItemCount > 0 && (
+        {/* Desktop Layout */}
+        <div className="hidden md:block">
+          <div className="w-full max-w-screen-2xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-2 w-full max-w-full">
+              {/* Tabs with constrained container */}
+              <div className="relative flex-1 min-w-0 max-w-full overflow-hidden">
+                <div className="flex space-x-1 overflow-x-auto scrollbar-hide max-w-full" 
+                     style={{ scrollSnapType: 'x mandatory' }}>
+                  {tabs.map((tab, index) => (
                     <Button
-                      size="sm"
-                      onClick={onCheckout}
-                      className="h-8 px-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+                      key={tab.id}
+                      variant={selectedCategory === index ? "default" : "ghost"}
+                      className="whitespace-nowrap px-3 py-2 h-9 text-sm flex-shrink-0 transition-all duration-200 max-w-[200px] truncate"
+                      onClick={() => onTabSelect(index)}
+                      style={{ scrollSnapAlign: 'start' }}
+                      title={tab.title}
                     >
-                      <Check className="w-3 h-3 mr-1" />
-                      <span className="hidden xl:inline text-xs">Checkout</span>
-                      <span className="text-xs font-semibold ml-1">
-                        ${formatPrice(safePrice(totalAmount))}
-                      </span>
+                      <span className="font-medium truncate">{tab.title}</span>
                     </Button>
-                  )}
+                  ))}
                 </div>
+                {/* Scroll indicator */}
+                <div className="absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-background to-transparent pointer-events-none" />
               </div>
-            )}
+              
+              {/* Search Bar with Cart and Checkout - Fixed width to prevent overflow */}
+              {showSearch && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Compact Search Bar - constrained width */}
+                  <div className="relative w-32 lg:w-48">
+                    <AdvancedSearchBar
+                      value={searchQuery}
+                      onChange={(newValue) => {
+                        onSearchChange(newValue);
+                        if (newValue.trim()) {
+                          setTimeout(() => onSearchSubmit(), 300);
+                        }
+                      }}
+                      onSubmit={onSearchSubmit}
+                      placeholder="Search..."
+                      className="w-full text-sm"
+                      allProducts={allProducts}
+                    />
+                    {isSearching && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Compact Cart and Checkout - minimal width */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Cart Button - Icon only on smaller screens */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onOpenCart}
+                      className="h-8 px-2 text-xs hover:bg-accent flex-shrink-0 relative"
+                    >
+                      <ShoppingCart className="w-3 h-3" />
+                      <span className="hidden xl:inline ml-1 text-xs">Cart</span>
+                      {cartItemCount > 0 && (
+                        <span className="absolute -top-1 -right-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1 min-w-[16px] h-4 flex items-center justify-center">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Button>
+                    
+                    {/* Checkout Button - Minimal */}
+                    {cartItemCount > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={onCheckout}
+                        className="h-8 px-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 text-xs"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span className="hidden lg:inline ml-1">Go</span>
+                        <span className="text-xs font-semibold ml-1">
+                          ${formatPrice(safePrice(totalAmount))}
+                        </span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
       {/* MOBILE Layout - Always show tabs, conditionally show search */}
       <div className="block md:hidden">
@@ -403,13 +404,13 @@ export const CombinedSearchTabs = ({
         )}
 
         {/* Tabs Section with improved responsive design */}
-        <div className="container mx-auto px-2 py-1.5 bg-background border-b">
-          <div className="flex items-center">
-            {/* Enhanced Responsive Tabs - No icons, better text spacing */}
-            <div className="relative w-full">
+        <div className="w-full max-w-screen-sm mx-auto px-2 py-1.5 bg-background border-b">
+          <div className="flex items-center w-full max-w-full overflow-hidden">
+            {/* Enhanced Responsive Tabs - Properly constrained */}
+            <div className="relative w-full min-w-0 max-w-full overflow-hidden">
               <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1"
+                className="flex gap-1 overflow-x-auto scrollbar-hide w-full max-w-full pb-1"
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'
@@ -436,22 +437,22 @@ export const CombinedSearchTabs = ({
                     onClick={() => onTabSelect(index)}
                     title={tab.title}
                     style={{ 
-                      flex: '0 0 auto', // Natural width with no forced sizing
-                      minWidth: 'max-content', // Allow natural text width
+                      flex: '0 0 auto',
+                      maxWidth: '120px', // Constrain max width
                       scrollSnapAlign: 'start'
                     }}
                   >
-                    {/* Only text - no icons to prevent overlap */}
-                    <span className="font-medium text-xs leading-tight whitespace-nowrap px-1">
+                    {/* Truncated text to prevent overflow */}
+                    <span className="font-medium text-xs leading-tight whitespace-nowrap truncate max-w-full px-1">
                       {tab.title}
                     </span>
                   </Button>
                 ))}
               </div>
               
-              {/* Animated scroll indicator */}
-              <div className="absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none animate-pulse" />
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground animate-bounce">
+              {/* Scroll indicator */}
+              <div className="absolute right-0 top-0 h-full w-4 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                 →
               </div>
             </div>

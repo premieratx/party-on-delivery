@@ -69,10 +69,10 @@ export const CombinedSearchTabsCustom = ({
       <div className={`sticky ${showSearchModal ? 'top-[136px]' : 'top-[60px]'} z-40 bg-white border-b shadow-sm`}>
         {/* Desktop Layout - Side by side */}
         <div className="hidden md:block">
-          <div className="max-w-md mx-auto px-4 py-3">
-            <div className="flex items-center gap-4">
-              {/* Tabs */}
-              <div className="flex overflow-x-auto scrollbar-hide flex-1">
+          <div className="w-full max-w-screen-2xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-2 w-full max-w-full">
+              {/* Tabs - constrained container */}
+              <div className="flex overflow-x-auto scrollbar-hide flex-1 min-w-0 max-w-full">
                 {categories.map((category) => {
                   const categoryProducts = collections
                     .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
@@ -82,17 +82,17 @@ export const CombinedSearchTabsCustom = ({
                     <button
                       key={category.id}
                       onClick={() => onCategorySelect(category.id)}
-                      className={`flex-shrink-0 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                      className={`flex-shrink-0 px-2 py-2 text-xs font-medium border-b-2 transition-colors max-w-[150px] ${
                         activeCategory === category.id
                           ? 'border-purple-500 text-purple-600 bg-purple-50'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <div className="flex items-center gap-1">
-                        <category.icon className="w-3 h-3" />
-                        <span className="whitespace-nowrap">{category.name}</span>
+                      <div className="flex items-center gap-1 max-w-full">
+                        <category.icon className="w-3 h-3 flex-shrink-0" />
+                        <span className="whitespace-nowrap truncate">{category.name}</span>
                         {categoryProducts.length > 0 && (
-                          <Badge variant="secondary" className="text-xs ml-1">
+                          <Badge variant="secondary" className="text-xs ml-1 flex-shrink-0">
                             {categoryProducts.length}
                           </Badge>
                         )}
@@ -102,30 +102,31 @@ export const CombinedSearchTabsCustom = ({
                 })}
               </div>
 
-              {/* Running Total */}
+              {/* Running Total - compact */}
               {totalAmount > 0 && (
-                <div className="text-lg font-bold text-purple-600 whitespace-nowrap">
+                <div className="text-sm font-bold text-purple-600 whitespace-nowrap flex-shrink-0">
                   ${totalAmount.toFixed(2)}
                 </div>
               )}
               
-              {/* Cart and Checkout Buttons */}
-              <div className="flex items-center gap-2 ml-2">
+              {/* Cart and Checkout Buttons - constrained */}
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Button
                   variant="outline"
                   onClick={onOpenCart}
-                  className="flex items-center gap-2 h-8 text-xs"
+                  className="flex items-center gap-1 h-8 text-xs px-2"
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Cart ({cartItemCount})</span>
+                  <ShoppingCart className="w-3 h-3" />
+                  <span className="hidden lg:inline">Cart</span>
+                  <span>({cartItemCount})</span>
                 </Button>
                 
                 <Button
                   onClick={onCheckout}
-                  className="flex items-center gap-2 h-8 text-xs bg-purple-600 hover:bg-purple-700"
+                  className="flex items-center gap-1 h-8 text-xs bg-purple-600 hover:bg-purple-700 px-2"
                 >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Checkout</span>
+                  <CreditCard className="w-3 h-3" />
+                  <span className="hidden lg:inline">Checkout</span>
                 </Button>
               </div>
 
@@ -135,7 +136,7 @@ export const CombinedSearchTabsCustom = ({
                   variant="ghost"
                   size="sm"
                   onClick={onToggleSearch}
-                  className="p-2 flex-shrink-0 h-8 w-8"
+                  className="p-1 flex-shrink-0 h-8 w-8"
                 >
                   <Search className="w-4 h-4" />
                 </Button>
@@ -211,8 +212,8 @@ export const CombinedSearchTabsCustom = ({
           </div>
 
           {/* Tabs Row - Always visible below the main action row */}
-          <div className="max-w-md mx-auto px-4 pb-2 border-t border-gray-200">
-            <div className="flex overflow-x-auto scrollbar-hide pt-2">
+          <div className="w-full max-w-screen-sm mx-auto px-2 pb-2 border-t border-gray-200">
+            <div className="flex overflow-x-auto scrollbar-hide pt-2 w-full max-w-full">
               {categories.map((category) => {
                 const categoryProducts = collections
                   .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
@@ -222,17 +223,17 @@ export const CombinedSearchTabsCustom = ({
                   <button
                     key={category.id}
                     onClick={() => onCategorySelect(category.id)}
-                    className={`flex-shrink-0 px-2 py-1 text-xs font-medium border-b-2 transition-colors ${
+                    className={`flex-shrink-0 px-2 py-1 text-xs font-medium border-b-2 transition-colors max-w-[100px] ${
                       activeCategory === category.id
                         ? 'border-purple-500 text-purple-600 bg-purple-50'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-center gap-1">
-                      <category.icon className="w-3 h-3" />
-                      <span className="whitespace-nowrap">{category.name}</span>
+                    <div className="flex items-center gap-1 max-w-full">
+                      <category.icon className="w-3 h-3 flex-shrink-0" />
+                      <span className="whitespace-nowrap truncate">{category.name}</span>
                       {categoryProducts.length > 0 && (
-                        <Badge variant="secondary" className="text-xs ml-1">
+                        <Badge variant="secondary" className="text-xs ml-1 flex-shrink-0">
                           {categoryProducts.length}
                         </Badge>
                       )}
