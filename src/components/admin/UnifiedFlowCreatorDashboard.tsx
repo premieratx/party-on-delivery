@@ -17,13 +17,15 @@ import {
   Copy,
   ExternalLink,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Code
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
 import { UnifiedCoverPageCreator } from './UnifiedCoverPageCreator';
 import { UnifiedPostCheckoutCreator } from './UnifiedPostCheckoutCreator';
+import { EmbedCodeManager } from './EmbedCodeManager';
 import { UNIFIED_THEMES } from '@/lib/themeSystem';
 
 interface FlowItem {
@@ -342,7 +344,7 @@ export const UnifiedFlowCreatorDashboard: React.FC = () => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="delivery-apps" className="flex items-center gap-2">
             <Package2 className="w-4 h-4" />
             Delivery Apps ({deliveryApps.length})
@@ -354,6 +356,10 @@ export const UnifiedFlowCreatorDashboard: React.FC = () => {
           <TabsTrigger value="post-checkout" className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
             Post-Checkout ({postCheckoutPages.length})
+          </TabsTrigger>
+          <TabsTrigger value="embed-codes" className="flex items-center gap-2">
+            <Code className="w-4 h-4" />
+            Embed Codes
           </TabsTrigger>
         </TabsList>
 
@@ -424,6 +430,11 @@ export const UnifiedFlowCreatorDashboard: React.FC = () => {
               />
             ))}
           </div>
+        </TabsContent>
+
+        {/* Embed Codes Tab */}
+        <TabsContent value="embed-codes">
+          <EmbedCodeManager />
         </TabsContent>
       </Tabs>
 
