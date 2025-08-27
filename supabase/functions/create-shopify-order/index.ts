@@ -78,7 +78,7 @@ serve(async (req) => {
       
       // Validate environment variables for Shopify
       const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-      const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL") || "premier-concierge.myshopify.com";
+      const shopifyStore = "premier-concierge.myshopify.com";
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -265,7 +265,7 @@ serve(async (req) => {
     // Validate environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL") || "premier-concierge.myshopify.com";
+    const shopifyStore = "premier-concierge.myshopify.com";
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
