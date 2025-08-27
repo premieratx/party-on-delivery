@@ -248,50 +248,17 @@ serve(async (req) => {
       deliveryDate,
       deliveryTime
     });
-              fullAddressString = objStr;
-              street = fullAddressString;
-              logStep("✅ Found address object in metadata fallback", { address: fullAddressString });
-              break;
-            }
-          }
-        }
 
-        // STEP 2: Final fallback - construct meaningful placeholder
-        if (!fullAddressString || fullAddressString === '{}' || fullAddressString.trim() === '') {
-          const customerParts = [
-            firstName + ' ' + lastName || 'Customer',
-            customerEmail ? `(${customerEmail})` : ''
-          ].filter(Boolean);
-          
-          fullAddressString = `Address required - Customer: ${customerParts.join(' ')} - Please contact customer for address`;
-          street = fullAddressString;
-          
-          logStep("🚨 FINAL FALLBACK: Using customer info as address placeholder", { 
-            fallbackAddress: fullAddressString,
-            customerName: firstName + ' ' + lastName,
-            customerEmail 
-          });
-        }
-      }
-        
-      // Final fallback if still nothing
-      if (!fullAddressString || fullAddressString === '{}') {
-        fullAddressString = "Address verification required - Please contact customer";
-        street = fullAddressString;
-        logStep("🚨 ULTIMATE FALLBACK", { fallbackAddress: fullAddressString });
-      }
-
-    } catch (addressError) {
-      logStep("ERROR: Address parsing failed", { error: addressError.message });
-      fullAddressString = "Address parsing failed - Please verify with customer";
-      street = fullAddressString;
-    }
-
-    logStep("=== FINAL ADDRESS RESULT ===", {
-      fullAddressString,
-      components: { street, city, state, zip },
-      addressSource: metadata.delivery_address ? 'metadata.delivery_address' : 'fallback'
-    });
+    // Extract order amounts
+    const orderAmounts = {
+      subtotal: parseFloat(metadata.subtotal || '0'),
+      sales_tax: parseFloat(metadata.sales_tax || '0'),
+      delivery_fee: parseFloat(metadata.delivery_fee || '0'),
+      tip_amount: parseFloat(metadata.tip_amount || '0'),
+      total_amount: paymentAmount
+    };
+    
+    logStep("Order amounts extracted", orderAmounts);
 
     // Create line items for Shopify (ONLY products, no fees or tips)
     const lineItems = cartItems.map(item => ({
@@ -324,23 +291,23 @@ serve(async (req) => {
         billing_address: {
           first_name: firstName,
           last_name: lastName,
-          address1: street,
-          city: city,
-          province: state,
+          address1: deliveryAddress || "Address Required",
+          city: "Address Required",
+          province: "TX",
           country: "US",
-          zip: zip,
+          zip: "00000",
           phone: customerPhone
         },
         shipping_address: {
           first_name: firstName,
           last_name: lastName,
           company: `🚚 DELIVERY: ${deliveryDate} at ${deliveryTime}`,
-          address1: street,
+          address1: deliveryAddress || "Address Required",
           address2: deliveryInstructions ? `📋 Instructions: ${deliveryInstructions}` : undefined,
-          city: city,
-          province: state,
+          city: "Address Required",
+          province: "TX",
           country: "US",
-          zip: zip,
+          zip: "00000",
           phone: customerPhone
         },
         email: customerEmail,
@@ -387,7 +354,7 @@ serve(async (req) => {
           },
           {
             name: "📍 Full Delivery Address",
-            value: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')
+            value: deliveryAddress
           },
           {
             name: "📋 Special Instructions",
@@ -460,8 +427,7 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
       ].length,
       tipAmount: orderAmounts.tip_amount,
       deliveryFee: orderAmounts.delivery_fee,
-      deliveryAddress: fullAddressString,
-      addressComponents: { street, city, state, zip },
+      deliveryAddress: deliveryAddress,
       exactStructure: {
         line_items: "PRODUCTS ONLY",
         shipping_lines: "DELIVERY FEE + DRIVER TIP (separate entries)"
@@ -509,11 +475,11 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
               {
                 first_name: firstName,
                 last_name: lastName,
-                address1: street,
-                city: city,
-                province: state,
+                address1: deliveryAddress || "Address Required",
+                city: "Address Required",
+                province: "TX",
                 country: "US",
-                zip: zip,
+                zip: "00000",
                 phone: customerPhone
               }
             ]
@@ -597,11 +563,7 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
           delivery_date: deliveryDate,
           delivery_time: deliveryTime,
           delivery_address: {
-            street,
-            city,
-            state,
-            zip,
-            full_address: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, ''),
+            full_address: deliveryAddress,
             email: customerEmail,
             phone: customerPhone
           },
