@@ -54,13 +54,22 @@ serve(async (req) => {
     console.log("🔑 Shopify token retrieved");
 
     // Create line items for Shopify
-    const lineItems = cartItems.map((item: any) => ({
-      title: item.title || item.name,
-      quantity: item.quantity,
-      price: parseFloat(item.price || "0").toFixed(2),
-      variant_id: item.variant_id || item.variant || null,
-      requires_shipping: true
-    }));
+    const lineItems = cartItems.map((item: any) => {
+      let variantId = item.variant_id || item.variant || null;
+      
+      // Extract numeric ID from GraphQL format if needed
+      if (variantId && typeof variantId === 'string' && variantId.includes('gid://shopify/ProductVariant/')) {
+        variantId = variantId.split('/').pop();
+      }
+      
+      return {
+        title: item.title || item.name,
+        quantity: item.quantity,
+        price: parseFloat(item.price || "0").toFixed(2),
+        variant_id: variantId,
+        requires_shipping: true
+      };
+    });
 
     console.log("📝 Line items created:", lineItems.length);
 
