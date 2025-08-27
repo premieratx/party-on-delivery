@@ -11,6 +11,7 @@ import { RobustErrorBoundary } from '@/components/common/RobustErrorBoundary';
 import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
 import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
+import { useMobileBrowserChrome } from '@/hooks/useMobileBrowserChrome';
 import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
@@ -56,6 +57,9 @@ const queryClient = new QueryClient({
 const App = () => {
   // Global keyboard hiding on mobile scroll
   useGlobalKeyboardHiding();
+  
+  // Global mobile browser chrome hiding
+  useMobileBrowserChrome();
   
   return (
     <RobustErrorBoundary>
