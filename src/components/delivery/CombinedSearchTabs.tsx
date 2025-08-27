@@ -221,22 +221,33 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
-    console.log('🔍 Mobile search icon clicked directly');
+    console.log('🔍 ACTUAL Mobile search icon clicked directly in CombinedSearchTabs');
+    console.log('🔍 Current state - isSearchExpanded:', isSearchExpanded, 'isSearchActive:', isSearchActive);
+    
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
+    console.log('🔍 State updated - expanding search');
+    
     // Focus search input immediately with multiple fallback attempts
     const focusInput = () => {
+      console.log('🔍 Attempting to find and focus search input');
+      
       const searchInput = searchInputRef.current ||
                          document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
                          document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
                          document.querySelector('.mobile-search-input') as HTMLInputElement;
       
+      console.log('🔍 Search input found:', !!searchInput, searchInput);
+      
       if (searchInput) {
         console.log('🎯 Direct search input found, focusing');
         searchInput.focus();
         searchInput.click();
+        console.log('🎯 Search input focused and clicked');
         return true;
+      } else {
+        console.log('❌ No search input found');
       }
       return false;
     };
@@ -245,9 +256,13 @@ export const CombinedSearchTabs = ({
     if (!focusInput()) {
       // Try with small delay if immediate doesn't work
       setTimeout(() => {
+        console.log('🔍 Retry focus attempt 1');
         if (!focusInput()) {
           // Final attempt with longer delay
-          setTimeout(focusInput, 200);
+          setTimeout(() => {
+            console.log('🔍 Final focus attempt');
+            focusInput();
+          }, 200);
         }
       }, 50);
     }
@@ -510,12 +525,22 @@ export const CombinedSearchTabs = ({
                 ) : (
                 /* Search Icon - Compact */
                   <Button
-                    variant="ghost"
+                    variant="ghost" 
                     size="sm"
-                    onClick={handleSearchIconClick}
-                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors mobile-search-button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('🔍 MOBILE SEARCH BUTTON CLICKED!');
+                      handleSearchIconClick();
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                      console.log('🔍 Mobile search button touch start');
+                    }}
+                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors mobile-search-button relative z-50"
                     title="Search"
                     data-testid="mobile-search-button"
+                    style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
                   >
                     <Search className="w-4 h-4" />
                   </Button>
