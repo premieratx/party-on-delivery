@@ -84,16 +84,33 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-          // Webhook handles order creation automatically - removing duplicate call
-          console.log('💰 Payment successful - webhook handles order creation automatically');
+          // FIXED: Directly create Shopify order instead of relying on webhook
+          console.log('💰 Creating Shopify order directly with PaymentIntent:', piId);
+          
+          try {
+            const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
+              body: { paymentIntentId: piId }
+            });
+            
+            if (shopifyError) {
+              console.error('❌ Shopify order creation failed:', shopifyError);
+            } else {
+              console.log('✅ Shopify order created successfully:', shopifyResult);
+              // Store the order number if we got one
+              if (shopifyResult?.order_number) {
+                localStorage.setItem('orderNumber', shopifyResult.order_number);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error calling create-shopify-order:', error);
+          }
             } catch (e) {
               console.error('❌ Failed to process order on complete page:', e);
             }
           }
           
-          // ✅ WORKING: Webhook creates Shopify orders automatically
-          // No background database sync needed - simplified for reliability
-          console.log('🎉 Order Complete: Webhook handled Shopify order creation');
+          // ✅ FIXED: Direct Shopify order creation (no webhook dependency)
+          console.log('🎉 Order Complete: Shopify order creation handled directly');
           
         } else {
           // No session data available - show basic confirmation
@@ -115,8 +132,25 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-          // Webhook handles order creation automatically - removing second duplicate call
-          console.log('💰 Payment successful - webhook handles order creation automatically');
+          // FIXED: Directly create Shopify order instead of relying on webhook (fallback)
+          console.log('💰 Creating Shopify order directly (fallback) with PaymentIntent:', piId);
+          
+          try {
+            const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
+              body: { paymentIntentId: piId }
+            });
+            
+            if (shopifyError) {
+              console.error('❌ Shopify order creation failed (fallback):', shopifyError);
+            } else {
+              console.log('✅ Shopify order created successfully (fallback):', shopifyResult);
+              if (shopifyResult?.order_number) {
+                localStorage.setItem('orderNumber', shopifyResult.order_number);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error calling create-shopify-order (fallback):', error);
+          }
             } catch (e) {
               console.error('❌ Failed to process order on complete page (no session data):', e);
             }

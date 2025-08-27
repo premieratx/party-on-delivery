@@ -167,9 +167,23 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         console.log('✅ Payment successful!');
         const paymentIntentId = data.client_secret.split('_secret_')[0];
         
-        // Webhook will handle Shopify order creation automatically
-        // Remove manual call to prevent duplicate orders
-        console.log('💰 Payment successful - webhook will create Shopify order automatically');
+        // FIXED: Directly call create-shopify-order instead of relying on webhook
+        console.log('💰 Creating Shopify order directly with PaymentIntent:', paymentIntentId);
+        
+        try {
+          // Call the edge function to create Shopify order
+          const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
+            body: { paymentIntentId }
+          });
+          
+          if (shopifyError) {
+            console.error('❌ Shopify order creation failed:', shopifyError);
+          } else {
+            console.log('✅ Shopify order created successfully:', shopifyResult);
+          }
+        } catch (error) {
+          console.error('❌ Error calling create-shopify-order:', error);
+        }
         
         // Call success handler
         onPaymentSuccess(paymentIntentId);

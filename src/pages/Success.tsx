@@ -38,8 +38,32 @@ const Success = () => {
         localStorage.setItem('lastPaymentIntent', sessionId);
       }
 
-      // Webhook handles order creation automatically - no manual call needed
-      console.log('💰 Payment successful - webhook will handle order creation');
+      // FIXED: Directly create Shopify order instead of relying on webhook
+      console.log('💰 Creating Shopify order directly with ID:', sessionId);
+      
+      try {
+        const requestBody = sessionId.startsWith('pi_') 
+          ? { paymentIntentId: sessionId }
+          : { sessionId: sessionId };
+          
+        const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
+          body: requestBody
+        });
+        
+        if (shopifyError) {
+          console.error('❌ Shopify order creation failed:', shopifyError);
+        } else {
+          console.log('✅ Shopify order created successfully:', shopifyResult);
+          if (shopifyResult?.order_number) {
+            setOrderStatus({
+              success: true,
+              orderNumber: shopifyResult.order_number
+            });
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error calling create-shopify-order:', error);
+      }
       
       // Since webhook handles order creation, just set success status
       setOrderStatus({
