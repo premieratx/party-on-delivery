@@ -83,13 +83,35 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      onDeliveryInfoChange({ ...deliveryInfo, date });
+      const updatedInfo = { ...deliveryInfo, date };
+      onDeliveryInfoChange(updatedInfo);
       setIsCalendarOpen(false);
+      
+      // Auto-save to localStorage immediately
+      try {
+        localStorage.setItem('partyondelivery_delivery_info', JSON.stringify({
+          ...updatedInfo,
+          date: date.toISOString()
+        }));
+      } catch (error) {
+        console.warn('Failed to auto-save delivery date:', error);
+      }
     }
   };
 
   const handleTimeSlotSelect = (timeSlot: string) => {
-    onDeliveryInfoChange({ ...deliveryInfo, timeSlot });
+    const updatedInfo = { ...deliveryInfo, timeSlot };
+    onDeliveryInfoChange(updatedInfo);
+    
+    // Auto-save to localStorage immediately
+    try {
+      localStorage.setItem('partyondelivery_delivery_info', JSON.stringify({
+        ...updatedInfo,
+        date: updatedInfo.date ? updatedInfo.date.toISOString() : null
+      }));
+    } catch (error) {
+      console.warn('Failed to auto-save delivery time:', error);
+    }
   };
 
   const handleEdit = () => {

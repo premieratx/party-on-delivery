@@ -29,7 +29,15 @@ export const AddressStep: React.FC<AddressStepProps> = ({
   const { config } = useAppConfig();
 
   const handleAddressChange = (field: keyof AddressInfo, value: string) => {
-    setAddressInfo({ ...addressInfo, [field]: value });
+    const updatedAddress = { ...addressInfo, [field]: value };
+    setAddressInfo(updatedAddress);
+    
+    // Auto-save to localStorage immediately
+    try {
+      localStorage.setItem('partyondelivery_address', JSON.stringify(updatedAddress));
+    } catch (error) {
+      console.warn('Failed to auto-save address info:', error);
+    }
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -63,13 +71,22 @@ export const AddressStep: React.FC<AddressStepProps> = ({
 
     const fullStreet = `${streetNumber} ${route}`.trim();
     
-    setAddressInfo({
+    const updatedAddress = {
       ...addressInfo,
       street: fullStreet,
       city,
       state,
       zipCode
-    });
+    };
+    
+    setAddressInfo(updatedAddress);
+    
+    // Auto-save to localStorage immediately
+    try {
+      localStorage.setItem('partyondelivery_address', JSON.stringify(updatedAddress));
+    } catch (error) {
+      console.warn('Failed to auto-save address info:', error);
+    }
   };
 
   const validateAddress = () => {

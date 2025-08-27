@@ -32,7 +32,15 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
       processedValue = formatPhoneNumber(value);
     }
     
-    setCustomerInfo({ ...customerInfo, [field]: processedValue });
+    const updatedInfo = { ...customerInfo, [field]: processedValue };
+    setCustomerInfo(updatedInfo);
+    
+    // Auto-save to localStorage immediately
+    try {
+      localStorage.setItem('partyondelivery_customer', JSON.stringify(updatedInfo));
+    } catch (error) {
+      console.warn('Failed to auto-save customer info:', error);
+    }
     
     // Clear error when user starts typing
     if (errors[field]) {
