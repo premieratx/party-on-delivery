@@ -40,8 +40,22 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
     if (searchHandler) {
       // Always trigger mobile search expansion in delivery app, regardless of variant
       console.log('🚀 Dispatching mobileSearchActivate event');
-      const event = new CustomEvent('mobileSearchActivate', { bubbles: true });
+      const event = new CustomEvent('mobileSearchActivate', { 
+        bubbles: true, 
+        cancelable: true, 
+        detail: { source: 'SearchIcon', variant } 
+      });
+      
+      // Dispatch on both the handler element and document for redundancy
       searchHandler.dispatchEvent(event);
+      document.dispatchEvent(event);
+      
+      // Also trigger direct activation if available
+      const directSearchButton = searchHandler.querySelector('button[title="Search"]');
+      if (directSearchButton) {
+        console.log('🎯 Direct search button found, clicking');
+        (directSearchButton as HTMLButtonElement).click();
+      }
     } else {
       // Default navigation to search page
       console.log('🔄 Navigating to search page');
