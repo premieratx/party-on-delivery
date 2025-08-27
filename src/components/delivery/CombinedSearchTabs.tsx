@@ -426,44 +426,84 @@ export const CombinedSearchTabs = ({
 
         {/* Bottom Row - Search/Cart/Checkout Actions (Always visible) */}
         <div className="container mx-auto px-4 py-2 bg-background border-b" data-mobile-search-handler>
-          <div className="flex items-center justify-center gap-4">
-            {/* Search Icon - Toggle search bar */}
+          <div className="flex items-center justify-center gap-2">
+            {/* Search Section - Expands when active */}
             {showSearch && (
-              <Button
-                variant={isSearchExpanded || isSearchActive ? "default" : "ghost"}
-                size="sm"
-                onClick={handleSearchIconClick}
-                className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
-                title="Search"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
+              <div className={`flex items-center transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'flex-1' : 'flex-shrink-0'}`}>
+                {isSearchExpanded || isSearchActive ? (
+                  /* Expanded Search Bar */
+                  <div className="flex items-center w-full gap-2">
+                    <div className="relative flex-1">
+                      <AdvancedSearchBar
+                        value={searchQuery}
+                        onChange={(newValue) => {
+                          console.log('🔍 Mobile search query changed:', newValue);
+                          onSearchChange(newValue);
+                          if (newValue.trim()) {
+                            onSearchSubmit();
+                          }
+                        }}
+                        onSubmit={onSearchSubmit}
+                        placeholder="Search products..."
+                        className="w-full"
+                        allProducts={allProducts}
+                        autoFocus={true}
+                      />
+                      {isSearching && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Search Icon */
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSearchIconClick}
+                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
+                    title="Search"
+                  >
+                    <Search className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
             )}
             
-            {/* Cart Button - Mobile (Simple: Icon + Count Only) */}
+            {/* Cart Button - Responsive: Full when search inactive, icon-only when search active */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className="flex items-center justify-center gap-1.5 h-9 px-3 border hover:bg-muted transition-colors"
+              className={`flex items-center justify-center border hover:bg-muted transition-all duration-300 ${
+                (isSearchExpanded || isSearchActive) ? 'h-9 w-9 p-0' : 'h-9 px-3 gap-1.5'
+              }`}
               disabled={cartItemCount === 0}
             >
               <ShoppingCart className="w-4 h-4" />
-              {cartItemCount > 0 && (
+              {!(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
                 <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-semibold">
+                  {cartItemCount}
+                </span>
+              )}
+              {(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-xs bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center font-semibold">
                   {cartItemCount}
                 </span>
               )}
             </Button>
             
-            {/* Checkout Button - Mobile (Checkmark + Total Only) */}
+            {/* Checkout Button - Responsive: Full when search inactive, icon-only when search active */}
             <Button
               onClick={onCheckout}
-              className="flex items-center justify-center gap-1.5 h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200"
+              className={`flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 ${
+                (isSearchExpanded || isSearchActive) ? 'h-9 w-9 p-0' : 'h-9 px-4 gap-1.5'
+              }`}
               variant="default"
               disabled={cartItemCount === 0}
             >
-              <Check className="w-5 h-5" />
-              {totalAmount > 0 && (
+              <Check className="w-4 h-4" />
+              {!(isSearchExpanded || isSearchActive) && totalAmount > 0 && (
                 <span className="font-bold text-sm">${formatPrice(safePrice(totalAmount))}</span>
               )}
             </Button>

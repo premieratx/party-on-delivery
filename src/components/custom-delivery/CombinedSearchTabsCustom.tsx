@@ -146,78 +146,100 @@ export const CombinedSearchTabsCustom = ({
 
         {/* Mobile Layout */}
         <div className="block md:hidden">
-          {/* First Row - Tabs and Search Icon */}
+          {/* Combined Row - Search, Cart, and Checkout */}
           <div className="max-w-md mx-auto px-4 py-2">
-            <div className="flex items-center justify-between">
-              {/* Tabs */}
-              <div className="flex overflow-x-auto scrollbar-hide flex-1">
-                {categories.map((category) => {
-                  const categoryProducts = collections
-                    .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
-                    .flatMap(collection => collection.products);
-                  
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => onCategorySelect(category.id)}
-                      className={`flex-shrink-0 px-2 py-1 text-xs font-medium border-b-2 transition-colors ${
-                        activeCategory === category.id
-                          ? 'border-purple-500 text-purple-600 bg-purple-50'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1">
-                        <category.icon className="w-3 h-3" />
-                        <span className="whitespace-nowrap">{category.name}</span>
-                        {categoryProducts.length > 0 && (
-                          <Badge variant="secondary" className="text-xs ml-1">
-                            {categoryProducts.length}
-                          </Badge>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+            <div className="flex items-center gap-2">
+              {/* Search Section - Expands when modal is active */}
+              <div className={`flex items-center transition-all duration-300 ${showSearchModal ? 'flex-1' : 'flex-shrink-0'}`}>
+                {showSearchModal ? (
+                  /* Expanded Search Bar */
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchTerm}
+                      onChange={(e) => onSearchChange(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  /* Search Icon */
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onToggleSearch}
+                    className="h-8 w-8 p-0 border border-gray-300 hover:border-purple-500 transition-colors"
+                  >
+                    <Search className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
               
-              {/* Search Icon */}
-              {!showSearchModal && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onToggleSearch}
-                  className="ml-2 flex-shrink-0 h-8 w-8 p-0"
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Second Row - Cart and Checkout (Mobile Split Layout) */}
-          <div className="max-w-md mx-auto px-4 pb-2">
-            <div className="grid grid-cols-2 gap-2">
-              {/* Cart Button */}
+              {/* Cart Button - Responsive: Full when search inactive, icon-only when search active */}
               <Button
                 variant="outline"
                 onClick={onOpenCart}
-                className="flex items-center justify-center gap-2 h-8 text-xs"
+                className={`flex items-center justify-center transition-all duration-300 ${
+                  showSearchModal ? 'h-8 w-8 p-0' : 'h-8 px-3 gap-2'
+                }`}
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>Cart ({cartItemCount})</span>
-                {totalAmount > 0 && (
-                  <span className="font-bold">${totalAmount.toFixed(2)}</span>
+                {!showSearchModal && <span className="text-xs">Cart ({cartItemCount})</span>}
+                {showSearchModal && cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 text-xs bg-purple-600 text-white rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center font-semibold">
+                    {cartItemCount}
+                  </span>
+                )}
+                {!showSearchModal && totalAmount > 0 && (
+                  <span className="font-bold text-xs">${totalAmount.toFixed(2)}</span>
                 )}
               </Button>
               
-              {/* Checkout Button */}
+              {/* Checkout Button - Responsive: Full when search inactive, icon-only when search active */}
               <Button
                 onClick={onCheckout}
-                className="flex items-center justify-center gap-2 h-8 text-xs bg-purple-600 hover:bg-purple-700"
+                className={`flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white transition-all duration-300 ${
+                  showSearchModal ? 'h-8 w-8 p-0' : 'h-8 px-3 gap-2'
+                }`}
               >
                 <CreditCard className="w-4 h-4" />
-                <span>Checkout</span>
+                {!showSearchModal && <span className="text-xs">Checkout</span>}
               </Button>
+            </div>
+          </div>
+
+          {/* Tabs Row - Always visible below the main action row */}
+          <div className="max-w-md mx-auto px-4 pb-2 border-t border-gray-200">
+            <div className="flex overflow-x-auto scrollbar-hide pt-2">
+              {categories.map((category) => {
+                const categoryProducts = collections
+                  .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
+                  .flatMap(collection => collection.products);
+                
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => onCategorySelect(category.id)}
+                    className={`flex-shrink-0 px-2 py-1 text-xs font-medium border-b-2 transition-colors ${
+                      activeCategory === category.id
+                        ? 'border-purple-500 text-purple-600 bg-purple-50'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1">
+                      <category.icon className="w-3 h-3" />
+                      <span className="whitespace-nowrap">{category.name}</span>
+                      {categoryProducts.length > 0 && (
+                        <Badge variant="secondary" className="text-xs ml-1">
+                          {categoryProducts.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
