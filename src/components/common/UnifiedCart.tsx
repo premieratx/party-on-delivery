@@ -89,8 +89,11 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         onClick={onClose}
       />
       
-      {/* Cart Sidebar - Fixed positioning with proper flex layout */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate">
+      {/* Cart Sidebar - Fixed positioning independent of page scroll */}
+      <div 
+        className="fixed right-0 top-0 w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate"
+        style={{ position: 'fixed', height: '100vh' }}
+      >
         
         {/* Sticky Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 z-10">
@@ -256,17 +259,19 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                   <span>${formatPrice(finalTotal)}</span>
                 </div>
                 
-                {/* Checkout Button - Positioned directly below Total */}
-                <div className="pt-4">
+                 {/* Checkout Button - Positioned directly below Total */}
+                <div className="pt-4 relative">
                   <Button 
-                    className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+                    className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl animate-heartbeat overflow-hidden relative"
                     size="lg" 
                     onClick={handleCheckout}
                   >
-                    <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    <span className="hidden sm:inline">Proceed to Checkout - </span>
-                    <span className="sm:hidden">Checkout - </span>
-                    ${formatPrice(finalTotal)}
+                    {/* Liquid flowing background effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-liquid-flow -translate-x-full"></div>
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2 relative z-10" />
+                    <span className="hidden sm:inline relative z-10">Proceed to Checkout - </span>
+                    <span className="sm:hidden relative z-10">Checkout - </span>
+                    <span className="relative z-10">${formatPrice(finalTotal)}</span>
                   </Button>
                 </div>
               </div>
