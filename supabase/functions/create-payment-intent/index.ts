@@ -47,6 +47,12 @@ serve(async (req) => {
     } = await req.json();
 
     console.log('💰 Creating payment intent for amount:', amount, 'cents');
+    console.log('🛒 CART ITEMS DEBUG:', { 
+      cartItems, 
+      cartItemsLength: cartItems?.length, 
+      cartItemsType: typeof cartItems,
+      firstItem: cartItems?.[0]
+    });
     
     // Initialize Supabase and Stripe
     const supabase = createClient(
@@ -111,6 +117,7 @@ serve(async (req) => {
       metadata: {
         order_draft_id: draftData?.id || 'unknown',
         cart_items: JSON.stringify(cartItems || []),  // 🔥 CRITICAL FIX: Add cart items as backup
+        cart_items_debug: `Items: ${cartItems?.length || 0}, First: ${cartItems?.[0]?.title || 'none'}`,
         affiliate_code: (affiliateCode || '').substring(0, 100),
         customer_email: (customerInfo?.email || '').substring(0, 100),
         customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim().substring(0, 100),
