@@ -13,8 +13,15 @@ serve(async (req) => {
   try {
     console.log("🚀 CREATE SHOPIFY ORDER - Starting...");
     
-    const body = await req.json();
-    console.log("📦 FULL REQUEST BODY:", JSON.stringify(body, null, 2));
+    let body;
+    try {
+      body = await req.json();
+      console.log("📦 FULL REQUEST BODY:", JSON.stringify(body, null, 2));
+    } catch (jsonError) {
+      console.error("❌ JSON PARSE ERROR:", jsonError.message);
+      throw new Error("Invalid JSON in request body");
+    }
+    
     console.log("🔍 ADDRESS DEBUG:", {
       deliveryInfo: body.deliveryInfo,
       addressType: typeof body.deliveryInfo?.address,
@@ -51,7 +58,7 @@ serve(async (req) => {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
     }
 
-    console.log("🔑 Shopify token retrieved");
+    console.log("🔑 Shopify token retrieved, length:", shopifyToken.length);
 
     // Create line items for Shopify
     const lineItems = cartItems.map((item: any) => {
@@ -125,17 +132,23 @@ serve(async (req) => {
 
     console.log("🏪 SENDING TO SHOPIFY:", JSON.stringify(orderData, null, 2));
 
-    const response = await fetch(
-      "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
-      {
-        method: "POST",
-        headers: {
-          "X-Shopify-Access-Token": shopifyToken,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      }
-    );
+    let response;
+    try {
+      response = await fetch(
+        "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
+        {
+          method: "POST",
+          headers: {
+            "X-Shopify-Access-Token": shopifyToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+    } catch (fetchError) {
+      console.error("❌ FETCH ERROR:", fetchError.message);
+      throw new Error(`Network error calling Shopify: ${fetchError.message}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -165,11 +178,16 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("💥 Error:", error.message);
+    console.error("💥 CRITICAL ERROR:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
