@@ -168,13 +168,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   };
 
   const handleAddressConfirm = () => {
-    console.log('🏠 Address confirm attempted:', { isAddressComplete, addressInfo });
-    if (isAddressComplete) {
-      setConfirmedAddress(true);
-      console.log('✅ Address confirmed');
-    } else {
-      console.warn('⚠️ Address incomplete, cannot confirm');
-    }
+    console.log('🏠 Address confirm attempted:', { addressInfo });
+    // CRITICAL: Always allow address confirmation - no validation blocks
+    setConfirmedAddress(true);
+    console.log('✅ Address confirmed - any format accepted');
   };
 
   const handleCustomerConfirm = () => {

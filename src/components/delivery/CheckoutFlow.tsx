@@ -652,9 +652,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   const handleConfirmAddress = async () => {
     console.log('🔵 CONFIRM ADDRESS CLICKED - Address info:', addressInfo);
-    if (!isAddressComplete) return;
+    // CRITICAL: Always allow address confirmation - no validation blocks
     
-    console.log('🟢 Address validation passed, confirming...');
+    console.log('🟢 Address accepted - any format allowed, confirming...');
     setConfirmedAddress(true);
     
     // Return to previous step if editing, otherwise auto-proceed to payment if all sections are confirmed  
@@ -1283,7 +1283,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       </Button>
                       <Button 
                         onClick={handleConfirmAddress}
-                        disabled={!isAddressComplete}
                         className="flex-1"
                       >
                         Save Delivery Address

@@ -102,14 +102,14 @@ export const AddressStep: React.FC<AddressStepProps> = ({
   };
 
   const handleConfirm = () => {
-    if (validateAddress()) {
-      onConfirm();
-    }
+    // CRITICAL: Always allow confirmation - no address validation blocks
+    onConfirm();
   };
 
-  const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
+  // CRITICAL: Always return true - customers can enter ANY address format
+  const isAddressComplete = true; // Always true - handle validation on backend
 
-  if (isConfirmed && isAddressComplete) {
+  if (isConfirmed) {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
