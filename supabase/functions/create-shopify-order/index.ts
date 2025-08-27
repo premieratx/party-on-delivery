@@ -523,19 +523,8 @@ serve(async (req) => {
     // Create Shopify order with EXACT structure matching screenshot
     const orderData = {
       order: {
-        // ONLY actual products as line items (for subtotal calculation)
-        line_items: [
-          ...lineItems,
-          // Add driver tip as a separate line item (this makes it show as separate "Tip" line)
-          ...(orderAmounts.tip_amount > 0 ? [{
-            title: "Driver Tip",
-            price: orderAmounts.tip_amount.toFixed(2),
-            quantity: 1,
-            requires_shipping: false,
-            taxable: false,
-            gift_card: false
-          }] : [])
-        ],
+        // ONLY actual products as line items - NO TIP, NO FEES
+        line_items: lineItems, // Just the real products
         
         customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
         billing_address: {
@@ -580,6 +569,9 @@ serve(async (req) => {
           price: orderAmounts.delivery_fee.toFixed(2),  // $30.00
           code: "LOCAL_DELIVERY"
         }] : [],
+        
+        // Driver tip tracking - Store in note attributes only (NOT as line item or tax)
+        // Tip amount is included in total_price but not itemized in Shopify breakdown
         
         // Custom attributes - delivery details displayed prominently
         note_attributes: [
