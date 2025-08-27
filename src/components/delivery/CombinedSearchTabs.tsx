@@ -225,17 +225,32 @@ export const CombinedSearchTabs = ({
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Focus search input immediately
-    setTimeout(() => {
+    // Focus search input immediately with multiple fallback attempts
+    const focusInput = () => {
       const searchInput = searchInputRef.current ||
                          document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
-                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
+                         document.querySelector('.mobile-search-input') as HTMLInputElement;
       
       if (searchInput) {
+        console.log('🎯 Direct search input found, focusing');
         searchInput.focus();
-        console.log('🎯 Direct search input focused');
+        searchInput.click();
+        return true;
       }
-    }, 100);
+      return false;
+    };
+    
+    // Try immediate focus
+    if (!focusInput()) {
+      // Try with small delay if immediate doesn't work
+      setTimeout(() => {
+        if (!focusInput()) {
+          // Final attempt with longer delay
+          setTimeout(focusInput, 200);
+        }
+      }, 50);
+    }
   };
 
   // Listen for mobile search activation from SearchIcon component
@@ -481,7 +496,7 @@ export const CombinedSearchTabs = ({
                         }}
                         onSubmit={onSearchSubmit}
                         placeholder="Search products..."
-                        className="w-full"
+                        className="w-full mobile-search-input"
                         allProducts={allProducts}
                         autoFocus={true}
                       />
@@ -493,13 +508,14 @@ export const CombinedSearchTabs = ({
                     </div>
                   </div>
                 ) : (
-                  /* Search Icon - Compact */
+                /* Search Icon - Compact */
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleSearchIconClick}
-                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
+                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors mobile-search-button"
                     title="Search"
+                    data-testid="mobile-search-button"
                   >
                     <Search className="w-4 h-4" />
                   </Button>
