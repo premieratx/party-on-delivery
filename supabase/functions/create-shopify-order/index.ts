@@ -267,44 +267,93 @@ serve(async (req) => {
     let zip = '';
     let fullAddressString = '';
 
+    // First, log what we received
+    logStep("Raw delivery address data received", {
+      delivery_address: metadata.delivery_address,
+      delivery_date: deliveryDate,
+      delivery_time: deliveryTime,
+      type: typeof metadata.delivery_address
+    });
+
     try {
-      // Try to parse as JSON first
-      if (metadata.delivery_address && metadata.delivery_address.startsWith('{')) {
-        deliveryAddressObj = JSON.parse(metadata.delivery_address);
-        street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || '';
-        city = deliveryAddressObj.city || '';
-        state = deliveryAddressObj.state || deliveryAddressObj.province || '';
-        zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
-        fullAddressString = `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '');
-      } else {
-        // Fallback to string parsing
-        const deliveryAddress = metadata.delivery_address || '';
-        fullAddressString = deliveryAddress;
-        const addressParts = deliveryAddress.split(',').map(p => p.trim());
-        street = addressParts[0] || '';
-        city = addressParts[1] || '';
-        const stateZip = addressParts[2] || '';
-        const stateParts = stateZip.split(' ');
-        state = stateParts[0] || '';
-        zip = stateParts.slice(1).join(' ') || '';
+      // Handle different address formats
+      if (metadata.delivery_address) {
+        if (typeof metadata.delivery_address === 'object') {
+          // Already an object
+          deliveryAddressObj = metadata.delivery_address;
+          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || deliveryAddressObj.address || '';
+          city = deliveryAddressObj.city || '';
+          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
+          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
+        } else if (typeof metadata.delivery_address === 'string' && metadata.delivery_address.trim().startsWith('{')) {
+          // JSON string
+          deliveryAddressObj = JSON.parse(metadata.delivery_address);
+          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || deliveryAddressObj.address || '';
+          city = deliveryAddressObj.city || '';
+          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
+          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
+        } else {
+          // Plain string address
+          const deliveryAddress = metadata.delivery_address.toString().trim();
+          fullAddressString = deliveryAddress;
+          
+          // Try to parse if it contains commas
+          if (deliveryAddress.includes(',')) {
+            const addressParts = deliveryAddress.split(',').map(p => p.trim());
+            street = addressParts[0] || '';
+            city = addressParts[1] || '';
+            const stateZip = addressParts[2] || '';
+            const stateParts = stateZip.split(' ');
+            state = stateParts[0] || '';
+            zip = stateParts.slice(1).join(' ') || '';
+          } else {
+            // Use entire string as street if no structure
+            street = deliveryAddress;
+          }
+        }
+
+        // Build formatted address string if we have parts
+        if (!fullAddressString && (street || city || state || zip)) {
+          const parts = [street, city, state && zip ? `${state} ${zip}` : state || zip].filter(Boolean);
+          fullAddressString = parts.join(', ');
+        }
+
+        // Fallback to ensure we always have something
+        if (!fullAddressString) {
+          fullAddressString = metadata.delivery_address.toString();
+        }
       }
+
+      // Fallback if still empty
+      if (!fullAddressString) {
+        fullAddressString = 'Address not provided';
+        street = 'Address not provided';
+      }
+
     } catch (addressParseError) {
       logStep("WARNING: Could not parse delivery address", { 
         error: addressParseError.message,
         rawAddress: metadata.delivery_address 
       });
-      // Fallback to raw string
-      fullAddressString = metadata.delivery_address || '';
+      // Robust fallback
+      fullAddressString = metadata.delivery_address ? metadata.delivery_address.toString() : 'Address parsing failed';
       street = fullAddressString;
     }
 
-    logStep("Order details extracted", {
+    logStep("Address parsing completed", {
       customerName,
       customerEmail,
       deliveryDate,
       deliveryTime,
       itemCount: cartItems.length,
-      parsedAddress: { street, city, state, zip, fullAddressString }
+      finalAddressData: { 
+        street, 
+        city, 
+        state, 
+        zip, 
+        fullAddressString,
+        willGoToShopifyAs: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '') 
+      }
     });
 
     // Create customer in Shopify
