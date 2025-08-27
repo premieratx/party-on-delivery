@@ -253,27 +253,25 @@ export const CombinedSearchTabs = ({
       
       // Focus the search input after a short delay to ensure it's rendered
       setTimeout(() => {
-        const searchInput = document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement;
+        // Try multiple selectors to find the input
+        const searchInput = document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
+                           document.querySelector('.container input[placeholder*="Search"]') as HTMLInputElement ||
+                           document.querySelector('input[type="text"]') as HTMLInputElement;
+        
         if (searchInput) {
           searchInput.focus();
           console.log('🎯 Search input focused');
+        } else {
+          console.log('❌ Search input not found');
         }
-      }, 100);
+      }, 150);
     };
 
-    // Listen on both document and the search handler element
+    // Listen on document level
     document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
-    
-    const searchHandler = document.querySelector('[data-mobile-search-handler]');
-    if (searchHandler) {
-      searchHandler.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
-    }
     
     return () => {
       document.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
-      if (searchHandler) {
-        searchHandler.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
-      }
     };
   }, [onSearchActiveChange]);
 
