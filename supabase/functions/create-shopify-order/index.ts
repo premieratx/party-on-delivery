@@ -324,10 +324,23 @@ serve(async (req) => {
         }
       }
 
-      // Fallback if still empty
+      // Fallback if still empty - USE EVERYTHING WE HAVE
       if (!fullAddressString) {
-        fullAddressString = 'Address not provided';
-        street = 'Address not provided';
+        // Try every possible address field from metadata
+        fullAddressString = metadata.delivery_address || 
+                           metadata.address || 
+                           metadata.customer_address ||
+                           metadata.shipping_address ||
+                           JSON.stringify(metadata.delivery_address || {}) ||
+                           'FALLBACK: Raw metadata available but address parsing failed';
+        street = fullAddressString;
+        
+        // Log this so we can see what we're missing
+        logStep("CRITICAL: Using ultimate fallback for address", {
+          attempted_address: fullAddressString,
+          all_metadata_keys: Object.keys(metadata),
+          full_metadata: metadata
+        });
       }
 
     } catch (addressParseError) {
@@ -570,24 +583,20 @@ serve(async (req) => {
           code: "LOCAL_DELIVERY"
         }] : [],
         
-        // Tip handling - Use Shopify's order adjustments to make tip appear in breakdown
+        // Tip handling - Use Shopify's NATIVE tip system (same as POS transactions)
         ...(orderAmounts.tip_amount > 0 ? {
-          order_adjustments: [{
-            amount: orderAmounts.tip_amount.toFixed(2),
-            tax_amount: "0.00", // Tips are not taxed
-            kind: "shipping_discount", // Use shipping_discount type to appear in breakdown
-            reason: "Driver Tip",
-            amount_set: {
-              shop_money: {
-                amount: orderAmounts.tip_amount.toFixed(2),
-                currency_code: "USD"
-              },
-              presentment_money: {
-                amount: orderAmounts.tip_amount.toFixed(2),
-                currency_code: "USD"
-              }
+          tip_payment_gateway: "stripe",
+          tip_payment_method: "credit_card", 
+          current_total_additional_fees_set: {
+            shop_money: {
+              amount: orderAmounts.tip_amount.toFixed(2),
+              currency_code: "USD"
+            },
+            presentment_money: {
+              amount: orderAmounts.tip_amount.toFixed(2),
+              currency_code: "USD" 
             }
-          }]
+          }
         } : {}),
         
         // Custom attributes - delivery details displayed prominently
