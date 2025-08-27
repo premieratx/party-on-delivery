@@ -215,6 +215,7 @@ serve(async (req) => {
     const customerPhone = metadata.customer_phone || metadata.phone || '';
     const deliveryDate = metadata.delivery_date || '';
     const deliveryTime = metadata.delivery_time || '';
+    const deliveryAddress = metadata.delivery_address || '';  // RAW ADDRESS - NO PARSING
     const deliveryInstructions = metadata.delivery_instructions || metadata.special_instructions || '';
 
     logStep("Customer and delivery info extracted", {
@@ -222,6 +223,7 @@ serve(async (req) => {
       phone: customerPhone,
       deliveryDate,
       deliveryTime,
+      deliveryAddress,
       hasInstructions: !!deliveryInstructions
     });
 
@@ -240,84 +242,12 @@ serve(async (req) => {
 
     logStep("Customer name processed", { firstName, lastName });
 
-    // ENHANCED ADDRESS PARSING with robust fallbacks
-    let deliveryAddressObj = {};
-    let street = '';
-    let city = '';
-    let state = '';
-    let zip = '';
-    let fullAddressString = '';
-
-    logStep("ENHANCED ADDRESS PARSING DEBUG", {
-      delivery_address: metadata.delivery_address,
-      delivery_date: deliveryDate,
-      delivery_time: deliveryTime,
-      type: typeof metadata.delivery_address
+    // Simple address handling - no complex parsing needed
+    logStep("Raw delivery address from metadata", {
+      deliveryAddress,
+      deliveryDate,
+      deliveryTime
     });
-
-    try {
-      // Handle different address formats
-      if (metadata.delivery_address) {
-        if (typeof metadata.delivery_address === 'object') {
-          // Already an object
-          deliveryAddressObj = metadata.delivery_address;
-          logStep("✅ Address is object format", deliveryAddressObj);
-        } else if (typeof metadata.delivery_address === 'string') {
-          try {
-            // Try to parse as JSON first
-            deliveryAddressObj = JSON.parse(metadata.delivery_address);
-            logStep("✅ Address parsed from JSON string", deliveryAddressObj);
-          } catch (jsonError) {
-            // If not JSON, treat as plain string
-            fullAddressString = metadata.delivery_address.trim();
-            street = fullAddressString;
-            logStep("✅ Address treated as plain string", { fullAddressString });
-          }
-        }
-
-        // Extract components from object if we have one
-        if (deliveryAddressObj && typeof deliveryAddressObj === 'object') {
-          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || '';
-          city = deliveryAddressObj.city || '';
-          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
-          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || '';
-          
-          // Create full address string
-          const addressParts = [street, city, state, zip].filter(Boolean);
-          fullAddressString = addressParts.join(', ');
-          
-          logStep("✅ Address components extracted", {
-            street, city, state, zip, fullAddressString
-          });
-        }
-      }
-
-      // Enhanced fallback system - check ALL possible sources
-      if (!fullAddressString || fullAddressString === '{}' || fullAddressString.trim() === '') {
-        
-        logStep("CRITICAL: Primary address empty, checking order draft and all metadata sources", {
-          orderDraftId: metadata.order_draft_id,
-          allMetadataKeys: Object.keys(metadata)
-        });
-
-        // STEP 1: Try all possible metadata fields
-        const possibleAddresses = [
-          metadata.delivery_address,
-          metadata.address,
-          metadata.customer_address,
-          metadata.shipping_address,
-          metadata.billing_address
-        ];
-        
-        for (const addr of possibleAddresses) {
-          if (addr && typeof addr === 'string' && addr.trim() && addr !== '{}') {
-            fullAddressString = addr.trim();
-            street = fullAddressString;
-            logStep("✅ Found address in metadata fallback", { field: 'string', address: fullAddressString });
-            break;
-          } else if (addr && typeof addr === 'object') {
-            const objStr = JSON.stringify(addr);
-            if (objStr !== '{}' && objStr !== 'null') {
               fullAddressString = objStr;
               street = fullAddressString;
               logStep("✅ Found address object in metadata fallback", { address: fullAddressString });
@@ -477,7 +407,7 @@ serve(async (req) => {
         note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
 📍 DELIVERY ADDRESS:
-${fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')}
+${deliveryAddress}
 📞 Customer Phone: ${customerPhone}
 ✉️ Customer Email: ${customerEmail}
 ${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}
