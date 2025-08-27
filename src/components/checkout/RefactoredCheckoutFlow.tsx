@@ -20,6 +20,7 @@ import { ImprovedCheckoutSummary } from './ImprovedCheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
 import { CleanCheckoutTotal } from './CleanCheckoutTotal';
 import { PromoCodeInput } from './PromoCodeInput';
+import { CheckoutSafeguards } from './CheckoutSafeguards';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -113,23 +114,12 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     }
   }, [persistentDataLoaded, persistedCustomer, persistedAddress, setCustomerInfo, setAddressInfo]);
 
-  // Fast auto-advance through completed steps
+  // CRITICAL: Always allow editing - never auto-confirm to prevent user lockout
   useEffect(() => {
-    if (persistentDataLoaded && hasSavedData()) {
-      // If we have complete delivery info, auto-confirm it
-      if (deliveryInfo.date && deliveryInfo.timeSlot && !confirmedDateTime) {
-        setTimeout(() => setConfirmedDateTime(true), 100);
-      }
-      
-      // If we have complete address, auto-confirm it
-      if (persistedAddress.address && !confirmedAddress) {
-        setTimeout(() => setConfirmedAddress(true), 200);
-      }
-      
-      // Customer info should always be shown for user to review and confirm
-      // Don't auto-confirm even if we have persisted data
-    }
-  }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer, confirmedDateTime, confirmedAddress, confirmedCustomer]);
+    // Remove any auto-confirmation that could block users from editing
+    // Users must manually confirm each step to ensure they can always edit
+    console.log('✅ Checkout safeguard: Auto-confirmation disabled to ensure editability');
+  }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer]);
 
   // Pricing calculations - use proper delivery fee hook with tip support
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -158,35 +148,76 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
 
   // Step confirmation handlers
   const handleDateTimeConfirm = () => {
+    console.log('📅 DateTime confirm attempted:', { isDateTimeComplete, deliveryInfo });
     if (isDateTimeComplete) {
       setConfirmedDateTime(true);
       setCurrentStep('address');
-      // No toast for speed - just auto-advance
+      console.log('✅ DateTime confirmed, moving to address step');
+    } else {
+      console.warn('⚠️ DateTime incomplete, cannot confirm');
     }
   };
 
   const handleAddressConfirm = () => {
+    console.log('🏠 Address confirm attempted:', { isAddressComplete, addressInfo });
     if (isAddressComplete) {
       setConfirmedAddress(true);
-      // Don't auto-confirm customer - let user manually confirm
-      // Stay on address step until customer info is also filled
-      // No toast for speed - just auto-advance
+      console.log('✅ Address confirmed');
+    } else {
+      console.warn('⚠️ Address incomplete, cannot confirm');
     }
   };
 
   const handleCustomerConfirm = () => {
+    console.log('👤 Customer confirm attempted:', { isCustomerComplete, customerInfo });
     if (isCustomerComplete) {
       setConfirmedCustomer(true);
       setCurrentStep('payment');
-      // No toast for speed - just auto-advance
+      console.log('✅ Customer confirmed, moving to payment step');
+    } else {
+      console.warn('⚠️ Customer info incomplete, cannot confirm');
     }
   };
 
   const handleEditAll = () => {
+    console.log('🔄 User editing all fields - resetting all confirmations');
     setConfirmedDateTime(false);
     setConfirmedAddress(false);
     setConfirmedCustomer(false);
     setCurrentStep('datetime');
+  };
+
+  const handleClearAllData = () => {
+    console.log('🧹 Clearing all checkout data for fresh start');
+    // Clear all persistent data
+    localStorage.removeItem('partyondelivery_customer');
+    localStorage.removeItem('partyondelivery_address'); 
+    localStorage.removeItem('partyondelivery_delivery_info');
+    localStorage.removeItem('partyondelivery_checkout_state');
+    localStorage.removeItem('persistent-checkout-info');
+    
+    // Reset all state
+    setConfirmedDateTime(false);
+    setConfirmedAddress(false);
+    setConfirmedCustomer(false);
+    setCurrentStep('datetime');
+    
+    // Reset form data
+    setCustomerInfo({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: ''
+    });
+    setAddressInfo({
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      instructions: ''
+    });
+    
+    console.log('✅ All checkout data cleared - fresh start enabled');
   };
 
   const handlePaymentSuccess = (paymentIntentId?: string) => {
@@ -352,9 +383,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             )}
           </div>
 
-          {/* Right Column - Always Show Product List */}
+          {/* Right Column - Always Show Product List & Safeguards */}
           <div className="xl:col-span-2 space-y-4">
-            <div className="lg:sticky lg:top-4">
+            <div className="lg:sticky lg:top-4 space-y-4">
               <ImprovedCheckoutSummary
                 cartItems={cartItems}
                 subtotal={cartSubtotal}
@@ -363,6 +394,12 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 tipAmount={tipAmount} // Pass tip amount to summary
                 appliedDiscount={appliedDiscount}
                 onUpdateQuantity={onUpdateQuantity}
+              />
+              
+              {/* Checkout Safeguards - Always visible to ensure editability */}
+              <CheckoutSafeguards
+                onResetCheckout={handleEditAll}
+                onClearAllData={handleClearAllData}
               />
             </div>
           </div>

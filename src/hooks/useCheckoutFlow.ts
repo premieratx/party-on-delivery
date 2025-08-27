@@ -36,24 +36,26 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     return saved?.confirmedCustomer || false;
   });
 
-  // Auto-advance to next step when previous step is confirmed
+  // Auto-advance to next step when previous step is confirmed - with safeguards
   useEffect(() => {
     console.log('🔄 Step progression check:', { 
       confirmedDateTime, 
       confirmedAddress, 
+      confirmedCustomer,
       currentStep,
       shouldGoToAddress: confirmedDateTime && !confirmedAddress && currentStep === 'datetime',
-      shouldGoToPayment: confirmedDateTime && confirmedAddress && currentStep === 'address'
+      shouldGoToPayment: confirmedDateTime && confirmedAddress && confirmedCustomer && currentStep !== 'payment'
     });
     
+    // Only auto-advance if user has manually confirmed previous steps
     if (confirmedDateTime && !confirmedAddress && currentStep === 'datetime') {
       console.log('✅ Moving to address step');
       setCurrentStep('address');
-    } else if (confirmedDateTime && confirmedAddress && currentStep === 'address') {
+    } else if (confirmedDateTime && confirmedAddress && confirmedCustomer && currentStep !== 'payment') {
       console.log('✅ Moving to payment step');
       setCurrentStep('payment');
     }
-  }, [confirmedDateTime, confirmedAddress, currentStep]);
+  }, [confirmedDateTime, confirmedAddress, confirmedCustomer, currentStep]);
   
   // Change tracking for "add to order" flow
   const [originalOrderInfo, setOriginalOrderInfo] = useState<any>(null);

@@ -121,6 +121,7 @@ export const AddressStep: React.FC<AddressStepProps> = ({
             variant="outline"
             size="sm"
             onClick={() => {
+              console.log('🔄 User editing address');
               onEdit?.();
             }}
             className="flex items-center gap-2"
