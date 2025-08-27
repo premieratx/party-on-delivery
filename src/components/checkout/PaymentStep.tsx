@@ -120,6 +120,24 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           tip: `$${validTipAmount.toFixed(2)}`
         }
       });
+      
+      // 🔥 CRITICAL DEBUG: Log cart items being sent
+      console.log('🛒 CART ITEMS BEING SENT TO PAYMENT INTENT:', {
+        cartItems,
+        cartItemsLength: cartItems?.length,
+        cartItemsType: typeof cartItems,
+        firstItem: cartItems?.[0],
+        formattedForShopify: cartItems?.map(item => ({
+          id: item.id,
+          title: item.title || item.name,
+          name: item.name || item.title,
+          price: item.price,
+          quantity: item.quantity,
+          product_id: item.id,
+          variant_id: item.variant || null,
+          vendor: null
+        }))
+      });
 
       // Create payment intent with enhanced error handling and retries
       const response = await safeSupabaseInvoke<PaymentIntentResponse>(
@@ -129,7 +147,16 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           body: {
             amount: amountInCents,
             currency: 'usd',
-            cartItems,
+            cartItems: cartItems?.map(item => ({
+              id: item.id,
+              title: item.title || item.name,
+              name: item.name || item.title,
+              price: item.price,
+              quantity: item.quantity,
+              product_id: item.id,
+              variant_id: item.variant || null,
+              vendor: null
+            })), // 🔥 FIXED: Properly format cart items for Shopify
             customerInfo,
             deliveryInfo,
             appliedDiscount,
