@@ -110,33 +110,56 @@ serve(async (req) => {
       }
     };
 
-    console.log("🏪 Calling Shopify API");
+    console.log("🏪 Calling Shopify API with order data:", {
+      orderDataSize: JSON.stringify(orderData).length,
+      lineItemsCount: orderData.order.line_items.length,
+      customerEmail: orderData.order.customer.email,
+      totalPrice: orderData.order.total_price
+    });
 
-    const response = await fetch(
-      "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
-      {
-        method: "POST",
-        headers: {
-          "X-Shopify-Access-Token": shopifyToken,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      }
-    );
+    let response;
+    try {
+      response = await fetch(
+        "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
+        {
+          method: "POST",
+          headers: {
+            "X-Shopify-Access-Token": shopifyToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+      
+      console.log("📡 Shopify API response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
+    } catch (fetchError) {
+      console.error("💥 FETCH ERROR:", fetchError);
+      throw new Error(`Network error: ${fetchError.message}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ SHOPIFY FULL ERROR:", {
+      console.error("❌ SHOPIFY API ERROR DETAILS:", {
         status: response.status,
         statusText: response.statusText,
         errorBody: errorText,
-        requestData: JSON.stringify(orderData, null, 2)
+        headers: Object.fromEntries(response.headers.entries()),
+        sentData: JSON.stringify(orderData, null, 2)
       });
       throw new Error(`Shopify API error (${response.status}): ${errorText}`);
     }
 
     const result = await response.json();
-    console.log("✅ Shopify order created:", result.order.name);
+    console.log("✅ Shopify order created successfully:", {
+      orderId: result.order?.id,
+      orderName: result.order?.name,
+      status: result.order?.financial_status
+    });
 
     return new Response(
       JSON.stringify({
