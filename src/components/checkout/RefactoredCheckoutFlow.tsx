@@ -420,29 +420,61 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         
       </div>
 
-      {/* Sticky Mobile Checkout Button */}
+      {/* Safe Mobile Checkout Button - Positioned above browser bottom menu */}
       {currentStep === 'payment' && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t p-4 lg:hidden">
-          <Button 
-            onClick={() => {
-              // Find and click the payment form submit button
-              const form = document.querySelector('form');
-              if (form) {
-                // Create a submit event to trigger the form submission
-                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-                form.dispatchEvent(submitEvent);
+        <>
+          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+            {/* Add safe area for browser bottom navigation */}
+            <div 
+              className="bg-background border-t p-4" 
+              style={{ 
+                paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+                bottom: 'env(safe-area-inset-bottom, 0px)'
+              }}
+            >
+              <Button 
+                onClick={() => {
+                  // Find and click the payment form submit button
+                  const form = document.querySelector('form');
+                  if (form) {
+                    // Create a submit event to trigger the form submission
+                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                    form.dispatchEvent(submitEvent);
+                  }
+                }}
+                className="w-full h-12 text-base font-semibold"
+                size="lg"
+              >
+                Pay ${finalTotal.toFixed(2)}
+              </Button>
+            </div>
+          </div>
+          
+          {/* Global styles for mobile browser UI handling */}
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              @media (max-width: 1023px) {
+                body {
+                  padding-bottom: env(safe-area-inset-bottom);
+                }
+                
+                /* Hide browser chrome on scroll */
+                html {
+                  overscroll-behavior-y: none;
+                }
+                
+                /* Force mobile viewport to account for bottom UI */
+                .checkout-safe-area {
+                  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+                }
               }
-            }}
-            className="w-full h-12 text-base font-semibold"
-            size="lg"
-          >
-            Pay ${finalTotal.toFixed(2)}
-          </Button>
-        </div>
+            `
+          }} />
+        </>
       )}
       
       {/* Add bottom padding for mobile when sticky button is shown */}
-      <div className={`${currentStep === 'payment' ? 'pb-20 lg:pb-0' : ''}`} />
+      <div className={`${currentStep === 'payment' ? 'checkout-safe-area lg:pb-0' : ''}`} />
     </div>
   );
 };
