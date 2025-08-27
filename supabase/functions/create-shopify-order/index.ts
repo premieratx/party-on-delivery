@@ -12,11 +12,22 @@ serve(async (req) => {
 
   try {
     console.log("🚀 CREATE SHOPIFY ORDER - Starting...");
+    console.log("🔍 REQUEST DEBUG:", {
+      method: req.method,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries())
+    });
     
     let body;
     try {
       body = await req.json();
       console.log("📦 FULL REQUEST BODY:", JSON.stringify(body, null, 2));
+      console.log("📦 BODY TYPE CHECK:", {
+        bodyType: typeof body,
+        isObject: typeof body === 'object',
+        isArray: Array.isArray(body),
+        keys: body ? Object.keys(body) : 'no keys'
+      });
     } catch (jsonError) {
       console.error("❌ JSON PARSE ERROR:", jsonError.message);
       throw new Error("Invalid JSON in request body");
@@ -31,6 +42,16 @@ serve(async (req) => {
         : (body.deliveryInfo?.address?.address || "Address Required")
     });
 
+    console.log("🔍 DESTRUCTURING DEBUG:", {
+      hasPaymentIntentId: !!body.paymentIntentId,
+      hasCartItems: !!body.cartItems,
+      hasCustomerInfo: !!body.customerInfo,
+      hasDeliveryInfo: !!body.deliveryInfo,
+      hasAmounts: !!body.amounts,
+      cartItemsLength: body.cartItems?.length || 0,
+      customerEmail: body.customerInfo?.email || 'missing'
+    });
+
     const { 
       paymentIntentId,
       cartItems,
@@ -38,6 +59,12 @@ serve(async (req) => {
       deliveryInfo,
       amounts
     } = body;
+
+    console.log("🔍 AFTER DESTRUCTURING:", {
+      paymentIntentId: !!paymentIntentId,
+      cartItems: cartItems?.length || 0,
+      customerEmail: customerInfo?.email || 'missing'
+    });
 
     // Validate required data
     if (!paymentIntentId) {
