@@ -32,14 +32,19 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
   };
 
   const handleClick = () => {
+    console.log('🔍 SearchIcon clicked, variant:', variant);
     // Check if we're in a delivery app context by looking for mobile search handler
     const searchHandler = document.querySelector('[data-mobile-search-handler]');
-    if (searchHandler && variant === "mobile") {
-      // Trigger mobile search expansion in delivery app
+    console.log('📱 Search handler found:', !!searchHandler);
+    
+    if (searchHandler) {
+      // Always trigger mobile search expansion in delivery app, regardless of variant
+      console.log('🚀 Dispatching mobileSearchActivate event');
       const event = new CustomEvent('mobileSearchActivate', { bubbles: true });
       searchHandler.dispatchEvent(event);
     } else {
       // Default navigation to search page
+      console.log('🔄 Navigating to search page');
       navigate("/search");
     }
   };

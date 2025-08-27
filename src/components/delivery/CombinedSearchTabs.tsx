@@ -237,21 +237,18 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
+    console.log('🔍 Mobile search icon clicked');
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
+    // Auto-focus will be handled by the autoFocus prop
   };
 
   // Listen for mobile search activation from SearchIcon component
   useEffect(() => {
     const handleMobileSearchActivate = () => {
+      console.log('📱 Mobile search activated from SearchIcon');
       setIsSearchExpanded(true);
       onSearchActiveChange?.(true);
-      // Focus the search input when expanded
-      setTimeout(() => {
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-        }
-      }, 100);
     };
 
     document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
@@ -358,16 +355,18 @@ export const CombinedSearchTabs = ({
               <AdvancedSearchBar
                 value={searchQuery}
                 onChange={(newValue) => {
+                  console.log('🔍 Mobile search query changed:', newValue);
                   onSearchChange(newValue);
+                  // Real-time search - trigger immediately for faster results
                   if (newValue.trim()) {
-                    setTimeout(() => onSearchSubmit(), 300);
+                    onSearchSubmit();
                   }
                 }}
                 onSubmit={onSearchSubmit}
                 placeholder="Search products..."
                 className="flex-1 max-w-md"
                 allProducts={allProducts}
-                autoFocus={true}
+                autoFocus={isSearchExpanded}
               />
             </div>
           </div>
