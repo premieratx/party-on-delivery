@@ -54,80 +54,9 @@ export const BottomCartBar = withCartErrorBoundary<BottomCartBarProps>(({
 
   return (
     <>
-      {/* Always Sticky Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto lg:hidden">
-        <div className="bg-background border-t shadow-lg p-2">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            {/* Left side: Search icon */}
-            {!isHomePage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/search')}
-                className="flex items-center gap-1 px-3 h-9"
-              >
-                <Search className="w-4 h-4" />
-                <span className="text-xs">Search</span>
-              </Button>
-            )}
-            {!isHomePage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/customer/dashboard')}
-                className="flex items-center gap-1 px-2 h-9"
-              >
-                <Package className="w-4 h-4" />
-                <span className="text-xs">Manage Order</span>
-              </Button>
-            )}
-            {/* Center: Delivery App Selector, Admin */}
-            <div className="flex items-center gap-2">
-              {showAdmin && (
-                <button 
-                  onClick={() => navigate('/admin')}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors px-2 bg-transparent border-0 cursor-pointer"
-                >
-                  Admin
-                </button>
-              )}
-              
-              <div className="scale-75 origin-center">
-                <DeliveryAppSelector 
-                  currentAppSlug={currentAppSlug}
-                  className="flex-shrink-0"
-                />
-              </div>
-            </div>
-
-            {/* Right side: Cart, Total, and Checkout */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenCart}
-                className="flex items-center gap-1 px-2 h-9"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                <span className="text-xs">({totalItems})</span>
-              </Button>
-              
-              <span className="font-semibold text-xs text-primary px-1">
-                ${formatPrice(adjustedTotal)}
-              </span>
-              
-              <Button
-                onClick={onCheckout}
-                size="sm"
-                variant="success"
-                className="flex items-center gap-1 px-2 h-9 checkout-blink"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span className="text-xs">Checkout</span>
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Mobile Bottom Bar - HIDDEN as requested */}
+      <div className="hidden lg:hidden">
+        {/* Bottom navigation completely hidden on mobile */}
       </div>
 
       {/* Always Sticky Desktop Bottom Bar */}
