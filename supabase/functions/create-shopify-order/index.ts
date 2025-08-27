@@ -33,22 +33,12 @@ serve(async (req) => {
 
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    const shopifyStoreUrl = Deno.env.get("SHOPIFY_STORE_URL");
-    
-    console.log("🔍 Environment check:", {
-      hasToken: !!shopifyToken,
-      hasStoreUrl: !!shopifyStoreUrl,
-      storeUrl: shopifyStoreUrl
-    });
     
     if (!shopifyToken) {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
     }
-    if (!shopifyStoreUrl) {
-      throw new Error("SHOPIFY_STORE_URL not configured");
-    }
 
-    console.log("🔑 Credentials retrieved");
+    console.log("🔑 Token retrieved");
 
     // Create line items for Shopify
     const lineItems = cartItems.map((item: any) => {
@@ -122,17 +112,17 @@ serve(async (req) => {
 
     console.log("🏪 Calling Shopify API");
 
-    const apiUrl = `${shopifyStoreUrl}/admin/api/2024-10/orders.json`;
-    console.log("🌐 API URL:", apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "X-Shopify-Access-Token": shopifyToken,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(orderData),
-    });
+    const response = await fetch(
+      "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
+      {
+        method: "POST",
+        headers: {
+          "X-Shopify-Access-Token": shopifyToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
