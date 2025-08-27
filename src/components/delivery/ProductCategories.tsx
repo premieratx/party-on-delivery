@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { OptimizedImage } from '@/components/common/OptimizedImage';
-import { LazyImage } from '@/components/common/LazyImage';
+import { OptimizedProductImage } from '@/components/common/OptimizedProductImage';
+import { useVirtualizedProductList } from '@/hooks/useVirtualizedProductList';
 import { PullToRefreshIndicator } from '@/components/common/PullToRefreshIndicator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -261,8 +261,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return Array.isArray(handles) && handles.includes(currentCollectionHandle);
     });
     
-    // Return stable slice
-    return filteredProducts.slice(0, maxProducts);
+    // Return stable slice with pagination
+    return filteredProducts.slice(0, Math.min(maxProducts, 30)); // Limit initial render
   }, [currentTabProducts, currentCollectionHandle, maxProducts]);
 
   const currentTab = tabs[selectedCategory];
@@ -528,14 +528,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                      onClick={() => setSelectedProduct(product)}
                    >
                     <div className="aspect-square relative overflow-hidden">
-                     <LazyImage
-                       src={product.image}
-                       alt={cleanTitle}
-                       className="w-full h-full object-cover hover-scale"
-                       priority={false}
-                       quality={85}
-                       width={300}
-                     />
+                      <OptimizedProductImage
+                        src={product.image}
+                        alt={cleanTitle}
+                        className="w-full h-full object-cover hover-scale"
+                        priority={false}
+                        width={300}
+                        height={300}
+                      />
                     </div>
                     <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                       <div className="space-y-1 text-center">
@@ -645,14 +645,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                    onClick={() => setSelectedProduct(product)}
                  >
                    <div className="aspect-square relative overflow-hidden">
-                     <LazyImage
-                       src={product.image}
-                       alt={cleanTitle}
-                       className="w-full h-full object-cover hover-scale"
-                       priority={false}
-                       quality={85}
-                       width={300}
-                     />
+                      <OptimizedProductImage
+                        src={product.image}
+                        alt={cleanTitle}
+                        className="w-full h-full object-cover hover-scale"
+                        priority={false}
+                        width={300}
+                        height={300}
+                      />
                    </div>
                   
                   <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
