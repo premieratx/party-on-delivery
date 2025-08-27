@@ -341,18 +341,16 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                   isConfirmed={confirmedAddress}
                 />
                 
-                {/* Customer Info - shown inline with address */}
-                {!confirmedCustomer && (
-                  <CustomerInfoStep
-                    customerInfo={customerInfo}
-                    setCustomerInfo={setCustomerInfo}
-                    onConfirm={handleCustomerConfirm}
-                    onEdit={() => {
-                      setConfirmedCustomer(false);
-                    }}
-                    isConfirmed={confirmedCustomer}
-                  />
-                )}
+                {/* Customer Info - always visible, condensed when confirmed */}
+                <CustomerInfoStep
+                  customerInfo={customerInfo}
+                  setCustomerInfo={setCustomerInfo}
+                  onConfirm={handleCustomerConfirm}
+                  onEdit={() => {
+                    setConfirmedCustomer(false);
+                  }}
+                  isConfirmed={confirmedCustomer}
+                />
               </>
             )}
 
