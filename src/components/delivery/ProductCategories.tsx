@@ -438,7 +438,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 alt={appName}
                 className="mx-auto transition-opacity duration-300"
                 style={{
-                  height: `clamp(${(heroConfig.logoSize || 64) * 0.5}px, ${(heroConfig.logoSize || 64) * 0.8}vw, ${heroConfig.logoSize || 64}px)`,
+                  height: `clamp(${(heroConfig.logoSize || mainConfig.logo_size || 64) * 0.5}px, ${(heroConfig.logoSize || mainConfig.logo_size || 64) * 0.8}vw, ${heroConfig.logoSize || mainConfig.logo_size || 64}px)`,
                   maxWidth: '80%',
                   objectFit: 'contain',
                   opacity: logoLoaded ? 1 : 0
