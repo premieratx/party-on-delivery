@@ -26,44 +26,21 @@ export function useGlobalKeyboardHiding() {
       }
     };
 
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    const handleScroll = () => {
+    // Simplified - only hide keyboard on user interaction, not scroll
+    const handleTouchStart = () => {
       if (!isMobile()) return;
       
-      const currentScrollY = window.scrollY;
-      
-      // Hide keyboard on any significant scroll movement
-      if (Math.abs(currentScrollY - lastScrollY) > 10) {
+      // Small delay to allow natural scroll behavior
+      setTimeout(() => {
         hideKeyboard();
-      }
-      
-      lastScrollY = currentScrollY;
-      ticking = false;
+      }, 150);
     };
 
-    const requestScrollTick = () => {
-      if (!ticking) {
-        requestAnimationFrame(handleScroll);
-        ticking = true;
-      }
-    };
-
-    // Touch-based scroll detection for mobile
-    const handleTouchMove = () => {
-      if (isMobile()) {
-        requestScrollTick();
-      }
-    };
-
-    // Regular scroll listener
-    window.addEventListener('scroll', requestScrollTick, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    // Only listen to touch start to avoid scroll conflicts
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', requestScrollTick);
-      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchstart', handleTouchStart);
     };
   }, []);
 }
