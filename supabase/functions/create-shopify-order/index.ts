@@ -26,13 +26,199 @@ serve(async (req) => {
       method: req.method,
       bodyKeys: Object.keys(body),
       hasPaymentIntentId: !!body.paymentIntentId,
-      hasSessionId: !!body.sessionId
+      hasSessionId: !!body.sessionId,
+      hasDirectCartItems: !!body.cartItems
     });
     
-    const { paymentIntentId, sessionId } = body;
+    const { 
+      paymentIntentId, 
+      sessionId, 
+      cartItems: directCartItems,
+      customerInfo: directCustomerInfo,
+      deliveryInfo: directDeliveryInfo,
+      amounts: directAmounts,
+      affiliateCode: directAffiliateCode
+    } = body;
+    
     if (!paymentIntentId && !sessionId) {
       logStep("ERROR: Missing payment identifier");
       throw new Error("Payment Intent ID or Session ID is required");
+    }
+
+    // 🔥 NEW APPROACH: Use direct data if provided, fallback to Stripe metadata
+    if (directCartItems && directCartItems.length > 0) {
+      logStep("🚀 USING DIRECT CART DATA (BYPASSING STRIPE METADATA)", {
+        cartItemCount: directCartItems.length,
+        customerEmail: directCustomerInfo?.email,
+        deliveryDate: directDeliveryInfo?.date
+      });
+      
+      // Skip all the complex Stripe metadata parsing - use direct data
+      const cartItems = directCartItems;
+      const customerEmail = directCustomerInfo?.email || '';
+      const customerPhone = directCustomerInfo?.phone || '';
+      const deliveryDate = directDeliveryInfo?.date || '';
+      const deliveryTime = directDeliveryInfo?.time || '';
+      const deliveryAddress = directDeliveryInfo?.address || '';
+      const deliveryInstructions = directDeliveryInfo?.instructions || '';
+      const firstName = directCustomerInfo?.firstName || 'Customer';
+      const lastName = directCustomerInfo?.lastName || '';
+      const affiliateCode = directAffiliateCode || '';
+      
+      const orderAmounts = {
+        subtotal: directAmounts?.subtotal || 0,
+        sales_tax: directAmounts?.salesTax || 0,
+        delivery_fee: directAmounts?.deliveryFee || 0,
+        tip_amount: directAmounts?.tipAmount || 0,
+        total_amount: directAmounts?.totalAmount || 0
+      };
+
+      // Jump directly to Shopify order creation with this data
+      // Skip all Stripe validation and go straight to Shopify API
+      
+      // Validate environment variables for Shopify
+      const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
+      const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL") || "premier-concierge.myshopify.com";
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+      if (!shopifyToken) {
+        logStep("ERROR: SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
+        throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not set");
+      }
+
+      // Create line items for Shopify from direct cart data
+      const lineItems = cartItems.map(item => ({
+        title: item.title || item.name,
+        quantity: item.quantity,
+        price: parseFloat(item.price).toFixed(2),
+        variant_id: item.variant_id || null,
+        product_id: item.product_id || item.id || null,
+        vendor: item.vendor || null,
+        requires_shipping: true
+      }));
+
+      logStep("Direct line items created", { 
+        itemCount: lineItems.length,
+        firstItem: lineItems[0]?.title
+      });
+
+      // Create Shopify order directly
+      const orderData = {
+        order: {
+          line_items: lineItems,
+          customer: null,
+          billing_address: {
+            first_name: firstName,
+            last_name: lastName,
+            address1: deliveryAddress || "Address Required",
+            city: "Address Required",
+            province: "TX",
+            country: "US",
+            zip: "00000",
+            phone: customerPhone
+          },
+          shipping_address: {
+            first_name: firstName,
+            last_name: lastName,
+            company: `🚚 DELIVERY: ${deliveryDate} at ${deliveryTime}`,
+            address1: deliveryAddress || "Address Required",
+            address2: deliveryInstructions ? `📋 Instructions: ${deliveryInstructions}` : undefined,
+            city: "Address Required",
+            province: "TX",
+            country: "US",
+            zip: "00000",
+            phone: customerPhone
+          },
+          email: customerEmail,
+          phone: customerPhone,
+          subtotal_price: orderAmounts.subtotal.toFixed(2),
+          total_price: orderAmounts.total_amount.toFixed(2),
+          tax_lines: orderAmounts.sales_tax > 0 ? [{
+            title: "Sales Tax 8.25%", 
+            price: orderAmounts.sales_tax.toFixed(2),
+            rate: 0.0825
+          }] : [],
+          shipping_lines: [
+            ...(orderAmounts.delivery_fee > 0 ? [{
+              title: "Delivery Fee",
+              price: orderAmounts.delivery_fee.toFixed(2),
+              code: "LOCAL_DELIVERY"
+            }] : []),
+            ...(orderAmounts.tip_amount > 0 ? [{
+              title: "Driver Tip", 
+              price: orderAmounts.tip_amount.toFixed(2),
+              code: "DRIVER_TIP"
+            }] : [])
+          ],
+          note_attributes: [
+            { name: "🚚 Delivery Date", value: deliveryDate },
+            { name: "🕐 Delivery Time", value: deliveryTime },
+            { name: "📍 Full Delivery Address", value: deliveryAddress },
+            { name: "📋 Special Instructions", value: deliveryInstructions || "None" },
+            { name: "💰 Driver Tip Amount", value: `$${orderAmounts.tip_amount.toFixed(2)}` },
+            { name: "💳 Payment ID", value: paymentIntentId || sessionId }
+          ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
+          note: `🚚 DELIVERY ORDER - ${deliveryDate} at ${deliveryTime}\n📍 ${deliveryAddress}\n📞 ${customerPhone}\n✉️ ${customerEmail}`,
+          financial_status: "paid",
+          tags: [
+            "delivery-order",
+            "direct-data",
+            affiliateCode ? `affiliate-${affiliateCode}` : null,
+            `tip-${orderAmounts.tip_amount.toFixed(2).replace('.', '_')}`
+          ].filter(Boolean).join(", "),
+          transactions: [{
+            amount: orderAmounts.total_amount.toFixed(2),
+            kind: "sale",
+            gateway: "stripe",
+            status: "success",
+            source_name: "web"
+          }]
+        }
+      };
+
+      // Create the Shopify order
+      const orderResponse = await fetch(
+        `https://${shopifyStore}/admin/api/2024-10/orders.json`,
+        {
+          method: 'POST',
+          headers: {
+            'X-Shopify-Access-Token': shopifyToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+
+      if (!orderResponse.ok) {
+        const errorText = await orderResponse.text();
+        logStep("ERROR: Direct Shopify order creation failed", {
+          status: orderResponse.status,
+          error: errorText
+        });
+        throw new Error(`Shopify API error (${orderResponse.status}): ${errorText}`);
+      }
+
+      const orderResult = await orderResponse.json();
+      const shopifyOrder = orderResult.order;
+
+      logStep("✅ DIRECT Shopify order created successfully", {
+        shopifyOrderId: shopifyOrder.id,
+        orderNumber: shopifyOrder.name
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          shopify_order_id: shopifyOrder.id,
+          order_number: shopifyOrder.name,
+          message: "Order created successfully via direct data"
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
     // Validate environment variables

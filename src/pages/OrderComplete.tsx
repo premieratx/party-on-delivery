@@ -84,12 +84,36 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-          // FIXED: Directly create Shopify order instead of relying on webhook
-          console.log('💰 Creating Shopify order directly with PaymentIntent:', piId);
+          // FIXED: Send ALL the cart data directly to create-shopify-order
+          console.log('💰 Creating Shopify order with FULL DATA:', piId);
           
           try {
             const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
-              body: { paymentIntentId: piId }
+              body: { 
+                paymentIntentId: piId,
+                // 🔥 SEND THE ACTUAL DATA INSTEAD OF RELYING ON STRIPE METADATA
+                cartItems: parsedData.cartItems || [],
+                customerInfo: {
+                  firstName: parsedData.customerName?.split(' ')[0] || 'Customer',
+                  lastName: parsedData.customerName?.split(' ').slice(1).join(' ') || '',
+                  email: parsedData.customerEmail,
+                  phone: parsedData.customerPhone || ''
+                },
+                deliveryInfo: {
+                  date: parsedData.deliveryDate,
+                  time: parsedData.deliveryTime,
+                  address: parsedData.deliveryAddress,
+                  instructions: parsedData.deliveryInstructions || ''
+                },
+                amounts: {
+                  subtotal: parsedData.subtotal || 0,
+                  deliveryFee: parsedData.deliveryFee || 0,
+                  salesTax: parsedData.salesTax || 0,
+                  tipAmount: parsedData.tipAmount || 0,
+                  totalAmount: parsedData.totalAmount || 0
+                },
+                affiliateCode: affiliateCode
+              }
             });
             
             if (shopifyError) {
