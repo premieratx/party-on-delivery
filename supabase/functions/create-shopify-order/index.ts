@@ -257,30 +257,60 @@ serve(async (req) => {
     const customerPhone = metadata.customer_phone || '';
     const deliveryDate = metadata.delivery_date || '';
     const deliveryTime = metadata.delivery_time || '';
-    const deliveryAddress = metadata.delivery_address || '';
     const deliveryInstructions = metadata.delivery_instructions || '';
+
+    // Parse delivery address - handle both string and JSON formats
+    let deliveryAddressObj = {};
+    let street = '';
+    let city = '';
+    let state = '';
+    let zip = '';
+    let fullAddressString = '';
+
+    try {
+      // Try to parse as JSON first
+      if (metadata.delivery_address && metadata.delivery_address.startsWith('{')) {
+        deliveryAddressObj = JSON.parse(metadata.delivery_address);
+        street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || '';
+        city = deliveryAddressObj.city || '';
+        state = deliveryAddressObj.state || deliveryAddressObj.province || '';
+        zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
+        fullAddressString = `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '');
+      } else {
+        // Fallback to string parsing
+        const deliveryAddress = metadata.delivery_address || '';
+        fullAddressString = deliveryAddress;
+        const addressParts = deliveryAddress.split(',').map(p => p.trim());
+        street = addressParts[0] || '';
+        city = addressParts[1] || '';
+        const stateZip = addressParts[2] || '';
+        const stateParts = stateZip.split(' ');
+        state = stateParts[0] || '';
+        zip = stateParts.slice(1).join(' ') || '';
+      }
+    } catch (addressParseError) {
+      logStep("WARNING: Could not parse delivery address", { 
+        error: addressParseError.message,
+        rawAddress: metadata.delivery_address 
+      });
+      // Fallback to raw string
+      fullAddressString = metadata.delivery_address || '';
+      street = fullAddressString;
+    }
 
     logStep("Order details extracted", {
       customerName,
       customerEmail,
       deliveryDate,
       deliveryTime,
-      itemCount: cartItems.length
+      itemCount: cartItems.length,
+      parsedAddress: { street, city, state, zip, fullAddressString }
     });
 
     // Create customer in Shopify
     const nameParts = customerName.split(' ');
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
-
-    // Parse delivery address (enhanced format support)
-    const addressParts = deliveryAddress.split(',').map(p => p.trim());
-    const street = addressParts[0] || '';
-    const city = addressParts[1] || '';
-    const stateZip = addressParts[2] || '';
-    const stateParts = stateZip.split(' ');
-    const state = stateParts[0] || '';
-    const zip = stateParts.slice(1).join(' ') || ''; // Handle zip+4 format
 
     logStep("Creating/finding Shopify customer", { firstName, lastName, email: customerEmail });
 
@@ -510,7 +540,7 @@ serve(async (req) => {
           },
           {
             name: "📍 Full Delivery Address",
-            value: `${street}, ${city}, ${state} ${zip}`
+            value: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')
           },
           {
             name: "📋 Special Instructions",
@@ -527,11 +557,10 @@ serve(async (req) => {
         ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
         
         // Order notes - COMPREHENSIVE delivery information display
-        note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate}T05:00:00.000Z at ${deliveryTime}
+        note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
 📍 DELIVERY ADDRESS:
-${street}
-${city}, ${state} ${zip}
+${fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')}
 📞 Customer Phone: ${customerPhone}
 ✉️ Customer Email: ${customerEmail}
 ${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}
@@ -630,7 +659,7 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
             city,
             state,
             zip,
-            full_address: deliveryAddress,
+            full_address: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, ''),
             email: customerEmail,
             phone: customerPhone
           },
