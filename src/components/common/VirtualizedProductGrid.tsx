@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus, Loader2 } from 'lucide-react';
-import { useVirtualizedProducts } from '@/hooks/useVirtualizedProducts';
+import { useUltraFastProductLoader } from '@/hooks/useUltraFastProductLoader';
 import { parseProductTitle } from '@/utils/productUtils';
 
 interface ShopifyProduct {
@@ -47,31 +47,51 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   className = ''
 }) => {
   const [isGridReady, setIsGridReady] = useState(false);
+  const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
 
   const {
-    visibleItems,
-    totalHeight,
-    handleScroll,
+    products,
     loading,
     error,
-    hasMore,
-    refresh
-  } = useVirtualizedProducts({
-    containerHeight,
-    category,
-    itemHeight: 280
-  });
+    searchProducts,
+    loadAllProducts
+  } = useUltraFastProductLoader();
 
-  // Filter products by search query
-  const searchFilteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return visibleItems;
+  // Real-time search with instant results
+  React.useEffect(() => {
+    if (searchQuery.trim()) {
+      searchProducts(searchQuery, { limit: 100 }).then(setSearchResults);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, searchProducts]);
+
+  // Filter products by category
+  const categoryFilteredProducts = React.useMemo(() => {
+    const productsToFilter = searchQuery.trim() ? searchResults : products;
+    if (!category) return productsToFilter;
     
-    const query = searchQuery.toLowerCase();
-    return visibleItems.filter(({ item: product }) =>
-      product.title.toLowerCase().includes(query) ||
-      product.handle.toLowerCase().includes(query)
+    return productsToFilter.filter(product => 
+      product.category?.toLowerCase() === category.toLowerCase() ||
+      product.collection_handles?.some(handle => 
+        handle.toLowerCase().includes(category.toLowerCase())
+      )
     );
-  }, [visibleItems, searchQuery]);
+  }, [products, searchResults, category, searchQuery]);
+
+  // Create virtual items for rendering (simplified - no virtualization for instant loading)
+  const displayItems = React.useMemo(() => {
+    return categoryFilteredProducts.map((product, index) => ({
+      item: product,
+      index,
+      offsetTop: Math.floor(index / 4) * 280 // Approximate grid layout
+    }));
+  }, [categoryFilteredProducts]);
+
+  // Refresh function
+  const refresh = React.useCallback(() => {
+    loadAllProducts();
+  }, [loadAllProducts]);
 
   // Get cart item quantity
   const getCartItemQuantity = useCallback((productId: string, variantId?: string) => {
@@ -127,12 +147,13 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  if (loading && searchFilteredItems.length === 0) {
+  // Only show loading on initial load with no products (should be rare with cache)
+  if (loading && products.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading products...</p>
+          <p className="text-muted-foreground">Initializing cache...</p>
         </div>
       </div>
     );
@@ -154,49 +175,44 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     );
   }
 
+  if (displayItems.length === 0 && !loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-muted-foreground">
+            {searchQuery ? `No products found for "${searchQuery}"` : 'No products available'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`relative ${className}`}>
-      {/* Virtual scroll container */}
+      {/* Instant-loading grid - no virtualization needed for cached data */}
       <div
         style={{ height: containerHeight }}
         className="overflow-auto"
-        onScroll={handleScroll}
       >
-        {/* Virtual container with total height */}
-        <div style={{ height: totalHeight, position: 'relative' }}>
-          {/* Grid container */}
-          <div 
-            className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 p-2"
-            style={{
-              transform: `translateY(${searchFilteredItems[0]?.offsetTop || 0}px)`,
-              transition: isGridReady ? 'transform 0.1s ease-out' : 'none'
-            }}
-          >
-            {searchFilteredItems.map(({ item: product, index }) => {
-              const variant = product.variants[0];
-              const variantId = variant?.id;
-              
-              return (
-                <ProductCard
-                  key={`${product.id}-${index}`}
-                  product={product}
-                  quantity={getCartItemQuantity(product.id, variantId)}
-                  onAddToCart={() => handleAddToCart(product)}
-                  onIncrement={() => handleIncrement(product.id, variantId)}
-                  onDecrement={() => handleDecrement(product.id, variantId)}
-                />
-              );
-            })}
-          </div>
+        {/* Grid container - instant display */}
+        <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 p-2">
+          {displayItems.map(({ item: product, index }) => {
+            const variant = product.variants?.[0];
+            const variantId = variant?.id;
+            
+            return (
+              <ProductCard
+                key={`${product.id}-${index}`}
+                product={product}
+                quantity={getCartItemQuantity(product.id, variantId)}
+                onAddToCart={() => handleAddToCart(product)}
+                onIncrement={() => handleIncrement(product.id, variantId)}
+                onDecrement={() => handleDecrement(product.id, variantId)}
+              />
+            );
+          })}
         </div>
       </div>
-
-      {/* Loading more indicator */}
-      {loading && searchFilteredItems.length > 0 && (
-        <div className="flex justify-center p-4">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-      )}
     </div>
   );
 };
