@@ -237,10 +237,21 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
-    console.log('🔍 Mobile search icon clicked');
+    console.log('🔍 Mobile search icon clicked directly');
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
-    // Auto-focus will be handled by the autoFocus prop
+    
+    // Focus search input immediately
+    setTimeout(() => {
+      const searchInput = searchInputRef.current ||
+                         document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
+                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+      
+      if (searchInput) {
+        searchInput.focus();
+        console.log('🎯 Direct search input focused');
+      }
+    }, 100);
   };
 
   // Listen for mobile search activation from SearchIcon component
@@ -248,30 +259,43 @@ export const CombinedSearchTabs = ({
     const handleMobileSearchActivate = (e: Event) => {
       console.log('📱 Mobile search activated from SearchIcon');
       e.preventDefault();
+      e.stopPropagation();
+      
+      // Force expansion and activation
       setIsSearchExpanded(true);
       onSearchActiveChange?.(true);
       
-      // Focus the search input after a short delay to ensure it's rendered
+      // Focus the search input with multiple attempts
       setTimeout(() => {
-        // Try multiple selectors to find the input
-        const searchInput = document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
-                           document.querySelector('.container input[placeholder*="Search"]') as HTMLInputElement ||
+        const searchInput = searchInputRef.current ||
+                           document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
+                           document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
                            document.querySelector('input[type="text"]') as HTMLInputElement;
         
         if (searchInput) {
           searchInput.focus();
-          console.log('🎯 Search input focused');
+          searchInput.click();
+          console.log('🎯 Search input focused and clicked');
         } else {
-          console.log('❌ Search input not found');
+          console.log('❌ Search input not found for focus');
         }
-      }, 150);
+      }, 200);
     };
 
-    // Listen on document level
+    // Listen on both document and the search handler element
+    const searchHandler = document.querySelector('[data-mobile-search-handler]');
+    
+    // Add listeners
     document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    if (searchHandler) {
+      searchHandler.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
+    }
     
     return () => {
       document.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
+      if (searchHandler) {
+        searchHandler.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
+      }
     };
   }, [onSearchActiveChange]);
 
