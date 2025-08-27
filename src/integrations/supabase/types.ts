@@ -910,6 +910,36 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_flow_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string
+          description: string
+          id: string
+          is_default: boolean
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          created_at?: string
+          description: string
+          id?: string
+          is_default?: boolean
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          is_default?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       checkout_flow_documentation: {
         Row: {
           component_name: string
@@ -952,6 +982,45 @@ export type Database = {
           notes?: string | null
           stripe_related?: boolean | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      checkout_flow_monitoring: {
+        Row: {
+          completed_at: string | null
+          completion_status: string
+          created_at: string
+          device_info: Json | null
+          entry_point: string | null
+          error_details: Json | null
+          id: string
+          session_id: string | null
+          step_reached: string
+          user_email: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_status?: string
+          created_at?: string
+          device_info?: Json | null
+          entry_point?: string | null
+          error_details?: Json | null
+          id?: string
+          session_id?: string | null
+          step_reached: string
+          user_email?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completion_status?: string
+          created_at?: string
+          device_info?: Json | null
+          entry_point?: string | null
+          error_details?: Json | null
+          id?: string
+          session_id?: string | null
+          step_reached?: string
+          user_email?: string | null
         }
         Relationships: []
       }
@@ -4477,6 +4546,10 @@ export type Database = {
           product_count: number
         }[]
       }
+      get_checkout_config: {
+        Args: { config_type?: string }
+        Returns: Json
+      }
       get_dashboard_data: {
         Args: {
           affiliate_code?: string
@@ -4605,6 +4678,18 @@ export type Database = {
           p_file_path?: string
           p_session_id: string
           p_success?: boolean
+        }
+        Returns: string
+      }
+      log_checkout_event: {
+        Args: {
+          p_device_info?: Json
+          p_entry_point?: string
+          p_error_details?: Json
+          p_session_id: string
+          p_status?: string
+          p_step: string
+          p_user_email: string
         }
         Returns: string
       }
