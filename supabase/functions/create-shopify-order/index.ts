@@ -104,10 +104,26 @@ serve(async (req) => {
     let cartItems = [];
     let orderAmounts = {};
 
-    // Try to get from order_drafts first
-    if (metadata.order_draft_id) {
+    // FIRST: Try to get cart items from Stripe metadata (MOST RELIABLE)
+    if (metadata.cart_items) {
       try {
-        logStep("Loading order data from database", { orderDraftId: metadata.order_draft_id });
+        cartItems = JSON.parse(metadata.cart_items);
+        logStep("Cart items parsed from Stripe metadata", { 
+          itemCount: cartItems.length,
+          firstItem: cartItems[0]?.title || 'N/A'
+        });
+      } catch (parseError) {
+        logStep("ERROR: Failed to parse cart items from Stripe metadata", { 
+          error: parseError.message,
+          rawCartItems: metadata.cart_items
+        });
+      }
+    }
+
+    // FALLBACK: Try to get from order_drafts if Stripe metadata failed
+    if (cartItems.length === 0 && metadata.order_draft_id) {
+      try {
+        logStep("Fallback: Loading order data from database", { orderDraftId: metadata.order_draft_id });
         const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
           auth: { autoRefreshToken: false, persistSession: false }
         });
@@ -121,28 +137,15 @@ serve(async (req) => {
         if (!error && orderDraft) {
           cartItems = orderDraft.cart_items || [];
           orderAmounts = orderDraft.amounts || {};
-          logStep("Order data loaded from database", { 
+          logStep("Order data loaded from database as fallback", { 
             itemCount: cartItems.length,
             amounts: orderAmounts
           });
         } else {
-          logStep("Order draft not found, falling back to metadata", { error: error?.message });
+          logStep("Order draft fallback failed", { error: error?.message });
         }
       } catch (dbError) {
-        logStep("Database error, falling back to metadata", { error: dbError.message });
-      }
-    }
-    
-    // Fallback to metadata
-    if (cartItems.length === 0) {
-      try {
-        if (metadata.cart_items) {
-          cartItems = JSON.parse(metadata.cart_items);
-          logStep("Cart items parsed from metadata", { itemCount: cartItems.length });
-        }
-      } catch (parseError) {
-        logStep("ERROR: Failed to parse cart items from metadata", { error: parseError.message });
-        throw new Error("Invalid cart items in payment metadata");
+        logStep("Database fallback error", { error: dbError.message });
       }
     }
 
@@ -205,9 +208,16 @@ serve(async (req) => {
       logStep("WARNING: Could not check for duplicates", { error: duplicateCheckError.message });
     }
 
+    // FINAL CHECK: If still no cart items, provide detailed error
     if (cartItems.length === 0) {
-      logStep("ERROR: No cart items found");
-      throw new Error("No cart items found in order");
+      logStep("CRITICAL ERROR: No cart items found anywhere", {
+        metadataKeys: Object.keys(metadata),
+        hasCartItemsKey: !!metadata.cart_items,
+        cartItemsValue: metadata.cart_items,
+        hasOrderDraftId: !!metadata.order_draft_id,
+        orderDraftId: metadata.order_draft_id
+      });
+      throw new Error("No cart items found in order - check payment intent metadata");
     }
 
     // Extract customer and delivery information
