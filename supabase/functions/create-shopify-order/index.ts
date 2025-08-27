@@ -202,10 +202,51 @@ serve(async (req) => {
       const orderResult = await orderResponse.json();
       const shopifyOrder = orderResult.order;
 
-      logStep("✅ DIRECT Shopify order created successfully", {
-        shopifyOrderId: shopifyOrder.id,
-        orderNumber: shopifyOrder.name
-      });
+    // Also store in customer_orders table for tracking
+    if (supabaseUrl && supabaseServiceKey) {
+      try {
+        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: { autoRefreshToken: false, persistSession: false }
+        });
+        
+        const orderRecord = {
+          order_number: shopifyOrder.name,
+          shopify_order_id: shopifyOrder.id.toString(),
+          session_id: paymentIntentId || sessionId,
+          payment_intent_id: paymentIntentId || sessionId,
+          status: 'completed',
+          subtotal: orderAmounts.subtotal,
+          delivery_fee: orderAmounts.delivery_fee,
+          total_amount: orderAmounts.total_amount,
+          delivery_date: deliveryDate,
+          delivery_time: deliveryTime,
+          delivery_address: { address: deliveryAddress, instructions: deliveryInstructions },
+          special_instructions: deliveryInstructions,
+          line_items: cartItems.map(item => ({
+            id: item.id,
+            title: item.title || item.name,
+            quantity: item.quantity,
+            price: item.price,
+            product_id: item.product_id || item.id
+          })),
+          affiliate_code: affiliateCode || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: dbError } = await supabaseClient
+          .from('customer_orders')
+          .insert(orderRecord);
+
+        if (dbError) {
+          logStep("WARNING: Failed to store in customer_orders", { error: dbError.message });
+        } else {
+          logStep("✅ Order stored in customer_orders table", { orderNumber: shopifyOrder.name });
+        }
+      } catch (dbError) {
+        logStep("WARNING: Database storage error", { error: dbError.message });
+      }
+    }
 
       return new Response(
         JSON.stringify({
@@ -320,12 +361,21 @@ serve(async (req) => {
           .eq('id', metadata.order_draft_id)
           .single();
 
-        if (!error && orderDraft) {
-          cartItems = orderDraft.cart_items || [];
-          orderAmounts = orderDraft.amounts || {};
-          logStep("Order data loaded from database as fallback", { 
+        if (!error && orderDraft && orderDraft.draft_data) {
+          // 🔥 CRITICAL FIX: Access data from draft_data jsonb column, not non-existent columns
+          const draftData = orderDraft.draft_data;
+          cartItems = draftData.cart_items || [];
+          orderAmounts = {
+            subtotal: draftData.subtotal || 0,
+            sales_tax: draftData.sales_tax || 0,
+            delivery_fee: draftData.delivery_fee || 0,
+            tip_amount: draftData.tip_amount || 0,
+            total_amount: draftData.subtotal + draftData.sales_tax + draftData.delivery_fee + draftData.tip_amount
+          };
+          logStep("Order data loaded from database draft_data", { 
             itemCount: cartItems.length,
-            amounts: orderAmounts
+            amounts: orderAmounts,
+            draftDataKeys: Object.keys(draftData)
           });
         } else {
           logStep("Order draft fallback failed", { error: error?.message });
