@@ -242,26 +242,24 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                   <span>Total</span>
                   <span>${formatPrice(finalTotal)}</span>
                 </div>
+                
+                {/* Checkout Button - Positioned directly below Total */}
+                <div className="pt-4">
+                  <Button 
+                    className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+                    size="lg" 
+                    onClick={handleCheckout}
+                  >
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    <span className="hidden sm:inline">Proceed to Checkout - </span>
+                    <span className="sm:hidden">Checkout - </span>
+                    ${formatPrice(finalTotal)}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
         </div>
-
-        {/* ALWAYS VISIBLE Sticky Checkout Button - Guaranteed to stay at bottom */}
-        {cartItems.length > 0 && (
-          <div className="sticky bottom-0 left-0 right-0 border-t p-3 sm:p-4 bg-background shadow-2xl z-30 flex-shrink-0">
-            <Button 
-              className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
-              size="lg" 
-              onClick={handleCheckout}
-            >
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              <span className="hidden sm:inline">Proceed to Checkout - </span>
-              <span className="sm:hidden">Checkout - </span>
-              ${formatPrice(finalTotal)}
-            </Button>
-          </div>
-        )}
         
       </div>
     </RobustCartErrorBoundary>
