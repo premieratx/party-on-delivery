@@ -51,13 +51,10 @@ serve(async (req) => {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not set");
     }
     if (!supabaseUrl || !supabaseServiceKey) {
-      logStep("ERROR: Supabase credentials not configured");
-      throw new Error("Supabase credentials are not set");
+      logStep("ERROR: Supabase configuration missing");
+      throw new Error("Supabase configuration is not set");
     }
 
-    logStep("Environment variables validated");
-
-    // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Get payment details from Stripe
@@ -73,41 +70,37 @@ serve(async (req) => {
           throw new Error(`Payment not completed. Status: ${paymentIntent.status}`);
         }
         metadata = paymentIntent.metadata;
-        paymentAmount = paymentIntent.amount / 100; // Convert cents to dollars
-        logStep("PaymentIntent retrieved successfully", { 
-          status: paymentIntent.status,
-          amount: paymentAmount,
-          metadataKeys: Object.keys(metadata || {})
-        });
+        paymentAmount = paymentIntent.amount / 100;
+        logStep("PaymentIntent retrieved successfully", { amount: paymentAmount, status: paymentIntent.status });
       } else if (sessionId) {
         logStep("Retrieving Checkout Session", { sessionId });
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (session.payment_status !== 'paid') {
-          logStep("ERROR: Payment not completed", { status: session.payment_status });
-          throw new Error(`Payment not completed. Status: ${session.payment_status}`);
+          logStep("ERROR: Session payment not completed", { payment_status: session.payment_status });
+          throw new Error(`Session payment not completed. Status: ${session.payment_status}`);
         }
         metadata = session.metadata;
-        paymentAmount = (session.amount_total || 0) / 100; // Convert cents to dollars
-        logStep("Checkout Session retrieved successfully", { 
-          status: session.payment_status,
-          amount: paymentAmount,
-          metadataKeys: Object.keys(metadata || {})
-        });
+        paymentAmount = session.amount_total / 100;
+        logStep("Checkout Session retrieved successfully", { amount: paymentAmount, status: session.payment_status });
       }
     } catch (stripeError) {
-      logStep("ERROR: Stripe API call failed", { 
-        error: stripeError.message,
-        stack: stripeError.stack 
-      });
-      throw new Error(`Stripe API error: ${stripeError.message}`);
+      logStep("ERROR: Failed to retrieve payment from Stripe", { error: stripeError.message });
+      throw new Error(`Failed to retrieve payment details: ${stripeError.message}`);
     }
 
     if (!metadata) {
-      logStep("ERROR: No metadata received from Stripe");
-      throw new Error("No payment metadata found");
+      logStep("ERROR: No metadata found in payment");
+      throw new Error("No metadata found in payment");
     }
 
-    // Parse cart items and order details
+    logStep("Payment metadata extracted", {
+      keys: Object.keys(metadata),
+      hasOrderDraftId: !!metadata.order_draft_id,
+      hasCartItems: !!metadata.cart_items,
+      hasDeliveryInfo: !!metadata.delivery_date
+    });
+
+    // Extract order data from database or metadata
     let cartItems = [];
     let orderAmounts = {};
 
@@ -121,29 +114,22 @@ serve(async (req) => {
         
         const { data: orderDraft, error } = await supabaseClient
           .from('order_drafts')
-          .select('draft_data, total_amount')
+          .select('*')
           .eq('id', metadata.order_draft_id)
           .single();
-          
-        if (!error && orderDraft?.draft_data) {
-          cartItems = orderDraft.draft_data.cart_items || [];
-          // CRITICAL FIX: Don't double-convert amounts - they're already in dollars in draft_data
-          orderAmounts = {
-            subtotal: orderDraft.draft_data.subtotal || 0,
-            delivery_fee: orderDraft.draft_data.delivery_fee || 0,
-            sales_tax: orderDraft.draft_data.sales_tax || 0,
-            tip_amount: orderDraft.draft_data.tip_amount || 0,
-            total_amount: orderDraft.total_amount || 0
-          };
-          logStep("Order data loaded from database (FIXED DECIMAL CONVERSION)", { 
+
+        if (!error && orderDraft) {
+          cartItems = orderDraft.cart_items || [];
+          orderAmounts = orderDraft.amounts || {};
+          logStep("Order data loaded from database", { 
             itemCount: cartItems.length,
-            totalAmount: orderAmounts.total_amount,
-            deliveryFee: orderAmounts.delivery_fee,
-            tipAmount: orderAmounts.tip_amount
+            amounts: orderAmounts
           });
+        } else {
+          logStep("Order draft not found, falling back to metadata", { error: error?.message });
         }
       } catch (dbError) {
-        logStep("WARNING: Failed to load from order_drafts", { error: dbError.message });
+        logStep("Database error, falling back to metadata", { error: dbError.message });
       }
     }
     
@@ -155,32 +141,32 @@ serve(async (req) => {
           logStep("Cart items parsed from metadata", { itemCount: cartItems.length });
         }
       } catch (parseError) {
-        logStep("ERROR: Failed to parse cart_items from metadata", { error: parseError.message });
+        logStep("ERROR: Failed to parse cart items from metadata", { error: parseError.message });
+        throw new Error("Invalid cart items in payment metadata");
       }
     }
 
-    if (cartItems.length === 0) {
-      logStep("CRITICAL ERROR: No cart items found", { 
-        metadataKeys: Object.keys(metadata),
-        hasOrderDraftId: !!metadata.order_draft_id
-      });
-      throw new Error("No cart items found in order");
-    }
-
-    // Get order amounts (fallback to metadata if not from database)
+    // Extract order amounts
     if (!orderAmounts.total_amount) {
-      // CRITICAL FIX: Properly parse and round tip amount from metadata
-      const rawTipAmount = parseFloat(metadata.tip_amount || '0');
       orderAmounts = {
         subtotal: parseFloat(metadata.subtotal || '0'),
-        delivery_fee: parseFloat(metadata.delivery_fee || '0'),
         sales_tax: parseFloat(metadata.sales_tax || '0'),
-        tip_amount: Math.round(rawTipAmount * 100) / 100, // Round to 2 decimal places
-        total_amount: parseFloat(metadata.total_amount || '0')
+        delivery_fee: parseFloat(metadata.delivery_fee || '0'),
+        tip_amount: parseFloat(metadata.tip_amount || '0'),
+        total_amount: paymentAmount
       };
-      logStep("Using amounts from metadata with proper tip rounding", {
-        ...orderAmounts,
-        rawTipFromMetadata: rawTipAmount
+    }
+
+    // Enhanced tip debugging
+    const rawTipAmount = metadata.tip_amount;
+    if (rawTipAmount) {
+      logStep("ENHANCED TIP DEBUG", {
+        rawTipFromMetadata: rawTipAmount,
+        parsedTipAmount: orderAmounts.tip_amount,
+        tipType: typeof rawTipAmount,
+        isZeroTip: orderAmounts.tip_amount === 0,
+        paymentAmount: paymentAmount,
+        calculatedTotal: orderAmounts.subtotal + orderAmounts.sales_tax + orderAmounts.delivery_fee + orderAmounts.tip_amount
       });
     }
 
@@ -192,16 +178,14 @@ serve(async (req) => {
       
       const { data: existingOrder } = await supabaseClient
         .from('customer_orders')
-        .select('id, order_number, shopify_order_id')
+        .select('shopify_order_id, order_number')
         .eq('session_id', paymentIntentId || sessionId)
-        .limit(1)
-        .maybeSingle();
-        
+        .single();
+
       if (existingOrder) {
-        logStep("ORDER ALREADY EXISTS - PREVENTING DUPLICATE", {
-          existingOrderId: existingOrder.id,
-          existingOrderNumber: existingOrder.order_number,
-          existingShopifyOrderId: existingOrder.shopify_order_id
+        logStep("⚠️ DUPLICATE ORDER DETECTED - Returning existing order", {
+          existingShopifyId: existingOrder.shopify_order_id,
+          existingOrderNumber: existingOrder.order_number
         });
         
         return new Response(
@@ -209,9 +193,7 @@ serve(async (req) => {
             success: true,
             shopify_order_id: existingOrder.shopify_order_id,
             order_number: existingOrder.order_number,
-            total_amount: orderAmounts.total_amount,
-            message: "Order already exists - duplicate prevented",
-            duplicate_prevented: true
+            message: "Order already exists - duplicate prevented"
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -223,43 +205,42 @@ serve(async (req) => {
       logStep("WARNING: Could not check for duplicates", { error: duplicateCheckError.message });
     }
 
-    // FIX: Don't recalculate total - use the stored total_amount directly
-    // The individual breakdown amounts are often corrupted/wrong, but total_amount is correct
-    const calculatedTotal = orderAmounts.total_amount;
-    const totalDifference = Math.abs(paymentAmount - calculatedTotal);
-    
-    logStep("Using stored total_amount directly", {
-      paymentAmount,
-      storedTotalAmount: calculatedTotal,
-      difference: totalDifference,
-      breakdown: orderAmounts
-    });
-    
-    if (totalDifference > 0.02) {
-      logStep("ERROR: Amount mismatch", {
-        paymentAmount,
-        calculatedTotal,
-        difference: totalDifference,
-        breakdown: orderAmounts
-      });
-      throw new Error(`Payment amount mismatch: Payment $${paymentAmount} vs Order $${calculatedTotal}`);
+    if (cartItems.length === 0) {
+      logStep("ERROR: No cart items found");
+      throw new Error("No cart items found in order");
     }
 
-    logStep("Amount validation passed", { 
-      paymentAmount,
-      calculatedTotal,
-      difference: totalDifference
-    });
-
-    // Extract customer and delivery info
-    const customerName = metadata.customer_name || '';
-    const customerEmail = metadata.customer_email || '';
-    const customerPhone = metadata.customer_phone || '';
+    // Extract customer and delivery information
+    const customerEmail = metadata.customer_email || metadata.email || '';
+    const customerPhone = metadata.customer_phone || metadata.phone || '';
     const deliveryDate = metadata.delivery_date || '';
     const deliveryTime = metadata.delivery_time || '';
-    const deliveryInstructions = metadata.delivery_instructions || '';
+    const deliveryInstructions = metadata.delivery_instructions || metadata.special_instructions || '';
 
-    // Parse delivery address - handle both string and JSON formats
+    logStep("Customer and delivery info extracted", {
+      email: customerEmail,
+      phone: customerPhone,
+      deliveryDate,
+      deliveryTime,
+      hasInstructions: !!deliveryInstructions
+    });
+
+    // Extract customer name
+    let firstName = metadata.customer_first_name || metadata.first_name || '';
+    let lastName = metadata.customer_last_name || metadata.last_name || '';
+    
+    if (!firstName && !lastName && customerEmail) {
+      const emailParts = customerEmail.split('@')[0].split('.');
+      firstName = emailParts[0] || 'Customer';
+      lastName = emailParts[1] || '';
+    }
+
+    if (!firstName) firstName = 'Customer';
+    if (!lastName) lastName = 'User';
+
+    logStep("Customer name processed", { firstName, lastName });
+
+    // ENHANCED ADDRESS PARSING with robust fallbacks
     let deliveryAddressObj = {};
     let street = '';
     let city = '';
@@ -267,8 +248,7 @@ serve(async (req) => {
     let zip = '';
     let fullAddressString = '';
 
-    // First, log what we received
-    logStep("Raw delivery address data received", {
+    logStep("ENHANCED ADDRESS PARSING DEBUG", {
       delivery_address: metadata.delivery_address,
       delivery_date: deliveryDate,
       delivery_time: deliveryTime,
@@ -281,46 +261,34 @@ serve(async (req) => {
         if (typeof metadata.delivery_address === 'object') {
           // Already an object
           deliveryAddressObj = metadata.delivery_address;
-          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || deliveryAddressObj.address || '';
-          city = deliveryAddressObj.city || '';
-          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
-          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
-        } else if (typeof metadata.delivery_address === 'string' && metadata.delivery_address.trim().startsWith('{')) {
-          // JSON string
-          deliveryAddressObj = JSON.parse(metadata.delivery_address);
-          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || deliveryAddressObj.address || '';
-          city = deliveryAddressObj.city || '';
-          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
-          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
-        } else {
-          // Plain string address
-          const deliveryAddress = metadata.delivery_address.toString().trim();
-          fullAddressString = deliveryAddress;
-          
-          // Try to parse if it contains commas
-          if (deliveryAddress.includes(',')) {
-            const addressParts = deliveryAddress.split(',').map(p => p.trim());
-            street = addressParts[0] || '';
-            city = addressParts[1] || '';
-            const stateZip = addressParts[2] || '';
-            const stateParts = stateZip.split(' ');
-            state = stateParts[0] || '';
-            zip = stateParts.slice(1).join(' ') || '';
-          } else {
-            // Use entire string as street if no structure
-            street = deliveryAddress;
+          logStep("✅ Address is object format", deliveryAddressObj);
+        } else if (typeof metadata.delivery_address === 'string') {
+          try {
+            // Try to parse as JSON first
+            deliveryAddressObj = JSON.parse(metadata.delivery_address);
+            logStep("✅ Address parsed from JSON string", deliveryAddressObj);
+          } catch (jsonError) {
+            // If not JSON, treat as plain string
+            fullAddressString = metadata.delivery_address.trim();
+            street = fullAddressString;
+            logStep("✅ Address treated as plain string", { fullAddressString });
           }
         }
 
-        // Build formatted address string if we have parts
-        if (!fullAddressString && (street || city || state || zip)) {
-          const parts = [street, city, state && zip ? `${state} ${zip}` : state || zip].filter(Boolean);
-          fullAddressString = parts.join(', ');
-        }
-
-        // Fallback to ensure we always have something
-        if (!fullAddressString) {
-          fullAddressString = metadata.delivery_address.toString();
+        // Extract components from object if we have one
+        if (deliveryAddressObj && typeof deliveryAddressObj === 'object') {
+          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || '';
+          city = deliveryAddressObj.city || '';
+          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
+          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || '';
+          
+          // Create full address string
+          const addressParts = [street, city, state, zip].filter(Boolean);
+          fullAddressString = addressParts.join(', ');
+          
+          logStep("✅ Address components extracted", {
+            street, city, state, zip, fullAddressString
+          });
         }
       }
 
@@ -361,7 +329,7 @@ serve(async (req) => {
         // STEP 2: Final fallback - construct meaningful placeholder
         if (!fullAddressString || fullAddressString === '{}' || fullAddressString.trim() === '') {
           const customerParts = [
-            customerName || 'Customer',
+            firstName + ' ' + lastName || 'Customer',
             customerEmail ? `(${customerEmail})` : ''
           ].filter(Boolean);
           
@@ -370,213 +338,44 @@ serve(async (req) => {
           
           logStep("🚨 FINAL FALLBACK: Using customer info as address placeholder", { 
             fallbackAddress: fullAddressString,
-            customerName,
+            customerName: firstName + ' ' + lastName,
             customerEmail 
           });
         }
       }
         
-        // Final fallback if still nothing
-        if (!fullAddressString || fullAddressString === '{}') {
-          fullAddressString = 'Address not provided - check metadata';
-          street = fullAddressString;
-        }
-        
-        // Log this so we can see what we're missing
-        logStep("CRITICAL: Using fallback for address", {
-          attempted_address: fullAddressString,
-          all_metadata_keys: Object.keys(metadata),
-          tried_addresses: possibleAddresses,
-          final_result: fullAddressString
-        });
+      // Final fallback if still nothing
+      if (!fullAddressString || fullAddressString === '{}') {
+        fullAddressString = "Address verification required - Please contact customer";
+        street = fullAddressString;
+        logStep("🚨 ULTIMATE FALLBACK", { fallbackAddress: fullAddressString });
       }
 
-    } catch (addressParseError) {
-      logStep("WARNING: Could not parse delivery address", { 
-        error: addressParseError.message,
-        rawAddress: metadata.delivery_address 
-      });
-      // Robust fallback
-      fullAddressString = metadata.delivery_address ? metadata.delivery_address.toString() : 'Address parsing failed';
+    } catch (addressError) {
+      logStep("ERROR: Address parsing failed", { error: addressError.message });
+      fullAddressString = "Address parsing failed - Please verify with customer";
       street = fullAddressString;
     }
 
-    logStep("Address parsing completed", {
-      customerName,
-      customerEmail,
-      deliveryDate,
-      deliveryTime,
-      itemCount: cartItems.length,
-      finalAddressData: { 
-        street, 
-        city, 
-        state, 
-        zip, 
-        fullAddressString,
-        willGoToShopifyAs: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '') 
-      }
+    logStep("=== FINAL ADDRESS RESULT ===", {
+      fullAddressString,
+      components: { street, city, state, zip },
+      addressSource: metadata.delivery_address ? 'metadata.delivery_address' : 'fallback'
     });
 
-    // Create customer in Shopify
-    const nameParts = customerName.split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // Create line items for Shopify (ONLY products, no fees or tips)
+    const lineItems = cartItems.map(item => ({
+      title: item.title || item.name,
+      quantity: item.quantity,
+      price: parseFloat(item.price).toFixed(2),
+      variant_id: item.variant_id || null,
+      product_id: item.product_id || null,
+      vendor: item.vendor || null,
+      requires_shipping: true
+    }));
 
-    logStep("Creating/finding Shopify customer", { firstName, lastName, email: customerEmail });
-
-    let shopifyCustomerId = null;
-    
-    // First, try to find existing customer by email
-    try {
-      const searchResponse = await fetch(
-        `https://${shopifyStore}/admin/api/2024-10/customers/search.json?query=email:${encodeURIComponent(customerEmail)}`,
-        {
-          headers: {
-            'X-Shopify-Access-Token': shopifyToken,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (searchResponse.ok) {
-        const searchResult = await searchResponse.json();
-        if (searchResult.customers && searchResult.customers.length > 0) {
-          const existingCustomer = searchResult.customers[0];
-          shopifyCustomerId = existingCustomer.id;
-          
-          logStep("Found existing Shopify customer", { 
-            customerId: shopifyCustomerId,
-            existingEmail: existingCustomer.email 
-          });
-
-          // Update existing customer with latest info (phone, address)
-          const updateData = {
-            customer: {
-              id: shopifyCustomerId,
-              first_name: firstName || existingCustomer.first_name,
-              last_name: lastName || existingCustomer.last_name,
-              phone: customerPhone || existingCustomer.phone,
-              note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`
-            }
-          };
-
-          const updateResponse = await fetch(
-            `https://${shopifyStore}/admin/api/2024-10/customers/${shopifyCustomerId}.json`,
-            {
-              method: 'PUT',
-              headers: {
-                'X-Shopify-Access-Token': shopifyToken,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(updateData),
-            }
-          );
-
-          if (updateResponse.ok) {
-            logStep("Updated existing customer info", { customerId: shopifyCustomerId });
-          }
-        }
-      }
-    } catch (searchError) {
-      logStep("Customer search error, will create new", { error: searchError.message });
-    }
-
-    // If no existing customer found, create new one
-    if (!shopifyCustomerId) {
-      try {
-        const customerData = {
-          customer: {
-            first_name: firstName,
-            last_name: lastName,
-            email: customerEmail,
-            phone: customerPhone,
-            note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
-            addresses: [{
-              address1: street,
-              city: city,
-              province: state,
-              country: "US",
-              zip: zip,
-              phone: customerPhone,
-              default: true
-            }],
-            // Ensure customer can receive marketing emails
-            accepts_marketing: true,
-            marketing_opt_in_level: "single_opt_in"
-          }
-        };
-
-        const customerResponse = await fetch(
-          `https://${shopifyStore}/admin/api/2024-10/customers.json`,
-          {
-            method: 'POST',
-            headers: {
-              'X-Shopify-Access-Token': shopifyToken,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(customerData),
-          }
-        );
-
-        if (customerResponse.ok) {
-          const customerResult = await customerResponse.json();
-          shopifyCustomerId = customerResult.customer.id;
-          logStep("✅ New Shopify customer created with contact info", { 
-            customerId: shopifyCustomerId,
-            email: customerEmail,
-            phone: customerPhone
-          });
-        } else {
-          const errorText = await customerResponse.text();
-          logStep("⚠️ Customer creation failed, order will continue without customer link", { 
-            status: customerResponse.status,
-            error: errorText
-          });
-        }
-      } catch (customerError) {
-        logStep("⚠️ Customer creation error, order will continue", { error: customerError.message });
-      }
-    }
-
-    // Create line items - ONLY products (no tip here)
-    const lineItems = [
-      // Product line items only
-      ...cartItems.map(item => {
-        const lineItem: any = {
-          title: item.title || item.name || 'Unknown Item',
-          price: item.price.toString(),
-          quantity: item.quantity || 1,
-          requires_shipping: true
-        };
-
-        // Handle Shopify product/variant IDs (clean up GIDs)
-        if (item.id && typeof item.id === 'string') {
-          if (item.id.includes('gid://shopify/Product/')) {
-            const productId = item.id.replace('gid://shopify/Product/', '');
-            if (!isNaN(parseInt(productId))) {
-              lineItem.product_id = parseInt(productId);
-            }
-          }
-        }
-
-        if (item.variant && typeof item.variant === 'string') {
-          if (item.variant.includes('gid://shopify/ProductVariant/')) {
-            const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
-            if (!isNaN(parseInt(variantId))) {
-              lineItem.variant_id = parseInt(variantId);
-              delete lineItem.product_id; // Use variant_id instead
-            }
-          }
-        }
-
-        return lineItem;
-      })
-      // NOTE: Driver tip moved to shipping_lines section below
-    ];
-
-    logStep("Line items prepared (PRODUCTS ONLY)", { 
-      productItemCount: cartItems.length,
-      totalLineItems: lineItems.length,
+    logStep("Line items created (PRODUCTS ONLY)", { 
+      itemCount: lineItems.length,
       productSubtotal: cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
       tipAmount: orderAmounts.tip_amount,
       note: "Only products in line_items - delivery fee and tip in shipping_lines section"
@@ -591,7 +390,7 @@ serve(async (req) => {
         // ONLY actual products as line items - NO TIP, NO FEES
         line_items: lineItems, // Just the real products
         
-        customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
+        customer: null, // Will be set after customer creation
         billing_address: {
           first_name: firstName,
           last_name: lastName,
@@ -739,6 +538,89 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
       }
     });
 
+    // Create or find Shopify customer first
+    logStep("Creating/finding Shopify customer", { firstName, lastName, email: customerEmail });
+
+    let shopifyCustomerId = null;
+    
+    // First, try to find existing customer by email
+    try {
+      const searchResponse = await fetch(
+        `https://${shopifyStore}/admin/api/2024-10/customers/search.json?query=email:${encodeURIComponent(customerEmail)}`,
+        {
+          headers: {
+            'X-Shopify-Access-Token': shopifyToken,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (searchResponse.ok) {
+        const searchResult = await searchResponse.json();
+        if (searchResult.customers && searchResult.customers.length > 0) {
+          shopifyCustomerId = searchResult.customers[0].id;
+          logStep("Existing customer found", { customerId: shopifyCustomerId });
+        }
+      }
+    } catch (searchError) {
+      logStep("Customer search error, will create new", { error: searchError.message });
+    }
+
+    // If no existing customer found, create new one
+    if (!shopifyCustomerId) {
+      try {
+        const customerData = {
+          customer: {
+            first_name: firstName,
+            last_name: lastName,
+            email: customerEmail,
+            phone: customerPhone,
+            addresses: [
+              {
+                first_name: firstName,
+                last_name: lastName,
+                address1: street,
+                city: city,
+                province: state,
+                country: "US",
+                zip: zip,
+                phone: customerPhone
+              }
+            ]
+          }
+        };
+
+        const customerResponse = await fetch(
+          `https://${shopifyStore}/admin/api/2024-10/customers.json`,
+          {
+            method: 'POST',
+            headers: {
+              'X-Shopify-Access-Token': shopifyToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(customerData),
+          }
+        );
+
+        if (customerResponse.ok) {
+          const customerResult = await customerResponse.json();
+          shopifyCustomerId = customerResult.customer.id;
+          logStep("New customer created", { customerId: shopifyCustomerId });
+        } else {
+          const errorText = await customerResponse.text();
+          logStep("Customer creation failed", { error: errorText });
+        }
+      } catch (customerError) {
+        logStep("Customer creation error", { error: customerError.message });
+      }
+    }
+
+    // Update order data with customer ID if we have one
+    if (shopifyCustomerId) {
+      orderData.order.customer = { id: shopifyCustomerId };
+    }
+
+    // Create the Shopify order
     try {
       const orderResponse = await fetch(
         `https://${shopifyStore}/admin/api/2024-10/orders.json`,
