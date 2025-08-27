@@ -91,68 +91,9 @@ const OrderComplete = () => {
             }
           }
           
-          // Background sync to get real order data with share token (optional)
-          setTimeout(async () => {
-            let foundOrder = null;
-            let attempts = 0;
-            const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
-            
-            while (!foundOrder && attempts < 5) { // Quick background check
-              attempts++;
-              
-              for (const searchTerm of searchTerms) {
-                if (foundOrder) break;
-                
-                try {
-                  console.log(`🔍 CACHE-BREAK QUERY v2 - Attempt ${attempts}, SearchTerm: ${searchTerm}`);
-                  
-                  // Query with ONLY existing columns - no payment_intent_id!
-                  const { data: orders, error } = await supabase
-                    .from('customer_orders')
-                    .select(`*, customer:customers(first_name, last_name, email)`)
-                    .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`)
-                    .order('created_at', { ascending: false })
-                    .limit(3);
-                    
-                  console.log(`🔍 CACHE-BREAK RESULT v2: error=${error?.message || 'none'}, orders=${orders?.length || 0}`);
-                  
-                  if (!error && orders?.length > 0) {
-                    foundOrder = orders.find(o => o.customer_id) || orders[0];
-                    break;
-                  }
-                } catch (queryError) {
-                  console.error('❌ Query failed:', queryError);
-                }
-              }
-              
-              if (!foundOrder && attempts < 5) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-              }
-            }
-            
-            // Update with real order data if found (for share token, etc.)
-            if (foundOrder) {
-              console.log("🔥 ✅ BACKGROUND SYNC COMPLETE:", foundOrder.order_number);
-              
-              // Check if this was a group order join - route to group dashboard
-              const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
-              const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
-              
-              const updatedOrderData = {
-                ...instantOrderData,
-                ...foundOrder,
-                order_number: foundOrder.order_number || instantOrderData.order_number
-              };
-              
-              // If user joined a group order, mark it for group dashboard routing
-              if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
-                updatedOrderData.isGroupOrderJoin = true;
-                updatedOrderData.originalGroupData = JSON.parse(originalGroupOrderData);
-              }
-              
-              setOrderData(updatedOrderData);
-            }
-          }, 1000); // Start background sync after 1 second
+          // ✅ WORKING: Webhook creates Shopify orders automatically
+          // No background database sync needed - simplified for reliability
+          console.log('🎉 Order Complete: Webhook handled Shopify order creation');
           
         } else {
           // No session data available - show basic confirmation
