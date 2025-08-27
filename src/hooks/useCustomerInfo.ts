@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { cacheManager } from '@/utils/cacheManager';
+import { checkoutStorage } from '@/utils/universalStorage';
 
 export interface CustomerInfo {
   firstName: string;
@@ -541,28 +542,16 @@ export function useCustomerInfo() {
     }
   }, [hasLoadedStoredData]);
 
-  // Simple setters that just update state and localStorage
+  // Simple setters that just update state and universal storage
   const setCustomerInfo = (info: CustomerInfo | ((prev: CustomerInfo) => CustomerInfo)) => {
     const newInfo = typeof info === 'function' ? info(customerInfo) : info;
     console.log('💾 Setting and saving customer info:', newInfo);
     
     setCustomerInfoState(newInfo);
     
-    // Enhanced storage save with incognito mode resilience
+    // Universal storage save - works across ALL browsers and conditions
     try {
-      // Try localStorage first, fallback to sessionStorage for incognito mode
-      try {
-        localStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
-        console.log('✅ Customer info saved to localStorage');
-      } catch (localStorageError) {
-        console.warn('⚠️ localStorage failed, using sessionStorage for incognito mode:', localStorageError);
-        try {
-          sessionStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
-          console.log('✅ Customer info saved to sessionStorage');
-        } catch (sessionStorageError) {
-          console.error('❌ Both storage methods failed for customer info:', sessionStorageError);
-        }
-      }
+      checkoutStorage.saveCustomerInfo(newInfo);
       
       try {
         cacheManager.set('customer_checkout', newInfo, 60); // 1 hour cache for checkout session
@@ -585,21 +574,9 @@ export function useCustomerInfo() {
     
     setAddressInfoState(newInfo);
     
-    // Enhanced storage save with incognito mode resilience
+    // Universal storage save - works across ALL browsers and conditions
     try {
-      // Try localStorage first, fallback to sessionStorage for incognito mode
-      try {
-        localStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
-        console.log('✅ Address info saved to localStorage');
-      } catch (localStorageError) {
-        console.warn('⚠️ localStorage failed, using sessionStorage for incognito mode:', localStorageError);
-        try {
-          sessionStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
-          console.log('✅ Address info saved to sessionStorage');
-        } catch (sessionStorageError) {
-          console.error('❌ Both storage methods failed for address info:', sessionStorageError);
-        }
-      }
+      checkoutStorage.saveAddressInfo(newInfo);
       
       try {
         cacheManager.set('address_checkout', newInfo, 60); // 1 hour cache for checkout session

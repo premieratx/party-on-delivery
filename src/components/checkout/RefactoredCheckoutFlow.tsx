@@ -9,6 +9,7 @@ import { useDeliveryFee } from '@/hooks/useDeliveryFee';
 import { useToast } from '@/hooks/use-toast';
 import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
 import { usePersistentCheckout } from '@/hooks/usePersistentCheckout';
+import { checkoutStorage } from '@/utils/universalStorage';
 
 // Import our new modular components
 import { CheckoutSteps } from './CheckoutSteps';
@@ -198,32 +199,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const handleClearAllData = () => {
     console.log('🧹 Clearing all checkout data for fresh start');
     
-    // Clear from both localStorage and sessionStorage to handle incognito mode
-    const storageKeys = [
-      'partyondelivery_customer',
-      'partyondelivery_address', 
-      'partyondelivery_delivery_info',
-      'partyondelivery_checkout_state',
-      'persistent-checkout-info',
-      'partyondelivery_customer_persistent',
-      'partyondelivery_address_persistent'
-    ];
-    
-    storageKeys.forEach(key => {
-      try {
-        localStorage.removeItem(key);
-        console.log(`✅ Cleared ${key} from localStorage`);
-      } catch (localStorageError) {
-        console.warn(`⚠️ Failed to clear ${key} from localStorage:`, localStorageError);
-      }
-      
-      try {
-        sessionStorage.removeItem(key);
-        console.log(`✅ Cleared ${key} from sessionStorage`);
-      } catch (sessionStorageError) {
-        console.warn(`⚠️ Failed to clear ${key} from sessionStorage:`, sessionStorageError);
-      }
-    });
+    // Use universal storage for bulletproof clearing
+    checkoutStorage.clearAll();
     
     // Reset all state
     setConfirmedDateTime(false);
@@ -246,7 +223,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       instructions: ''
     });
     
-    console.log('✅ All checkout data cleared from both storage mechanisms - fresh start enabled');
+    console.log('✅ All checkout data cleared universally - works in ALL browsers and conditions');
   };
 
   const handlePaymentSuccess = (paymentIntentId?: string) => {

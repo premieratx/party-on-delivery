@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { checkoutStorage } from '@/utils/universalStorage';
 
 interface CustomerInfo {
   firstName: string;
@@ -118,19 +119,9 @@ export const usePersistentCheckout = () => {
             lastUsed: Date.now()
           };
           
-          // Try localStorage first, fallback to sessionStorage for incognito mode
-          try {
-            localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(dataToSave));
-            console.log('✅ Persistent checkout data saved to localStorage');
-          } catch (localStorageError) {
-            console.warn('⚠️ localStorage save failed, using sessionStorage for incognito mode:', localStorageError);
-            try {
-              sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(dataToSave));
-              console.log('✅ Persistent checkout data saved to sessionStorage');
-            } catch (sessionStorageError) {
-              console.error('❌ Both storage methods failed during save:', sessionStorageError);
-            }
-          }
+          // Use universal storage for bulletproof saving
+          checkoutStorage.savePersistentData(dataToSave);
+          console.log('✅ Persistent checkout data saved universally');
         } catch (error) {
           console.warn('Failed to save persistent checkout data:', error);
         }

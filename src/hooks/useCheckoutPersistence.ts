@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DeliveryInfo } from '@/components/DeliveryWidget';
 import { CustomerInfo, AddressInfo } from './useCustomerInfo';
+import { checkoutStorage } from '@/utils/universalStorage';
 
 interface CheckoutState {
   deliveryInfo: DeliveryInfo;
@@ -32,58 +33,28 @@ export function useCheckoutPersistence() {
         expiresAt: new Date(Date.now() + STORAGE_EXPIRY_HOURS * 60 * 60 * 1000).toISOString()
       };
       
-      // Try localStorage first, fallback to sessionStorage for incognito mode
-      try {
-        localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(stateWithTimestamp));
-        console.log('✅ Checkout state saved to localStorage:', stateWithTimestamp);
-      } catch (localStorageError) {
-        console.warn('⚠️ localStorage failed, using sessionStorage for incognito mode:', localStorageError);
-        sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(stateWithTimestamp));
-        console.log('✅ Checkout state saved to sessionStorage:', stateWithTimestamp);
-      }
+      // Use universal storage for bulletproof saving
+      checkoutStorage.saveCheckoutState(stateWithTimestamp);
+      console.log('✅ Checkout state saved universally:', stateWithTimestamp);
     } catch (error) {
-      console.error('❌ Failed to save checkout state completely:', error);
+      console.error('❌ Failed to save checkout state:', error);
     }
   };
 
   const getCheckoutState = (): Partial<CheckoutState> | null => {
     try {
-      // Try localStorage first, fallback to sessionStorage for incognito mode
-      let stored: string | null = null;
-      let storageType = 'localStorage';
+      // Use universal storage for bulletproof loading
+      const data = checkoutStorage.loadCheckoutState();
       
-      try {
-        stored = localStorage.getItem(CHECKOUT_STORAGE_KEY);
-      } catch (localStorageError) {
-        console.warn('⚠️ localStorage read failed, trying sessionStorage:', localStorageError);
-        try {
-          stored = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
-          storageType = 'sessionStorage';
-        } catch (sessionStorageError) {
-          console.error('❌ Both storage methods failed:', sessionStorageError);
-          return null;
-        }
-      }
-      
-      if (!stored) return null;
+      if (!data) return null;
 
-      const data = JSON.parse(stored);
-      
       // Check if expired
-      if (data.expiresAt && new Date() > new Date(data.expiresAt)) {
-        try {
-          if (storageType === 'localStorage') {
-            localStorage.removeItem(CHECKOUT_STORAGE_KEY);
-          } else {
-            sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
-          }
-        } catch (error) {
-          console.warn('Failed to remove expired data:', error);
-        }
+      if (data && typeof data === 'object' && 'expiresAt' in data && data.expiresAt && new Date() > new Date(data.expiresAt as string)) {
+        checkoutStorage.clearAll();
         return null;
       }
 
-      console.log(`✅ Checkout state loaded from ${storageType}:`, data);
+      console.log('✅ Checkout state loaded universally:', data);
       return data;
     } catch (error) {
       console.error('❌ Failed to load checkout state:', error);
@@ -93,20 +64,9 @@ export function useCheckoutPersistence() {
 
   const clearCheckoutState = () => {
     try {
-      // Clear from both storage mechanisms to be safe
-      try {
-        localStorage.removeItem(CHECKOUT_STORAGE_KEY);
-        console.log('✅ Checkout state cleared from localStorage');
-      } catch (localStorageError) {
-        console.warn('⚠️ Failed to clear localStorage:', localStorageError);
-      }
-      
-      try {
-        sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
-        console.log('✅ Checkout state cleared from sessionStorage');
-      } catch (sessionStorageError) {
-        console.warn('⚠️ Failed to clear sessionStorage:', sessionStorageError);
-      }
+      // Use universal storage for bulletproof clearing
+      checkoutStorage.clearAll();
+      console.log('✅ Checkout state cleared universally');
     } catch (error) {
       console.error('❌ Failed to clear checkout state:', error);
     }
