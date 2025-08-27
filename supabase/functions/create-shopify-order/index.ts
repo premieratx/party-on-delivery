@@ -11,49 +11,38 @@ serve(async (req) => {
   }
 
   try {
-    console.log("🚀 CREATE SHOPIFY ORDER - FRESH START");
+    console.log("🚀 FUNCTION STARTS NOW");
     
     const body = await req.json();
-    console.log("📦 REQUEST BODY:", JSON.stringify(body, null, 2));
+    console.log("📦 GOT BODY");
 
     const { paymentIntentId, cartItems, customerInfo, deliveryInfo, amounts } = body;
 
-    // Validate required data
     if (!paymentIntentId) {
       throw new Error("Payment Intent ID is required");
     }
     if (!cartItems || cartItems.length === 0) {
-      throw new Error("Cart items are required");
+      throw new Error("Cart items are required");  
     }
     if (!customerInfo?.email) {
       throw new Error("Customer email is required");
     }
 
-    console.log("✅ Validation passed");
+    console.log("✅ VALIDATION OK");
 
-    // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    
-    console.log("🔑 Token check:", {
-      hasToken: !!shopifyToken,
-      tokenLength: shopifyToken?.length || 0,
-      tokenStart: shopifyToken?.substring(0, 10) || 'NO_TOKEN',
-      envKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('SHOPIFY'))
-    });
-    
     if (!shopifyToken) {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
     }
 
-    // Create line items for Shopify
+    console.log("🔑 TOKEN OK");
+
+    // Create line items
     const lineItems = cartItems.map((item: any) => {
       let variantId = item.variant_id || item.variant || null;
-      
-      // Extract numeric ID from GraphQL format if needed
       if (variantId && typeof variantId === 'string' && variantId.includes('gid://shopify/ProductVariant/')) {
         variantId = variantId.split('/').pop();
       }
-      
       return {
         title: item.title || item.name,
         quantity: item.quantity,
@@ -63,9 +52,9 @@ serve(async (req) => {
       };
     });
 
-    console.log("📝 Line items created:", lineItems.length);
+    console.log("📝 LINE ITEMS OK");
 
-    // Create Shopify order
+    // Create order data
     const orderData = {
       order: {
         line_items: lineItems,
@@ -115,56 +104,30 @@ serve(async (req) => {
       }
     };
 
-    console.log("🏪 Calling Shopify API with order data:", {
-      orderDataSize: JSON.stringify(orderData).length,
-      lineItemsCount: orderData.order.line_items.length,
-      customerEmail: orderData.order.customer.email,
-      totalPrice: orderData.order.total_price
-    });
+    console.log("🏗️ ORDER DATA OK");
 
-    let response;
-    try {
-      response = await fetch(
-        "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
-        {
-          method: "POST",
-          headers: {
-            "X-Shopify-Access-Token": shopifyToken,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(orderData),
-        }
-      );
-      
-      console.log("📡 Shopify API response received:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-      
-    } catch (fetchError) {
-      console.error("💥 FETCH ERROR:", fetchError);
-      throw new Error(`Network error: ${fetchError.message}`);
-    }
+    const response = await fetch(
+      "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
+      {
+        method: "POST",
+        headers: {
+          "X-Shopify-Access-Token": shopifyToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      }
+    );
+
+    console.log("📡 FETCH DONE:", response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ SHOPIFY API ERROR DETAILS:", {
-        status: response.status,
-        statusText: response.statusText,
-        errorBody: errorText,
-        headers: Object.fromEntries(response.headers.entries()),
-        sentData: JSON.stringify(orderData, null, 2)
-      });
+      console.error("❌ SHOPIFY ERROR:", response.status, errorText);
       throw new Error(`Shopify API error (${response.status}): ${errorText}`);
     }
 
     const result = await response.json();
-    console.log("✅ Shopify order created successfully:", {
-      orderId: result.order?.id,
-      orderName: result.order?.name,
-      status: result.order?.financial_status
-    });
+    console.log("✅ SUCCESS:", result.order?.name);
 
     return new Response(
       JSON.stringify({
