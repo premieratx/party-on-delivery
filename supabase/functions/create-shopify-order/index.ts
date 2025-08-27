@@ -250,7 +250,7 @@ serve(async (req) => {
     });
 
     // Extract order amounts
-    const orderAmounts = {
+    orderAmounts = {
       subtotal: parseFloat(metadata.subtotal || '0'),
       sales_tax: parseFloat(metadata.sales_tax || '0'),
       delivery_fee: parseFloat(metadata.delivery_fee || '0'),
