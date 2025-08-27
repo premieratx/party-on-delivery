@@ -511,9 +511,9 @@ serve(async (req) => {
       }
     }
 
-    // Create line items - products + tip as separate line item (per documentation standard)
+    // Create line items - ONLY products (no tip here)
     const lineItems = [
-      // Product line items
+      // Product line items only
       ...cartItems.map(item => {
         const lineItem: any = {
           title: item.title || item.name || 'Unknown Item',
@@ -543,25 +543,16 @@ serve(async (req) => {
         }
 
         return lineItem;
-      }),
-      // Driver tip as separate line item (makes it appear in main order breakdown)
-      ...(orderAmounts.tip_amount > 0 ? [{
-        title: "Driver Tip",
-        price: orderAmounts.tip_amount.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false,
-        gift_card: false
-      }] : [])
+      })
+      // NOTE: Driver tip moved to shipping_lines section below
     ];
 
-    logStep("Line items prepared (PRODUCTS + TIP)", { 
+    logStep("Line items prepared (PRODUCTS ONLY)", { 
       productItemCount: cartItems.length,
       totalLineItems: lineItems.length,
-      hasTipLineItem: lineItems.some(item => item.title === "Driver Tip"),
       productSubtotal: cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
       tipAmount: orderAmounts.tip_amount,
-      note: "Products + Driver tip as separate line item (per documentation standard)"
+      note: "Only products in line_items - delivery fee and tip in shipping_lines section"
     });
 
     // Extract affiliate code if present
@@ -610,14 +601,23 @@ serve(async (req) => {
           rate: 0.0825
         }] : [],
         
-        // Shipping lines - ONLY delivery fee ($30.00)
-        shipping_lines: orderAmounts.delivery_fee > 0 ? [{
-          title: "Delivery Fee",
-          price: orderAmounts.delivery_fee.toFixed(2),  // $30.00
-          code: "LOCAL_DELIVERY"
-        }] : [],
+        // Shipping lines - Delivery fee AND Driver tip as separate entries (same section)
+        shipping_lines: [
+          // Delivery fee entry
+          ...(orderAmounts.delivery_fee > 0 ? [{
+            title: "Delivery Fee",
+            price: orderAmounts.delivery_fee.toFixed(2),
+            code: "LOCAL_DELIVERY"
+          }] : []),
+          // Driver tip entry (separate but same section)
+          ...(orderAmounts.tip_amount > 0 ? [{
+            title: "Driver Tip", 
+            price: orderAmounts.tip_amount.toFixed(2),
+            code: "DRIVER_TIP"
+          }] : [])
+        ],
         
-        // NOTE: Driver tip is now handled as line item above (per documentation standard)
+        // NOTE: Driver tip now in shipping_lines above (same section as delivery fee)
         
         // Custom attributes - delivery details displayed prominently
         note_attributes: [
@@ -695,13 +695,21 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
       }
     };
 
-    logStep("Creating Shopify order with fixed structure", { 
+    logStep("Creating Shopify order with FIXED STRUCTURE", { 
       totalAmount: orderAmounts.total_amount,
       lineItemCount: lineItems.length,
-      hasTipLineItem: lineItems.some(item => item.title === "Driver Tip"),
+      shippingLinesCount: [
+        ...(orderAmounts.delivery_fee > 0 ? [1] : []),
+        ...(orderAmounts.tip_amount > 0 ? [1] : [])
+      ].length,
       tipAmount: orderAmounts.tip_amount,
+      deliveryFee: orderAmounts.delivery_fee,
       deliveryAddress: fullAddressString,
-      addressComponents: { street, city, state, zip }
+      addressComponents: { street, city, state, zip },
+      exactStructure: {
+        line_items: "PRODUCTS ONLY",
+        shipping_lines: "DELIVERY FEE + DRIVER TIP (separate entries)"
+      }
     });
 
     try {
