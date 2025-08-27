@@ -552,6 +552,7 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
         const orderRecord = {
           order_number: shopifyOrder.name || shopifyOrder.order_number || `#${shopifyOrder.number}`,
           session_id: paymentIntentId || sessionId,
+          payment_intent_id: paymentIntentId, // ✅ NEW: Store PaymentIntent ID
           shopify_order_id: shopifyOrder.id.toString(),
           delivery_date: deliveryDate,
           delivery_time: deliveryTime,
