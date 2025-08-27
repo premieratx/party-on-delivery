@@ -62,10 +62,24 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
 
   if (!isOpen) return null;
 
-  // Always scroll cart to top when opened
+  // ENHANCED: Always scroll cart to top when opened - Complete isolation from page scroll
   useEffect(() => {
-    if (isOpen && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    if (isOpen) {
+      // Force scroll to top immediately when cart opens
+      const scrollToTop = () => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+          scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      };
+      
+      // Multiple attempts to ensure scroll reset works reliably across all scenarios
+      scrollToTop(); // Immediate
+      requestAnimationFrame(scrollToTop); // Next frame
+      setTimeout(scrollToTop, 1); // Next tick
+      setTimeout(scrollToTop, 10); // Backup
+      setTimeout(scrollToTop, 50); // Final backup
+      setTimeout(scrollToTop, 100); // Extra backup for slow devices
     }
   }, [isOpen]);
 
@@ -78,7 +92,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
       />
       
       {/* Cart Sidebar */}
-       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right">
+       <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
@@ -104,7 +118,19 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
           </div>
 
           {/* Cart Items */}
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain">
+          <div 
+            ref={scrollContainerRef} 
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
+            style={{ 
+              /* Complete scroll isolation from main page */
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+              position: 'relative',
+              zIndex: 1,
+              /* Ensure this container creates its own scroll context */
+              willChange: 'scroll-position'
+            }}
+          >
             <div className="p-4 space-y-4">
               {items.length === 0 ? (
                 <div className="text-center py-12">

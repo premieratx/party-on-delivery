@@ -36,10 +36,24 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
 
-  // Always scroll cart to top when opened
+  // ENHANCED: Always scroll cart to top when opened - Complete isolation from page scroll
   useEffect(() => {
-    if (isOpen && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    if (isOpen) {
+      // Force scroll to top immediately when cart opens
+      const scrollToTop = () => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+          scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      };
+      
+      // Multiple attempts to ensure scroll reset works reliably across all scenarios
+      scrollToTop(); // Immediate
+      requestAnimationFrame(scrollToTop); // Next frame
+      setTimeout(scrollToTop, 1); // Next tick
+      setTimeout(scrollToTop, 10); // Backup
+      setTimeout(scrollToTop, 50); // Final backup
+      setTimeout(scrollToTop, 100); // Extra backup for slow devices
     }
   }, [isOpen]);
 
@@ -87,7 +101,19 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
             </SheetTitle>
           </SheetHeader>
 
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain">
+          <div 
+            ref={scrollContainerRef} 
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
+            style={{ 
+              /* Complete scroll isolation from main page */
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+              position: 'relative',
+              zIndex: 1,
+              /* Ensure this container creates its own scroll context */
+              willChange: 'scroll-position'
+            }}
+          >
             <div className="p-6 space-y-4">
               {items.map((item) => (
                 <Card key={`${item.id}-${item.variant || 'default'}`} className="overflow-hidden">
