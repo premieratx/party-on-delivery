@@ -100,26 +100,28 @@ const OrderComplete = () => {
             while (!foundOrder && attempts < 5) { // Quick background check
               attempts++;
               
-            for (const searchTerm of searchTerms) {
+              for (const searchTerm of searchTerms) {
                 if (foundOrder) break;
                 
-                // Construct the query safely - only use existing columns
-                const safeQuery = `session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`;
-                console.log(`🔍 QUERY DEBUG - Attempt ${attempts}, SearchTerm: ${searchTerm}`);
-                console.log(`🔍 EXACT QUERY: .or("${safeQuery}")`);
-                
-                const { data: orders, error } = await supabase
-                  .from('customer_orders')
-                  .select(`*, customer:customers(first_name, last_name, email)`)
-                  .or(safeQuery)
-                  .order('created_at', { ascending: false })
-                  .limit(3);
+                try {
+                  console.log(`🔍 CACHE-BREAK QUERY v2 - Attempt ${attempts}, SearchTerm: ${searchTerm}`);
                   
-                console.log(`🔍 QUERY RESULT: error=${error?.message || 'none'}, orders=${orders?.length || 0}`);
-                
-                if (!error && orders?.length > 0) {
-                  foundOrder = orders.find(o => o.customer_id) || orders[0];
-                  break;
+                  // Query with ONLY existing columns - no payment_intent_id!
+                  const { data: orders, error } = await supabase
+                    .from('customer_orders')
+                    .select(`*, customer:customers(first_name, last_name, email)`)
+                    .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`)
+                    .order('created_at', { ascending: false })
+                    .limit(3);
+                    
+                  console.log(`🔍 CACHE-BREAK RESULT v2: error=${error?.message || 'none'}, orders=${orders?.length || 0}`);
+                  
+                  if (!error && orders?.length > 0) {
+                    foundOrder = orders.find(o => o.customer_id) || orders[0];
+                    break;
+                  }
+                } catch (queryError) {
+                  console.error('❌ Query failed:', queryError);
                 }
               }
               
