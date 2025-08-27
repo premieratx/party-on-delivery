@@ -470,18 +470,19 @@ export const CombinedSearchTabs = ({
           <div className="flex items-center justify-center gap-2">
             {/* Search Section - Expands when active */}
             {showSearch && (
-              <div className={`flex items-center transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'flex-1' : 'flex-shrink-0'}`}>
+              <div className={`flex items-center transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'flex-1 mr-2' : 'flex-shrink-0'}`}>
                 {isSearchExpanded || isSearchActive ? (
-                  /* Expanded Search Bar */
-                  <div className="flex items-center w-full gap-2">
+                  /* Expanded Search Bar - Full width */
+                  <div className="flex items-center w-full">
                     <div className="relative flex-1">
                       <AdvancedSearchBar
                         value={searchQuery}
                         onChange={(newValue) => {
                           console.log('🔍 Mobile search query changed:', newValue);
                           onSearchChange(newValue);
+                          // Instant search - trigger immediately as user types
                           if (newValue.trim()) {
-                            onSearchSubmit();
+                            setTimeout(() => onSearchSubmit(), 100);
                           }
                         }}
                         onSubmit={onSearchSubmit}
@@ -498,7 +499,7 @@ export const CombinedSearchTabs = ({
                     </div>
                   </div>
                 ) : (
-                  /* Search Icon */
+                  /* Search Icon - Compact */
                   <Button
                     variant="ghost"
                     size="sm"
@@ -512,29 +513,30 @@ export const CombinedSearchTabs = ({
               </div>
             )}
             
-            {/* Cart Button - Responsive: Full when search inactive, icon-only when search active */}
+            {/* Cart Button - Responsive: Shrinks to icon when search is expanded */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className={`flex items-center justify-center border hover:bg-muted transition-all duration-300 ${
+              className={`flex items-center justify-center border hover:bg-muted transition-all duration-300 relative ${
                 (isSearchExpanded || isSearchActive) ? 'h-9 w-9 p-0' : 'h-9 px-3 gap-1.5'
               }`}
-              disabled={cartItemCount === 0}
+              title={`Cart ${cartItemCount > 0 ? `(${cartItemCount} items)` : ''}`}
             >
               <ShoppingCart className="w-4 h-4" />
-              {!(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
-                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-semibold">
-                  {cartItemCount}
-                </span>
-              )}
+              {/* Show count as badge when expanded, inline when collapsed */}
               {(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
                 <span className="absolute -top-1 -right-1 text-xs bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center font-semibold">
                   {cartItemCount}
                 </span>
               )}
+              {!(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
+                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-semibold">
+                  {cartItemCount}
+                </span>
+              )}
             </Button>
             
-            {/* Checkout Button - Responsive: Full when search inactive, icon-only when search active */}
+            {/* Checkout Button - Responsive: Shrinks to icon when search is expanded */}
             <Button
               onClick={onCheckout}
               className={`flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 ${
@@ -542,8 +544,10 @@ export const CombinedSearchTabs = ({
               }`}
               variant="default"
               disabled={cartItemCount === 0}
+              title={`Checkout ${totalAmount > 0 ? `($${formatPrice(safePrice(totalAmount))})` : ''}`}
             >
               <Check className="w-4 h-4" />
+              {/* Show price inline when collapsed */}
               {!(isSearchExpanded || isSearchActive) && totalAmount > 0 && (
                 <span className="font-bold text-sm">${formatPrice(safePrice(totalAmount))}</span>
               )}
