@@ -34,11 +34,16 @@ serve(async (req) => {
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
     
+    console.log("🔑 Token check:", {
+      hasToken: !!shopifyToken,
+      tokenLength: shopifyToken?.length || 0,
+      tokenStart: shopifyToken?.substring(0, 10) || 'NO_TOKEN',
+      envKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('SHOPIFY'))
+    });
+    
     if (!shopifyToken) {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
     }
-
-    console.log("🔑 Token retrieved");
 
     // Create line items for Shopify
     const lineItems = cartItems.map((item: any) => {
