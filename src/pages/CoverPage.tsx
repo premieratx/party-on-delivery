@@ -12,102 +12,40 @@ export default function CoverPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Enhanced mobile fullscreen setup for cover pages
   useEffect(() => {
-    // Add mobile-specific meta tags for fullscreen experience
-    const addMobileMetaTags = () => {
-      // Remove existing mobile meta tags
-      const existingMetas = document.querySelectorAll('meta[name="viewport"], meta[name="mobile-web-app-capable"], meta[name="apple-mobile-web-app-capable"], meta[name="apple-mobile-web-app-status-bar-style"], meta[name="theme-color"]');
-      existingMetas.forEach(meta => meta.remove());
+    // Force fullscreen mode for cover pages
+    const enableFullscreen = () => {
+      // Add PWA installation prompt
+      const addPWAPrompt = () => {
+        let deferredPrompt: any;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          
+          // Auto-trigger PWA install for fullscreen experience
+          setTimeout(() => {
+            if (deferredPrompt) {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then(() => {
+                deferredPrompt = null;
+              });
+            }
+          }, 2000);
+        });
+      };
 
-      // Add enhanced mobile meta tags for aggressive fullscreen
-      const metas = [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, shrink-to-fit=no' },
-        { name: 'mobile-web-app-capable', content: 'yes' },
-        { name: 'apple-mobile-web-app-capable', content: 'yes' },
-        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-touch-fullscreen', content: 'yes' },
-        { name: 'format-detection', content: 'telephone=no' },
-        { name: 'msapplication-tap-highlight', content: 'no' },
-        { name: 'theme-color', content: '#000000' },
-        { name: 'msapplication-navbutton-color', content: '#000000' },
-        { name: 'apple-mobile-web-app-title', content: 'Cover Page' }
-      ];
-
-      metas.forEach(({ name, content }) => {
-        const meta = document.createElement('meta');
-        meta.name = name;
-        meta.content = content;
-        document.head.appendChild(meta);
-      });
-    };
-
-    // Add aggressive CSS to hide all browser UI elements
-    const addMobileStyles = () => {
-      const existingStyle = document.getElementById('cover-page-mobile-styles');
-      if (existingStyle) existingStyle.remove();
-
+      // Aggressive CSS for hiding browser UI
       const style = document.createElement('style');
-      style.id = 'cover-page-mobile-styles';
+      style.id = 'cover-fullscreen-styles';
       style.textContent = `
-        /* Aggressive mobile fullscreen for cover pages */
-        * {
-          -webkit-tap-highlight-color: transparent;
-          -webkit-touch-callout: none;
-          -webkit-user-select: none;
-          -khtml-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
-        }
-        
-        html {
-          height: 100vh;
-          height: -webkit-fill-available;
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
-          top: 0;
-          left: 0;
-        }
-        
-        body {
-          height: 100vh;
-          height: -webkit-fill-available;
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
-          top: 0;
-          left: 0;
-          margin: 0;
-          padding: 0;
-          background: #000;
-        }
-        
-        #root {
-          height: 100vh;
-          height: -webkit-fill-available;
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
-          top: 0;
-          left: 0;
-        }
-        
-        /* Hide all scrollbars */
-        ::-webkit-scrollbar {
-          display: none;
-          width: 0;
-          height: 0;
-        }
-        
-        /* Mobile specific overrides */
+        /* Ultimate mobile fullscreen for cover pages */
         @media screen and (max-width: 768px) {
-          html, body, #root {
-            position: fixed !important;
-            overflow: hidden !important;
+          html {
             height: 100vh !important;
             height: -webkit-fill-available !important;
+            overflow: hidden !important;
+            position: fixed !important;
             width: 100vw !important;
             top: 0 !important;
             left: 0 !important;
@@ -115,79 +53,134 @@ export default function CoverPage() {
             padding: 0 !important;
           }
           
-          /* iOS Safari specific */
-          @supports (-webkit-touch-callout: none) {
-            html, body, #root {
-              height: 100vh !important;
-              height: -webkit-fill-available !important;
-              position: fixed !important;
-              overflow: hidden !important;
-            }
+          body {
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100vw !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #000 !important;
           }
           
-          /* Android Chrome specific */
-          @media screen and (-webkit-min-device-pixel-ratio: 0) {
-            html, body, #root {
-              height: 100vh !important;
-              position: fixed !important;
-              overflow: hidden !important;
-            }
+          #root {
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100vw !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
+          * {
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            touch-action: manipulation !important;
+          }
+          
+          /* Hide any scrollbars */
+          ::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          
+          /* Prevent any scrolling */
+          html, body, #root {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+            -webkit-overflow-scrolling: auto !important;
+          }
+        }
+        
+        /* Force standalone mode appearance */
+        @media all and (display-mode: standalone) {
+          html, body {
+            overflow: hidden !important;
+          }
+        }
+        
+        @media all and (display-mode: fullscreen) {
+          html, body {
+            overflow: hidden !important;
           }
         }
       `;
+      
+      // Remove existing styles and add new ones
+      const existingStyle = document.getElementById('cover-fullscreen-styles');
+      if (existingStyle) existingStyle.remove();
       document.head.appendChild(style);
-    };
 
-    // JavaScript techniques to trigger fullscreen behavior
-    const triggerFullscreen = () => {
-      // Try to scroll to hide address bar
-      setTimeout(() => {
-        window.scrollTo(0, 1);
+      // JavaScript techniques to hide browser UI
+      const hideAddressBar = () => {
+        // Multiple scroll techniques to hide address bar
         setTimeout(() => {
-          window.scrollTo(0, 0);
-        }, 100);
-      }, 500);
+          window.scrollTo(0, 1);
+          setTimeout(() => {
+            window.scrollTo(0, 0);
+            setTimeout(() => {
+              window.scrollTo(0, 1);
+              setTimeout(() => {
+                window.scrollTo(0, 0);
+              }, 100);
+            }, 100);
+          }, 100);
+        }, 500);
+      };
 
-      // Prevent scroll events that might show UI
-      const preventScroll = (e: Event) => {
+      // Prevent all scrolling and touch events
+      const preventInteraction = (e: Event) => {
         e.preventDefault();
+        e.stopPropagation();
         return false;
       };
 
-      document.addEventListener('touchmove', preventScroll, { passive: false });
-      document.addEventListener('scroll', preventScroll, { passive: false });
-      document.addEventListener('wheel', preventScroll, { passive: false });
+      // Add event listeners to prevent scrolling
+      const events = ['scroll', 'touchmove', 'wheel', 'keydown'];
+      events.forEach(event => {
+        document.addEventListener(event, preventInteraction, { passive: false, capture: true });
+        window.addEventListener(event, preventInteraction, { passive: false, capture: true });
+      });
 
-      // Force focus to prevent keyboard from showing
-      const hiddenInput = document.createElement('input');
-      hiddenInput.setAttribute('readonly', 'readonly');
-      hiddenInput.style.position = 'absolute';
-      hiddenInput.style.left = '-9999px';
-      hiddenInput.style.opacity = '0';
-      document.body.appendChild(hiddenInput);
-      hiddenInput.focus();
-      hiddenInput.blur();
-
-      return () => {
-        document.removeEventListener('touchmove', preventScroll);
-        document.removeEventListener('scroll', preventScroll);
-        document.removeEventListener('wheel', preventScroll);
-        if (hiddenInput.parentNode) {
-          hiddenInput.parentNode.removeChild(hiddenInput);
+      // Force focus management to prevent keyboard
+      const preventKeyboard = () => {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && typeof activeElement.blur === 'function') {
+          activeElement.blur();
         }
+      };
+
+      document.addEventListener('focusin', preventKeyboard);
+      document.addEventListener('click', preventKeyboard);
+
+      // Run all techniques
+      addPWAPrompt();
+      hideAddressBar();
+
+      // Cleanup function
+      return () => {
+        const style = document.getElementById('cover-fullscreen-styles');
+        if (style) style.remove();
+        
+        events.forEach(event => {
+          document.removeEventListener(event, preventInteraction);
+          window.removeEventListener(event, preventInteraction);
+        });
+        
+        document.removeEventListener('focusin', preventKeyboard);
+        document.removeEventListener('click', preventKeyboard);
       };
     };
 
-    addMobileMetaTags();
-    addMobileStyles();
-    const cleanupFullscreen = triggerFullscreen();
-
-    // Cleanup function
-    return () => {
-      const style = document.getElementById('cover-page-mobile-styles');
-      if (style) style.remove();
-      cleanupFullscreen?.();
-    };
+    return enableFullscreen();
   }, []);
 
   useEffect(() => {
