@@ -687,16 +687,22 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                     </div>
 
                     <div>
-                      <Label htmlFor="slug" className="text-sm font-medium">URL Slug</Label>
+                      <Label htmlFor="slug" className="text-sm font-medium">
+                        Custom URL Slug 
+                        <Badge variant="secondary" className="ml-2 text-xs">Editable</Badge>
+                      </Label>
                       <Input
                         id="slug"
                         value={slug}
                         onChange={(e) => setSlug(e.target.value)}
-                        placeholder="Auto-generated from title"
+                        placeholder="Leave empty to auto-generate from title"
                         className="bg-background/50 border-border/50"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Preview: {CANONICAL_DOMAIN}/{computedSlug}
+                        <strong>Live URL:</strong> {CANONICAL_DOMAIN}/cover/{computedSlug}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        💡 Tip: Use short, memorable slugs for easier sharing (e.g., "vip-party", "boat-delivery")
                       </p>
                     </div>
 
