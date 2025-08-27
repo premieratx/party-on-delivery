@@ -14,13 +14,7 @@ serve(async (req) => {
     console.log("🚀 CREATE SHOPIFY ORDER - Starting...");
     
     const body = await req.json();
-    console.log("📦 Request body received:", {
-      hasPaymentIntentId: !!body.paymentIntentId,
-      hasCartItems: !!body.cartItems,
-      hasCustomerInfo: !!body.customerInfo,
-      hasDeliveryInfo: !!body.deliveryInfo,
-      hasAmounts: !!body.amounts
-    });
+    console.log("📦 Request body received:", body);
 
     const { 
       paymentIntentId,
