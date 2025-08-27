@@ -36,24 +36,37 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
 
-  // ENHANCED: Always scroll cart to top when opened - Complete isolation from page scroll
+  // BULLETPROOF: Always scroll cart to top when opened - Complete scroll isolation
   useEffect(() => {
-    if (isOpen) {
-      // Force scroll to top immediately when cart opens
-      const scrollToTop = () => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop = 0;
-          scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    if (isOpen && scrollContainerRef.current) {
+      console.log('🛒 Custom delivery cart opened, forcing scroll to top');
+      
+      // Multiple aggressive scroll resets to handle all edge cases
+      const container = scrollContainerRef.current;
+      
+      // Immediate reset
+      container.scrollTop = 0;
+      container.scrollTo({ top: 0, behavior: 'instant' });
+      
+      // Force focus to ensure container has proper scroll context
+      container.focus({ preventScroll: true });
+      
+      // Additional resets with increasing delays
+      const resetScrolling = () => {
+        if (container) {
+          container.scrollTop = 0;
+          container.scrollTo({ top: 0, behavior: 'instant' });
         }
       };
       
-      // Multiple attempts to ensure scroll reset works reliably across all scenarios
-      scrollToTop(); // Immediate
-      requestAnimationFrame(scrollToTop); // Next frame
-      setTimeout(scrollToTop, 1); // Next tick
-      setTimeout(scrollToTop, 10); // Backup
-      setTimeout(scrollToTop, 50); // Final backup
-      setTimeout(scrollToTop, 100); // Extra backup for slow devices
+      requestAnimationFrame(resetScrolling);
+      setTimeout(resetScrolling, 0);
+      setTimeout(resetScrolling, 10);
+      setTimeout(resetScrolling, 50);
+      setTimeout(resetScrolling, 100);
+      setTimeout(resetScrolling, 200);
+      
+      console.log('🛒 Custom delivery cart scroll position reset complete');
     }
   }, [isOpen]);
 
