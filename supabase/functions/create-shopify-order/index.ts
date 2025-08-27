@@ -14,7 +14,15 @@ serve(async (req) => {
     console.log("🚀 CREATE SHOPIFY ORDER - Starting...");
     
     const body = await req.json();
-    console.log("📦 Request body received:", body);
+    console.log("📦 FULL REQUEST BODY:", JSON.stringify(body, null, 2));
+    console.log("🔍 ADDRESS DEBUG:", {
+      deliveryInfo: body.deliveryInfo,
+      addressType: typeof body.deliveryInfo?.address,
+      addressValue: body.deliveryInfo?.address,
+      willUse: typeof body.deliveryInfo?.address === 'string' 
+        ? body.deliveryInfo.address 
+        : (body.deliveryInfo?.address?.address || "Address Required")
+    });
 
     const { 
       paymentIntentId,
@@ -106,7 +114,7 @@ serve(async (req) => {
       }
     };
 
-    console.log("🏪 Creating Shopify order...");
+    console.log("🏪 SENDING TO SHOPIFY:", JSON.stringify(orderData, null, 2));
 
     const response = await fetch(
       "https://premier-concierge.myshopify.com/admin/api/2024-10/orders.json",
@@ -122,7 +130,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ Shopify API error:", errorText);
+      console.error("❌ SHOPIFY FULL ERROR RESPONSE:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: errorText
+      });
       throw new Error(`Shopify API error (${response.status}): ${errorText}`);
     }
 
