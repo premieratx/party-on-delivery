@@ -31,8 +31,13 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
     return "bg-background hover:bg-muted/50 shadow-md hover:shadow-lg transition-all duration-200";
   };
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
     console.log('🔍 SearchIcon clicked, variant:', variant);
+    console.log('🔍 Click event details:', { target: event.target, currentTarget: event.currentTarget });
+    
     // Check if we're in a delivery app context by looking for mobile search handler
     const searchHandler = document.querySelector('[data-mobile-search-handler]');
     console.log('📱 Search handler found:', !!searchHandler);
@@ -40,22 +45,41 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
     if (searchHandler) {
       // Always trigger mobile search expansion in delivery app, regardless of variant
       console.log('🚀 Dispatching mobileSearchActivate event');
-      const event = new CustomEvent('mobileSearchActivate', { 
+      
+      // Try multiple approaches to trigger search
+      
+      // 1. Direct function call approach - find and call the search activation function
+      const searchButton = searchHandler.querySelector('button[title="Search"]') as HTMLButtonElement;
+      if (searchButton) {
+        console.log('🎯 Direct search button found, triggering click');
+        searchButton.click();
+        return; // Exit early if we found the direct button
+      }
+      
+      // 2. Custom event approach
+      const customEvent = new CustomEvent('mobileSearchActivate', { 
         bubbles: true, 
         cancelable: true, 
-        detail: { source: 'SearchIcon', variant } 
+        detail: { source: 'SearchIcon', variant, timestamp: Date.now() } 
       });
       
-      // Dispatch on both the handler element and document for redundancy
-      searchHandler.dispatchEvent(event);
-      document.dispatchEvent(event);
+      // Dispatch on multiple targets for maximum compatibility
+      document.dispatchEvent(customEvent);
+      searchHandler.dispatchEvent(customEvent);
+      window.dispatchEvent(customEvent);
       
-      // Also trigger direct activation if available
-      const directSearchButton = searchHandler.querySelector('button[title="Search"]');
-      if (directSearchButton) {
-        console.log('🎯 Direct search button found, clicking');
-        (directSearchButton as HTMLButtonElement).click();
+      // 3. Direct DOM manipulation as fallback
+      const searchInput = searchHandler.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+      if (searchInput) {
+        console.log('🎯 Direct input manipulation fallback');
+        searchInput.focus();
+        searchInput.click();
+        
+        // Trigger any parent components that might be listening
+        const focusEvent = new FocusEvent('focus', { bubbles: true });
+        searchInput.dispatchEvent(focusEvent);
       }
+      
     } else {
       // Default navigation to search page
       console.log('🔄 Navigating to search page');
@@ -66,10 +90,17 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
   return (
     <Button
       onClick={handleClick}
+      onTouchStart={(e) => {
+        // Ensure touch events also work on mobile
+        e.stopPropagation();
+        console.log('🔍 SearchIcon touch start');
+      }}
       variant="outline"
       size="icon"
-      className={`${getButtonSize()} ${getButtonStyle()} ${className}`}
+      className={`${getButtonSize()} ${getButtonStyle()} ${className} cursor-pointer select-none`}
       aria-label="Search products"
+      style={{ pointerEvents: 'auto', zIndex: 999 }}
+      data-testid="search-icon-button"
     >
       <Search className={getIconSize()} />
     </Button>
