@@ -74,7 +74,8 @@ export default function AdminDashboard() {
       // Use the working edge function that's already returning data
       const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
         body: {
-          type: 'admin'
+          type: 'admin',
+          loadAssignments: false // Skip assignments to speed up load
         }
       });
 
@@ -119,7 +120,10 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/');
+    // Clear admin session
+    const { AdminSessionManager } = await import('@/utils/sessionPersistence');
+    AdminSessionManager.clearAdminSession();
+    navigate('/admin/password-login');
   };
 
   const copyAffiliateLink = (affiliateCode: string) => {
@@ -206,8 +210,9 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="orders">Recent Orders</TabsTrigger>
             <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
             <TabsTrigger value="covers">Cover Pages</TabsTrigger>
             <TabsTrigger value="delivery">Delivery Apps</TabsTrigger>
@@ -218,7 +223,13 @@ export default function AdminDashboard() {
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <RecentOrdersFeed orders={recentOrders} />
+              <RecentOrdersFeed 
+                orders={recentOrders} 
+                title="Recent Orders"
+                showCustomerInfo={true}
+                refreshInterval={30000}
+                onRefresh={loadDashboardData}
+              />
               
               <Card>
                 <CardHeader>
@@ -246,6 +257,27 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Recent Orders</h2>
+              <Button onClick={loadDashboardData} variant="outline">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Refresh Orders
+              </Button>
+            </div>
+            
+            <div className="grid gap-6">
+              <RecentOrdersFeed 
+                orders={recentOrders} 
+                title="All Recent Orders"
+                showCustomerInfo={true}
+                refreshInterval={15000}
+                onRefresh={loadDashboardData}
+                maxHeight="600px"
+              />
             </div>
           </TabsContent>
 
