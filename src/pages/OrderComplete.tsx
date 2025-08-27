@@ -158,24 +158,14 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-          // FIXED: Directly create Shopify order instead of relying on webhook (fallback)
-          console.log('💰 Creating Shopify order directly (fallback) with PaymentIntent:', piId);
+          // Skip fallback order creation - insufficient data
+          console.log('⚠️ No session data available - skipping Shopify order creation');
           
           try {
-            const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
-              body: { paymentIntentId: piId }
-            });
-            
-            if (shopifyError) {
-              console.error('❌ Shopify order creation failed (fallback):', shopifyError);
-            } else {
-              console.log('✅ Shopify order created successfully (fallback):', shopifyResult);
-              if (shopifyResult?.order_number) {
-                localStorage.setItem('orderNumber', shopifyResult.order_number);
-              }
-            }
-          } catch (error) {
-            console.error('❌ Error calling create-shopify-order (fallback):', error);
+            // Just log the attempt for debugging
+            console.log('📝 Would create Shopify order but no cart data available');
+          } catch (e) {
+            console.error('❌ Note: No session data for order creation:', e);
           }
             } catch (e) {
               console.error('❌ Failed to process order on complete page (no session data):', e);
