@@ -118,7 +118,7 @@ serve(async (req) => {
         // Delivery info with proper CST formatting
         delivery_date: (deliveryInfo?.date || '').substring(0, 50),
         delivery_time: (deliveryInfo?.timeSlot || '').substring(0, 50),
-        delivery_address: (deliveryInfo?.address || deliveryInfo?.street || 'Address not provided').substring(0, 250),
+        delivery_address: (deliveryInfo?.address || '').substring(0, 250),
         delivery_instructions: (deliveryInfo?.instructions || '').substring(0, 250),
         
         // Order breakdown
