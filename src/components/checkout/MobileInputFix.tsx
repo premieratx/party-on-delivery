@@ -9,53 +9,79 @@ export const MobileInputFix = () => {
     // CRITICAL: Mobile input focus fix
     const enhanceMobileInputs = () => {
       const style = document.createElement('style');
+      style.id = 'mobile-input-fixes';
       style.textContent = `
-        /* CRITICAL: Mobile input fixes */
+        /* CRITICAL: Mobile input fixes - HIGHEST PRIORITY */
         input, textarea, select {
           /* Prevent zoom on focus (iOS) */
           font-size: 16px !important;
           
           /* Better touch targets */
-          min-height: 44px;
+          min-height: 44px !important;
           
-          /* Prevent interference from other elements */
+          /* CRITICAL: Ensure inputs are ALWAYS interactive */
           pointer-events: auto !important;
           touch-action: manipulation !important;
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
           
-          /* Ensure proper z-index */
-          position: relative;
-          z-index: 1;
+          /* Enhanced mobile touch handling */
+          -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+          -webkit-touch-callout: default !important;
+          
+          /* Prevent any blocking overlays */
+          position: relative !important;
+          z-index: 999 !important;
         }
         
-        /* Prevent form interference */
+        /* CRITICAL: Override ALL potential conflicts */
         .checkout-form input,
         .checkout-form textarea,
-        .checkout-form select {
-          /* Override any conflicting styles */
-          user-select: text !important;
-          
-          /* Ensure inputs are always interactive */
+        .checkout-form select,
+        [data-checkout-form] input,
+        [data-checkout-form] textarea,
+        [data-checkout-form] select {
+          /* Force interactivity */
           pointer-events: auto !important;
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          touch-action: manipulation !important;
           
-          /* Better mobile touch */
-          -webkit-tap-highlight-color: rgba(0,0,0,0.1);
-          -webkit-touch-callout: default;
-          -webkit-user-select: text;
+          /* Prevent any transforms that break input */
+          transform: none !important;
+          will-change: auto !important;
+          
+          /* Ensure proper layering */
+          z-index: 1000 !important;
         }
         
-        /* Fix for specific input containers */
+        /* CRITICAL: Container fixes to prevent input blocking */
         .checkout-form .space-y-3,
         .checkout-form .space-y-4,
-        .checkout-form .grid {
-          /* Ensure container doesn't block inputs */
-          pointer-events: none;
+        .checkout-form .grid,
+        .checkout-form .flex,
+        .checkout-form .relative {
+          /* Ensure containers NEVER block inputs */
+          pointer-events: none !important;
         }
         
         .checkout-form .space-y-3 > *,
         .checkout-form .space-y-4 > *,
-        .checkout-form .grid > * {
-          /* Re-enable pointer events for children */
-          pointer-events: auto;
+        .checkout-form .grid > *,
+        .checkout-form .flex > *,
+        .checkout-form .relative > * {
+          /* Force re-enable for ALL children */
+          pointer-events: auto !important;
+          z-index: 10 !important;
+        }
+        
+        /* CRITICAL: Button and label overrides */
+        .checkout-form button,
+        .checkout-form label,
+        .checkout-form [role="button"] {
+          pointer-events: auto !important;
+          z-index: 100 !important;
         }
         
         /* Enhanced focus states for mobile */
@@ -116,27 +142,53 @@ export const MobileInputFix = () => {
     // Apply fixes immediately
     enhanceMobileInputs();
 
-    // CRITICAL: Remove any event listeners that might interfere with inputs
-    const removeConflictingListeners = () => {
-      // Find all elements that might have conflicting touch/click handlers
-      const potentialConflicts = document.querySelectorAll('[data-checkout-form] *');
+    // CRITICAL: Comprehensive input protection system
+    const protectAllInputs = () => {
+      // Find ALL inputs in the checkout area
+      const allInputs = document.querySelectorAll('input, textarea, select');
       
-      potentialConflicts.forEach(element => {
-        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
-          // Ensure input elements have clean event handling
-          element.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-          }, { passive: true });
+      allInputs.forEach((input) => {
+        // Remove any conflicting event listeners
+        const newInput = input.cloneNode(true) as HTMLElement;
+        input.parentNode?.replaceChild(newInput, input);
+        
+        // Add protected event handlers
+        newInput.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          console.log('🔒 Input protected from touch interference');
+        }, { passive: true });
+        
+        newInput.addEventListener('focus', (e) => {
+          e.stopPropagation();
+          console.log('🎯 Input focus protected');
           
-          element.addEventListener('focus', (e) => {
-            e.stopPropagation();
-          });
-        }
+          // Ensure input is visible and not blocked
+          newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        
+        newInput.addEventListener('blur', (e) => {
+          console.log('👋 Input blur handled');
+        });
+        
+        // Prevent any drag/drop interference
+        newInput.addEventListener('dragstart', (e) => {
+          e.preventDefault();
+        });
       });
     };
 
-    // Apply on next tick to ensure DOM is ready
-    setTimeout(removeConflictingListeners, 100);
+    // Apply comprehensive protection
+    setTimeout(protectAllInputs, 100);
+    
+    // Re-apply protection when new elements are added
+    const observer = new MutationObserver(() => {
+      setTimeout(protectAllInputs, 50);
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
 
     // CRITICAL: Keyboard handling fix for mobile
     const handleKeyboardShow = () => {
