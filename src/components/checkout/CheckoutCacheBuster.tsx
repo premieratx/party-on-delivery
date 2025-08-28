@@ -1,10 +1,14 @@
 import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
  * Checkout Cache Buster - Clears all problematic cached states
  * Ensures returning users get the fixed checkout experience immediately
  */
 export const CheckoutCacheBuster = () => {
+  const location = useLocation();
+  const isCheckoutPage = location.pathname.includes('/checkout') || location.pathname.includes('/test-checkout');
+
   useEffect(() => {
     console.log('🧹 CHECKOUT CACHE BUSTER ACTIVE');
     
@@ -81,21 +85,26 @@ export const CheckoutCacheBuster = () => {
   }, []);
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: '10px',
-        right: '50px',
-        background: '#EF4444',
-        color: 'white',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        fontSize: '10px',
-        zIndex: 9999,
-        fontWeight: 'bold'
-      }}
-    >
-      🧹 CACHE CLEARED
-    </div>
+    <>
+      {/* Only show debug badge on checkout pages */}
+      {isCheckoutPage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50px',
+            left: '10px',
+            background: '#EF4444',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '10px',
+            zIndex: 9999,
+            fontWeight: 'bold'
+          }}
+        >
+          🧹 CACHE CLEARED
+        </div>
+      )}
+    </>
   );
 };

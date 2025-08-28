@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
  * Universal Checkout Guard - Prevents checkout lockout issues
@@ -10,6 +11,9 @@ import React, { useEffect } from 'react';
  * 4. New delivery apps automatically get unrestricted checkout
  */
 export const UniversalCheckoutGuard = () => {
+  const location = useLocation();
+  const isCheckoutPage = location.pathname.includes('/checkout') || location.pathname.includes('/test-checkout');
+
   useEffect(() => {
     console.log('🛡️ UNIVERSAL CHECKOUT GUARD ACTIVE');
     
@@ -62,21 +66,26 @@ export const UniversalCheckoutGuard = () => {
 
   // Visual indicator that the guard is active
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: '10px',
-        left: '10px',
-        background: '#10B981',
-        color: 'white',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        fontSize: '10px',
-        zIndex: 9999,
-        fontWeight: 'bold'
-      }}
-    >
-      🛡️ CHECKOUT GUARD
-    </div>
+    <>
+      {/* Only show debug badge on checkout pages */}
+      {isCheckoutPage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '10px',
+            left: '10px',
+            background: '#10B981',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '10px',
+            zIndex: 9999,
+            fontWeight: 'bold'
+          }}
+        >
+          🛡️ CHECKOUT GUARD
+        </div>
+      )}
+    </>
   );
 };
