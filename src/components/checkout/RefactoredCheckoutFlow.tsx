@@ -4,28 +4,15 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
-import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
-import { useDeliveryFee } from '@/hooks/useDeliveryFee';
 import { useToast } from '@/hooks/use-toast';
-import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
-import { usePersistentCheckout } from '@/hooks/usePersistentCheckout';
-import { checkoutStorage } from '@/utils/universalStorage';
 
 // Import our new modular components
-import { CheckoutSteps } from './CheckoutSteps';
-import { FastCheckoutHeader } from './FastCheckoutHeader';
 import { ImprovedDateTimeStep } from './ImprovedDateTimeStep';
 import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
 import { ImprovedCheckoutSummary } from './ImprovedCheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
-import { CleanCheckoutTotal } from './CleanCheckoutTotal';
 import { PromoCodeInput } from './PromoCodeInput';
-import { CheckoutSafeguards } from './CheckoutSafeguards';
-import { CheckoutFlowValidator } from './CheckoutFlowValidator';
-import { CheckoutInputOptimizer } from './CheckoutInputOptimizer';
-import { MobileInputFix } from './MobileInputFix';
-import { CheckoutVerificationTool } from './CheckoutVerificationTool';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -62,99 +49,26 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { tracking } = useCoverPageTracking();
-  const { 
-    customerInfo: persistedCustomer, 
-    addressInfo: persistedAddress, 
-    hasSavedData, 
-    isLoaded: persistentDataLoaded 
-  } = usePersistentCheckout();
-  
-  // Custom hooks for state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
-  const checkoutFlow = useCheckoutFlow({ 
-    isAddingToOrder, 
-    lastOrderInfo, 
-    deliveryInfo, 
-    onDeliveryInfoChange, 
-    affiliateCode 
-  });
+  
+  // Simple state management without complex hooks
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>('datetime');
+  const [tipAmount, setTipAmount] = useState(0);
 
-  // Extract checkout flow state FIRST
-  const { 
-    currentStep, 
-    setCurrentStep,
-    confirmedDateTime,
-    setConfirmedDateTime,
-    confirmedAddress,
-    setConfirmedAddress,
-    confirmedCustomer,
-    setConfirmedCustomer,
-    isDateTimeComplete,
-    isAddressComplete,
-    isCustomerComplete,
-    hasChanges
-  } = checkoutFlow;
-
-  // Auto-populate from persisted data on mount
-  useEffect(() => {
-    if (persistentDataLoaded && hasSavedData()) {
-      // Instantly populate from saved data
-      if (persistedCustomer.email) {
-        setCustomerInfo(persistedCustomer);
-      }
-      if (persistedAddress.address) {
-        // Convert address string to AddressInfo format
-        const parts = persistedAddress.address.split(',').map(s => s.trim());
-        const stateZip = parts[2]?.split(' ') || [];
-        const addressToUse = {
-          street: parts[0] || '',
-          city: parts[1] || '',
-          state: stateZip[0] || '',
-          zipCode: stateZip[1] || '',
-          instructions: persistedAddress.instructions || ''
-        };
-        setAddressInfo(addressToUse);
-      }
-    }
-  }, [persistentDataLoaded, persistedCustomer, persistedAddress, setCustomerInfo, setAddressInfo]);
-
-  // CRITICAL: NEVER auto-confirm pre-filled data - ALWAYS keep editable
-  useEffect(() => {
-    // Force all confirmations to FALSE to ensure pre-filled data stays editable
-    if (persistentDataLoaded && (persistedAddress.address || persistedCustomer.email)) {
-      console.log('🔒 PREVENTING auto-confirmation of pre-filled data to keep it editable');
-      setConfirmedDateTime(false);
-      setConfirmedAddress(false);
-      setConfirmedCustomer(false);
-      setCurrentStep('datetime'); // Always start at step 1 for editing
-    }
-  }, [persistentDataLoaded, persistedAddress, persistedCustomer, setConfirmedDateTime, setConfirmedAddress, setConfirmedCustomer, setCurrentStep]);
-
-  // Pricing calculations - use proper delivery fee hook with tip support
-  const markupPercent = (() => {
-    try {
-      return Number(sessionStorage.getItem('pricing.markupPercent') || '0');
-    } catch (sessionStorageError) {
-      console.warn('⚠️ sessionStorage read failed for markupPercent, using default:', sessionStorageError);
-      return 0;
-    }
-  })();
+  // Pricing calculations
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
-  // Use the proper delivery fee hook that handles PREMIERE2025 and other free shipping codes
-  const finalDeliveryFee = useDeliveryFee(cartSubtotal, appliedDiscount, tracking.freeShippingEligible);
+  // Simple delivery fee calculation
+  const deliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : 5.99;
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? cartSubtotal * (1 - appliedDiscount.value / 100)
     : cartSubtotal;
   
-  const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax on original subtotal
-
-  // FIXED: Add tip amount back to total calculation
-  const [tipAmount, setTipAmount] = useState(0);
-  const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax + tipAmount;
+  const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax
+  const finalTotal = discountedSubtotal + deliveryFee + calculatedSalesTax + tipAmount;
 
   // Discount management
   const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
@@ -163,69 +77,17 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     }
   };
 
-  // UNIVERSAL HANDLERS - ADVANCE STEPS WITHOUT CONFIRMATION LOCKS
+  // Simple step handlers
   const handleDateTimeConfirm = () => {
-    console.log('📅 Date/time step completed - advancing without locking');
-    // REMOVED: setConfirmedDateTime(true) - this was the lockout mechanism
-    if (isDateTimeComplete) {
+    if (deliveryInfo.date && deliveryInfo.timeSlot) {
       setCurrentStep('address');
-      console.log('✅ Moving to address step (inputs remain editable)');
     }
   };
 
   const handleAddressConfirm = () => {
-    console.log('🏠 Address step completed - advancing without locking');
-    // REMOVED: setConfirmedAddress(true) - this was the lockout mechanism
-    if (isAddressComplete) {
+    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
       setCurrentStep('payment');
-      console.log('✅ Moving to payment step (inputs remain editable)');
     }
-  };
-
-  const handleCustomerConfirm = () => {
-    console.log('👤 Customer step completed - staying accessible');
-    // REMOVED: setConfirmedCustomer(true) - this was the lockout mechanism
-    if (isCustomerComplete) {
-      console.log('✅ Customer info complete (inputs remain editable)');
-    }
-  };
-
-  const handleEditAll = () => {
-    console.log('🔄 User editing all fields - resetting all confirmations');
-    setConfirmedDateTime(false);
-    setConfirmedAddress(false);
-    setConfirmedCustomer(false);
-    setCurrentStep('datetime');
-  };
-
-  const handleClearAllData = () => {
-    console.log('🧹 Clearing all checkout data for fresh start');
-    
-    // Use universal storage for bulletproof clearing
-    checkoutStorage.clearAll();
-    
-    // Reset all state
-    setConfirmedDateTime(false);
-    setConfirmedAddress(false);
-    setConfirmedCustomer(false);
-    setCurrentStep('datetime');
-    
-    // Reset form data
-    setCustomerInfo({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: ''
-    });
-    setAddressInfo({
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      instructions: ''
-    });
-    
-    console.log('✅ All checkout data cleared universally - works in ALL browsers and conditions');
   };
 
   const handlePaymentSuccess = (paymentIntentId?: string) => {
@@ -247,9 +109,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       deliveryTime: deliveryInfo.timeSlot,
       totalAmount: finalTotal,
       subtotal: discountedSubtotal,
-      deliveryFee: finalDeliveryFee,
+      deliveryFee: deliveryFee,
       salesTax: calculatedSalesTax,
-      tipAmount: tipAmount, // Include tip amount in completion data
+      tipAmount: tipAmount,
       paymentIntentId,
       appliedDiscount
     };
@@ -260,26 +122,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     navigate(`/order-complete?payment_intent=${paymentIntentId}`);
   };
 
-  // REMOVE AUTO-PROGRESSION LOCKOUT LOGIC  
-  useEffect(() => {
-    console.log('🚫 Auto-progression lockout logic REMOVED');
-    console.log('✅ Users now control their own checkout flow without being locked out');
-    // REMOVED: All auto-progression that was locking users between steps
-    // Users can now freely edit any step at any time
-  }, []);
-
-  // Notify parent of changes
-  useEffect(() => {
-    if (onChangesDetected) {
-      onChangesDetected(hasChanges);
-    }
-  }, [hasChanges, onChangesDetected]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 overflow-x-hidden" data-checkout-form>
-      <MobileInputFix />
-      <CheckoutInputOptimizer />
-      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full checkout-form">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 overflow-x-hidden">
+      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full">
         
         {/* Header with Back Button */}
         <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
@@ -293,68 +138,50 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             <span className="hidden sm:inline">Back to Cart</span>
             <span className="sm:hidden">Back</span>
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">
-            {hasSavedData() ? 'Fast Checkout' : 'Checkout'}
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Checkout</h1>
         </div>
-
-        {/* Fast Checkout Header - Shows saved info condensed */}
-        <FastCheckoutHeader
-          customerInfo={persistedCustomer}
-          deliveryInfo={deliveryInfo}
-          hasSavedData={hasSavedData()}
-          onEditAll={handleEditAll}
-        />
-
-        {/* Progress Steps */}
-        <CheckoutSteps 
-          currentStep={currentStep}
-        />
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">
           
-          {/* Left Column - Checkout Steps (Wider on Large Screens) */}
-          <div className="xl:col-span-3 space-y-4 checkout-form">
+          {/* Left Column - Checkout Steps */}
+          <div className="xl:col-span-3 space-y-4">
             
-            {/* UNIVERSAL EDITABLE STEPS - NEVER LOCKED */}
-            <div className="space-y-6">
-              {/* Date & Time Step - ALWAYS EDITABLE & VISIBLE */}
-              <ImprovedDateTimeStep
-                deliveryInfo={deliveryInfo}
-                onDeliveryInfoChange={onDeliveryInfoChange}
-                onConfirm={handleDateTimeConfirm}
-                isConfirmed={false} // FORCE ALWAYS EDITABLE
-              />
+            {/* Date & Time Step */}
+            <ImprovedDateTimeStep
+              deliveryInfo={deliveryInfo}
+              onDeliveryInfoChange={onDeliveryInfoChange}
+              onConfirm={handleDateTimeConfirm}
+              isConfirmed={false}
+            />
 
-              {/* Address Step - ALWAYS EDITABLE & VISIBLE */}
-              <AddressStep
-                addressInfo={addressInfo}
-                setAddressInfo={setAddressInfo}
-                onConfirm={handleAddressConfirm}
-                isConfirmed={false} // FORCE ALWAYS EDITABLE
-              />
+            {/* Address Step */}
+            <AddressStep
+              addressInfo={addressInfo}
+              setAddressInfo={setAddressInfo}
+              onConfirm={handleAddressConfirm}
+              isConfirmed={false}
+            />
 
-              {/* Customer Info Step - ALWAYS EDITABLE & VISIBLE */}
-              <CustomerInfoStep
-                customerInfo={customerInfo}
-                setCustomerInfo={setCustomerInfo}
-                onConfirm={handleCustomerConfirm}
-                isConfirmed={false} // FORCE ALWAYS EDITABLE
-              />
-            </div>
+            {/* Customer Info Step */}
+            <CustomerInfoStep
+              customerInfo={customerInfo}
+              setCustomerInfo={setCustomerInfo}
+              onConfirm={() => {}}
+              isConfirmed={false}
+            />
 
-            {/* UNIVERSAL PROMO CODE - ALWAYS ACCESSIBLE */}
+            {/* Promo Code */}
             <PromoCodeInput 
               onDiscountApplied={handlePromoApplied}
               appliedDiscount={appliedDiscount}
               cartSubtotal={cartSubtotal}
             />
 
-            {/* UNIVERSAL PAYMENT SECTION - ALWAYS ACCESSIBLE */}
+            {/* Payment Section */}
             <StripePaymentWrapper
               cartItems={cartItems}
               subtotal={discountedSubtotal}
-              deliveryFee={finalDeliveryFee}
+              deliveryFee={deliveryFee}
               salesTax={calculatedSalesTax}
               customerInfo={customerInfo}
               deliveryInfo={deliveryInfo}
@@ -370,56 +197,30 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             />
           </div>
 
-          {/* Right Column - Always Show Product List & Safeguards */}
+          {/* Right Column - Order Summary */}
           <div className="xl:col-span-2 space-y-4">
             <div className="lg:sticky lg:top-4 space-y-4">
               <ImprovedCheckoutSummary
                 cartItems={cartItems}
                 subtotal={cartSubtotal}
-                deliveryFee={finalDeliveryFee}
+                deliveryFee={deliveryFee}
                 salesTax={calculatedSalesTax}
-                tipAmount={tipAmount} // Pass tip amount to summary
+                tipAmount={tipAmount}
                 appliedDiscount={appliedDiscount}
                 onUpdateQuantity={onUpdateQuantity}
               />
-              
-              {/* Checkout Safeguards - Always visible to ensure editability */}
-              <CheckoutSafeguards
-                onResetCheckout={handleEditAll}
-                onClearAllData={handleClearAllData}
-              />
-              
-              {/* Development: Checkout Flow Validator */}
-              {process.env.NODE_ENV === 'development' && (
-                <CheckoutFlowValidator />
-              )}
             </div>
           </div>
         </div>
-        
-        {/* Completion Message - Always Show */}
-        <div className="text-center text-muted-foreground mt-6">
-          <p className="text-sm">✅ All checkout fields are always editable - no lockouts!</p>
-        </div>
-        
       </div>
 
-      {/* UNIVERSAL Mobile Checkout Button - ALWAYS AVAILABLE */}
+      {/* Mobile Checkout Button */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-        {/* Add safe area for browser bottom navigation */}
-        <div 
-          className="bg-background border-t p-4" 
-          style={{ 
-            paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-            bottom: 'env(safe-area-inset-bottom, 0px)'
-          }}
-        >
+        <div className="bg-background border-t p-4">
           <Button 
             onClick={() => {
-              // Find and click the payment form submit button
               const form = document.querySelector('form');
               if (form) {
-                // Create a submit event to trigger the form submission
                 const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
                 form.dispatchEvent(submitEvent);
               }
@@ -431,29 +232,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           </Button>
         </div>
       </div>
-          {/* Global styles for mobile browser UI handling */}
-          <style dangerouslySetInnerHTML={{
-            __html: `
-              @media (max-width: 1023px) {
-                body {
-                  padding-bottom: env(safe-area-inset-bottom);
-                }
-                
-                /* Hide browser chrome on scroll */
-                html {
-                  overscroll-behavior-y: none;
-                }
-                
-                /* Force mobile viewport to account for bottom UI */
-                .checkout-safe-area {
-                  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
-                }
-              }
-            `
-          }} />
-      
-      {/* Add bottom padding for mobile - ALWAYS ACTIVE */}
-      <div className="checkout-safe-area lg:pb-0" />
     </div>
   );
 };
