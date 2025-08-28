@@ -13,6 +13,41 @@ const logStep = (step: string, details?: any) => {
   console.log(`[${timestamp}][SHOPIFY-ORDER] ${step}${detailsStr}`);
 };
 
+// Emoji sanitization for Shopify compatibility
+const EMOJI_REGEX = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+
+const removeEmojis = (text: string): string => {
+  if (!text || typeof text !== 'string') {
+    return text || '';
+  }
+  return text.replace(EMOJI_REGEX, '').trim();
+};
+
+const sanitizeCustomerData = (data: any) => {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+  
+  const sanitized = { ...data };
+  
+  // Sanitize all string fields
+  Object.keys(sanitized).forEach(key => {
+    if (typeof sanitized[key] === 'string') {
+      sanitized[key] = removeEmojis(sanitized[key]);
+    } else if (sanitized[key] && typeof sanitized[key] === 'object' && !Array.isArray(sanitized[key])) {
+      sanitized[key] = sanitizeCustomerData(sanitized[key]);
+    } else if (Array.isArray(sanitized[key])) {
+      sanitized[key] = sanitized[key].map((item: any) => 
+        typeof item === 'string' ? removeEmojis(item) :
+        item && typeof item === 'object' ? sanitizeCustomerData(item) :
+        item
+      );
+    }
+  });
+  
+  return sanitized;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -401,7 +436,7 @@ serve(async (req) => {
           });
 
           // Update existing customer with latest info (phone, address)
-          const updateData = {
+          const rawUpdateData = {
             customer: {
               id: shopifyCustomerId,
               first_name: firstName || existingCustomer.first_name,
@@ -410,6 +445,9 @@ serve(async (req) => {
               note: `Delivery order (CST) - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`
             }
           };
+
+          // Sanitize update data to remove emojis
+          const updateData = sanitizeCustomerData(rawUpdateData);
 
           const updateResponse = await fetch(
             `https://${shopifyStore}/admin/api/2024-10/customers/${shopifyCustomerId}.json`,
@@ -435,7 +473,7 @@ serve(async (req) => {
     // If no existing customer found, create new one
     if (!shopifyCustomerId) {
       try {
-        const customerData = {
+        const rawCustomerData = {
           customer: {
             first_name: firstName,
             last_name: lastName,
@@ -455,6 +493,16 @@ serve(async (req) => {
             accepts_marketing: false
           }
         };
+
+        // Sanitize customer data to remove emojis
+        const customerData = sanitizeCustomerData(rawCustomerData);
+        
+        logStep("Customer data sanitized for Shopify", {
+          originalFirstName: firstName,
+          sanitizedFirstName: customerData.customer.first_name,
+          originalStreet: street,
+          sanitizedStreet: customerData.customer.addresses[0].address1
+        });
 
         const customerResponse = await fetch(
           `https://${shopifyStore}/admin/api/2024-10/customers.json`,
@@ -610,9 +658,9 @@ serve(async (req) => {
         shipping_address: {
           first_name: firstName,
           last_name: lastName,
-          company: `🚚 DELIVERY: ${deliveryDate} at ${deliveryTime}`,
+          company: `DELIVERY: ${deliveryDate} at ${deliveryTime}`,
           address1: street,
-          address2: deliveryInstructions ? `📋 Instructions: ${deliveryInstructions}` : undefined,
+          address2: deliveryInstructions ? `Instructions: ${deliveryInstructions}` : undefined,
           city: city,
           province: state,
           country: "US",
@@ -637,51 +685,51 @@ serve(async (req) => {
         // Custom attributes for delivery details
         note_attributes: [
           {
-            name: "🚚 Delivery Date", 
+            name: "Delivery Date", 
             value: deliveryDate
           },
           {
-            name: "🕐 Delivery Time",
+            name: "Delivery Time",
             value: deliveryTime
           },
           {
-            name: "📍 Full Delivery Address",
+            name: "Full Delivery Address",
             value: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')
           },
           {
-            name: "📋 Special Instructions",
+            name: "Special Instructions",
             value: deliveryInstructions || "None"
           },
           {
-            name: "💰 Driver Tip Amount",
+            name: "Driver Tip Amount",
             value: `$${tipAmountInDollars.toFixed(2)}`
           },
           {
-            name: "💳 Stripe Payment ID",
+            name: "Stripe Payment ID",
             value: paymentIntentId || sessionId
           }
         ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
         
         // Comprehensive order notes
-        note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
+        note: `DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
-📍 DELIVERY ADDRESS: 
+DELIVERY ADDRESS: 
 ${street}
 ${city}, ${state} ${zip}
-📞 Customer: ${customerPhone}
-${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}
+Customer: ${customerPhone}
+${deliveryInstructions ? `SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : 'SPECIAL INSTRUCTIONS: None'}
 
-💰 PAYMENT BREAKDOWN:
+PAYMENT BREAKDOWN:
 • Product Subtotal: $${productSubtotal.toFixed(2)}
 • Delivery Fee: $${deliveryFeeInDollars.toFixed(2)}  
 • Sales Tax: $${orderAmounts.sales_tax.toFixed(2)}
 • Driver Tip: $${tipAmountInDollars.toFixed(2)}
 • TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)}
 
-💳 STRIPE CONFIRMATION: ${paymentIntentId || sessionId}
-${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
+STRIPE CONFIRMATION: ${paymentIntentId || sessionId}
+${affiliateCode ? `AFFILIATE: ${affiliateCode}` : ''}
 
-✅ NOTE: Order structure follows Shopify standards - delivery fee in shipping_lines, tax in tax_lines, tip as line item.`,
+NOTE: Order structure follows Shopify standards - delivery fee in shipping_lines, tax in tax_lines, tip as line item.`,
         
         // Financial status
         financial_status: "paid",
@@ -788,7 +836,7 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
         if (insertError) {
           logStep("WARNING: Failed to store order in database", { error: insertError.message });
         } else {
-          logStep("✅ Order stored in database successfully");
+          logStep("Order stored in database successfully");
         }
       } catch (dbError) {
         logStep("WARNING: Database storage failed", { error: dbError.message });
