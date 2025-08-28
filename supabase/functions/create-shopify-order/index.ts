@@ -267,12 +267,14 @@ serve(async (req) => {
     let zip = '';
     let fullAddressString = '';
 
-    // First, log what we received
-    logStep("Raw delivery address data received", {
+    // CRITICAL DEBUG: Log what we received for address
+    logStep("🔍 DEBUGGING ADDRESS DATA", {
       delivery_address: metadata.delivery_address,
       delivery_date: deliveryDate,
       delivery_time: deliveryTime,
-      type: typeof metadata.delivery_address
+      type: typeof metadata.delivery_address,
+      all_metadata_keys: Object.keys(metadata),
+      raw_metadata_sample: JSON.stringify(metadata).substring(0, 500)
     });
 
     try {
@@ -650,11 +652,11 @@ serve(async (req) => {
           }
         ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
         
-        // Order notes - COMPREHENSIVE delivery information display
+        // Order notes - DISPLAY DELIVERY ADDRESS PROMINENTLY
         note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
 📍 DELIVERY ADDRESS:
-${fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')}
+${fullAddressString || street || 'NO ADDRESS PROVIDED - CHECK METADATA'}
 📞 Customer Phone: ${customerPhone}
 ✉️ Customer Email: ${customerEmail}
 ${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}

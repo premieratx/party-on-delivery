@@ -83,14 +83,14 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
 
   return (
     <RobustCartErrorBoundary>
-      {/* Backdrop */}
+      {/* Full-screen backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 z-50 animate-fade-in"
         onClick={onClose}
       />
       
-      {/* Cart Sidebar - Fixed positioning with proper flex layout */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate">
+      {/* Cart Sidebar - Full viewport height, positioned at current scroll level */}
+      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-2xl z-50 animate-slide-in-right flex flex-col overflow-hidden">
         
         {/* Sticky Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 z-10">
@@ -122,21 +122,21 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Scrollable Content - Complete Scroll Isolation */}
+        {/* Scrollable Content - FULL VIEWPORT INDEPENDENT SCROLLING */}
         <div 
           ref={scrollContainerRef} 
-          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
+          className="flex-1 overflow-y-auto overscroll-contain"
           style={{ 
-            /* Complete scroll isolation from main page */
+            /* Complete scroll isolation - cart scrolls independently of page */
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
             position: 'relative',
-            zIndex: 1,
-            /* Ensure this container creates its own scroll context */
-            willChange: 'scroll-position'
+            height: '100%',
+            /* Prevent any interaction with page scroll */
+            isolation: 'isolate'
           }}
         >
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">{/* Removed bottom padding since checkout button is now separate */}
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
             {cartItems.length === 0 ? (
               <div className="text-center py-8 sm:py-12">
                 <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
