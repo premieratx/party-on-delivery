@@ -100,6 +100,15 @@ const App = () => {
                     <Route path="/cover/:slug" element={<StandaloneCoverPage />} />
                     <Route path="/premier-concierge" element={<CoverPage />} />
                     
+                    {/* Direct cover page routes to bypass dynamic handler */}
+                    <Route path="/lynn" element={<StandaloneCoverPage slug="lynn" />} />
+                    <Route path="/bachplan" element={<StandaloneCoverPage slug="bachplan" />} />
+                    <Route path="/allan" element={<StandaloneCoverPage slug="allan" />} />
+                    <Route path="/test" element={<StandaloneCoverPage slug="test" />} />
+                    <Route path="/big-tex" element={<StandaloneCoverPage slug="big-tex" />} />
+                    <Route path="/ppc" element={<StandaloneCoverPage slug="ppc" />} />
+                    <Route path="/premier-party-cruises" element={<StandaloneCoverPage slug="premier-party-cruises" />} />
+                    
                     {/* Post-checkout pages only */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
                     
