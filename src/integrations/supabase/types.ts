@@ -4597,6 +4597,10 @@ export type Database = {
         Args: { p_guideline_type?: string }
         Returns: Json
       }
+      hash_password: {
+        Args: { password: string }
+        Returns: string
+      }
       hierarchical_product_search: {
         Args: { max_results?: number; search_query: string }
         Returns: {
@@ -4757,6 +4761,10 @@ export type Database = {
         Args: { admin_email: string }
         Returns: undefined
       }
+      set_admin_password: {
+        Args: { admin_email: string; new_password: string }
+        Returns: boolean
+      }
       sync_shopify_to_hierarchical_categories: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -4815,6 +4823,10 @@ export type Database = {
       }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
+        Returns: boolean
+      }
+      verify_password: {
+        Args: { hash: string; password: string }
         Returns: boolean
       }
       warm_system_cache: {
