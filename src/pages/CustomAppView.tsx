@@ -100,6 +100,10 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
   }, [appSlug, isHomepage]);
 
   const handleCheckout = () => {
+    console.log('🛒 CustomAppView: handleCheckout called - navigating to checkout');
+    console.log('🛒 Cart items count:', getTotalItems());
+    console.log('🛒 Cart items:', cartItems);
+    
     // Enhanced referrer tracking for proper "Back to Cart" functionality
     const currentUrl = isHomepage ? '/' : `/app/${appSlug}`;
     try {
@@ -109,11 +113,14 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
         appSlug: appConfig?.app_slug || appSlug,
         appName: appConfig?.app_name || appSlug
       }));
-      console.log('Stored delivery app referrer:', currentUrl);
+      console.log('✅ Stored delivery app referrer:', currentUrl);
     } catch (error) {
-      console.warn('Failed to store delivery app referrer:', error);
+      console.warn('❌ Failed to store delivery app referrer:', error);
     }
+    
+    console.log('🛒 Navigating to /checkout...');
     navigate('/checkout');
+    console.log('🛒 Navigation command sent');
   };
 
   const handleAddToCart = (item: any) => {
