@@ -39,7 +39,7 @@ const OrderComplete = () => {
         const checkoutData = sessionStorage.getItem('checkout-completion-data');
         if (checkoutData) {
           const parsedData = JSON.parse(checkoutData);
-          // console.log("🔥 ✅ USING SESSION DATA:", parsedData);
+          console.log("🔥 ✅ USING SESSION DATA:", parsedData);
           
           // Create order data from checkout session - INSTANT DISPLAY
           const instantOrderData = {
@@ -84,63 +84,70 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-          // FIXED: Send ALL the cart data directly to create-shopify-order
-          console.log('💰 Creating Shopify order with FULL DATA:', piId);
-          
-          try {
-            const { data: shopifyResult, error: shopifyError } = await supabase.functions.invoke('create-shopify-order', {
-              body: { 
-                paymentIntentId: piId,
-                // 🔥 SEND THE ACTUAL DATA INSTEAD OF RELYING ON STRIPE METADATA
-                cartItems: parsedData.cartItems || [],
-                customerInfo: {
-                  firstName: parsedData.customerName?.split(' ')[0] || 'Customer',
-                  lastName: parsedData.customerName?.split(' ').slice(1).join(' ') || '',
-                  email: parsedData.customerEmail,
-                  phone: parsedData.customerPhone || ''
-                },
-                deliveryInfo: {
-                  date: parsedData.deliveryDate,
-                  time: parsedData.deliveryTime,
-                  address: typeof parsedData.deliveryAddress === 'string' 
-                    ? parsedData.deliveryAddress 
-                    : (parsedData.deliveryAddress?.address || 'Address Required'),
-                  instructions: parsedData.deliveryInstructions || ''
-                },
-                amounts: {
-                  subtotal: parsedData.subtotal || 0,
-                  deliveryFee: parsedData.deliveryFee || 0,
-                  salesTax: parsedData.salesTax || 0,
-                  tipAmount: parsedData.tipAmount || 0,
-                  totalAmount: parsedData.totalAmount || 0
-                },
-                affiliateCode: affiliateCode
-              }
-            });
-            
-            if (shopifyError) {
-              console.error('❌ Shopify order creation failed:', shopifyError);
-            } else {
-              console.log('✅ Shopify order created successfully:', shopifyResult);
-              // Store the order number if we got one
-              if (shopifyResult?.order_number) {
-                localStorage.setItem('orderNumber', shopifyResult.order_number);
-              }
-            }
-          } catch (error) {
-            console.error('❌ Error calling create-shopify-order:', error);
-          }
+          // Webhook handles order creation automatically - removing duplicate call
+          console.log('💰 Payment successful - webhook handles order creation automatically');
             } catch (e) {
               console.error('❌ Failed to process order on complete page:', e);
             }
           }
           
-          // ✅ FIXED: Direct Shopify order creation (no webhook dependency)
-          console.log('🎉 Order Complete: Shopify order creation handled directly');
+          // Background sync to get real order data with share token (optional)
+          setTimeout(async () => {
+            let foundOrder = null;
+            let attempts = 0;
+            const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
+            
+            while (!foundOrder && attempts < 5) { // Quick background check
+              attempts++;
+              
+              for (const searchTerm of searchTerms) {
+                if (foundOrder) break;
+                
+                const { data: orders, error } = await supabase
+                  .from('customer_orders')
+                  .select(`*, customer:customers(first_name, last_name, email)`)
+                  .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm},payment_intent_id.eq.${searchTerm}`)
+                  .order('created_at', { ascending: false })
+                  .limit(3);
+                
+                if (!error && orders?.length > 0) {
+                  foundOrder = orders.find(o => o.customer_id) || orders[0];
+                  break;
+                }
+              }
+              
+              if (!foundOrder && attempts < 5) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            }
+            
+            // Update with real order data if found (for share token, etc.)
+            if (foundOrder) {
+              console.log("🔥 ✅ BACKGROUND SYNC COMPLETE:", foundOrder.order_number);
+              
+              // Check if this was a group order join - route to group dashboard
+              const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+              const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
+              
+              const updatedOrderData = {
+                ...instantOrderData,
+                ...foundOrder,
+                order_number: foundOrder.order_number || instantOrderData.order_number
+              };
+              
+              // If user joined a group order, mark it for group dashboard routing
+              if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
+                updatedOrderData.isGroupOrderJoin = true;
+                updatedOrderData.originalGroupData = JSON.parse(originalGroupOrderData);
+              }
+              
+              setOrderData(updatedOrderData);
+            }
+          }, 1000); // Start background sync after 1 second
           
         } else {
           // No session data available - show basic confirmation
-          // console.log("🔥 NO SESSION DATA - SHOWING BASIC CONFIRMATION");
+          console.log("🔥 NO SESSION DATA - SHOWING BASIC CONFIRMATION");
           setOrderData({
             order_number: orderNumber || "Processing...",
             line_items: [],
@@ -158,15 +165,8 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-          // Skip fallback order creation - insufficient data
-          console.log('⚠️ No session data available - skipping Shopify order creation');
-          
-          try {
-            // Just log the attempt for debugging
-            console.log('📝 Would create Shopify order but no cart data available');
-          } catch (e) {
-            console.error('❌ Note: No session data for order creation:', e);
-          }
+          // Webhook handles order creation automatically - removing second duplicate call
+          console.log('💰 Payment successful - webhook handles order creation automatically');
             } catch (e) {
               console.error('❌ Failed to process order on complete page (no session data):', e);
             }

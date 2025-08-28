@@ -221,126 +221,62 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
-    console.log('🔍 ACTUAL Mobile search icon clicked directly in CombinedSearchTabs');
-    console.log('🔍 Current state - isSearchExpanded:', isSearchExpanded, 'isSearchActive:', isSearchActive);
-    
+    console.log('🔍 Mobile search icon clicked directly');
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    console.log('🔍 State updated - expanding search');
-    
-    // Focus search input immediately with multiple fallback attempts
-    const focusInput = () => {
-      console.log('🔍 Attempting to find and focus search input');
-      
+    // Focus search input immediately
+    setTimeout(() => {
       const searchInput = searchInputRef.current ||
                          document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
-                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
-                         document.querySelector('.mobile-search-input') as HTMLInputElement;
-      
-      console.log('🔍 Search input found:', !!searchInput, searchInput);
+                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
       
       if (searchInput) {
-        console.log('🎯 Direct search input found, focusing');
         searchInput.focus();
-        searchInput.click();
-        console.log('🎯 Search input focused and clicked');
-        return true;
-      } else {
-        console.log('❌ No search input found');
+        console.log('🎯 Direct search input focused');
       }
-      return false;
-    };
-    
-    // Try immediate focus
-    if (!focusInput()) {
-      // Try with small delay if immediate doesn't work
-      setTimeout(() => {
-        console.log('🔍 Retry focus attempt 1');
-        if (!focusInput()) {
-          // Final attempt with longer delay
-          setTimeout(() => {
-            console.log('🔍 Final focus attempt');
-            focusInput();
-          }, 200);
-        }
-      }, 50);
-    }
+    }, 100);
   };
 
   // Listen for mobile search activation from SearchIcon component
   useEffect(() => {
     const handleMobileSearchActivate = (e: Event) => {
       console.log('📱 Mobile search activated from SearchIcon');
-      console.log('📱 Event details:', (e as CustomEvent)?.detail);
-      
-      // Prevent default and stop propagation
       e.preventDefault();
       e.stopPropagation();
       
-      // Force expansion and activation immediately
-      console.log('📱 Setting search expanded to true');
+      // Force expansion and activation
       setIsSearchExpanded(true);
       onSearchActiveChange?.(true);
       
-      // Focus the search input with improved logic
-      const focusSearchInput = () => {
-        console.log('🔍 Attempting to focus search input...');
-        
-        // Try multiple selectors to find the search input
+      // Focus the search input with multiple attempts
+      setTimeout(() => {
         const searchInput = searchInputRef.current ||
                            document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
                            document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
-                           document.querySelector('.mobile-search-input') as HTMLInputElement ||
                            document.querySelector('input[type="text"]') as HTMLInputElement;
         
-        console.log('🔍 Search input found:', !!searchInput, searchInput?.tagName, searchInput?.className);
-        
         if (searchInput) {
-          // Force focus and click
           searchInput.focus();
           searchInput.click();
-          
-          // Also try scrolling into view
-          searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          
-          console.log('✅ Search input focused successfully');
-          return true;
+          console.log('🎯 Search input focused and clicked');
         } else {
-          console.log('❌ Search input not found');
-          return false;
+          console.log('❌ Search input not found for focus');
         }
-      };
-      
-      // Try immediate focus first
-      if (!focusSearchInput()) {
-        // Retry after a short delay to allow DOM updates
-        setTimeout(() => {
-          console.log('🔄 Retry 1 - focusing search input');
-          if (!focusSearchInput()) {
-            // Final retry with longer delay
-            setTimeout(() => {
-              console.log('🔄 Final retry - focusing search input');
-              focusSearchInput();
-            }, 300);
-          }
-        }, 150);
-      }
+      }, 200);
     };
 
-    // Listen on multiple targets for better compatibility
+    // Listen on both document and the search handler element
     const searchHandler = document.querySelector('[data-mobile-search-handler]');
     
     // Add listeners
     document.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
-    window.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
     if (searchHandler) {
       searchHandler.addEventListener('mobileSearchActivate', handleMobileSearchActivate);
     }
     
     return () => {
       document.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
-      window.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
       if (searchHandler) {
         searchHandler.removeEventListener('mobileSearchActivate', handleMobileSearchActivate);
       }
@@ -351,104 +287,100 @@ export const CombinedSearchTabs = ({
     <div className={`bg-background border-b transition-all duration-200 ${
       isSticky || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
     } ${condensed ? 'py-2' : 'py-3'}`}>
-        {/* Desktop Layout */}
-        <div className="hidden md:block">
-          <div className="w-full max-w-screen-2xl mx-auto px-4 py-3">
-            <div className="flex items-center gap-2 w-full max-w-full">
-              {/* Tabs with constrained container */}
-              <div className="relative flex-1 min-w-0 max-w-full overflow-hidden">
-                <div className="flex space-x-1 overflow-x-auto scrollbar-hide max-w-full" 
-                     style={{ scrollSnapType: 'x mandatory' }}>
-                  {tabs.map((tab, index) => (
-                    <Button
-                      key={tab.id}
-                      variant={selectedCategory === index ? "default" : "ghost"}
-                      className="whitespace-nowrap px-3 py-2 h-9 text-sm flex-shrink-0 transition-all duration-200 max-w-[200px] truncate"
-                      onClick={() => onTabSelect(index)}
-                      style={{ scrollSnapAlign: 'start' }}
-                      title={tab.title}
-                    >
-                      <span className="font-medium truncate">{tab.title}</span>
-                    </Button>
-                  ))}
-                </div>
-                {/* Scroll indicator */}
-                <div className="absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+      {/* Desktop Layout */}
+      <div className="hidden md:block">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-4">
+            {/* Tabs with scroll indicator */}
+            <div className="relative flex-1">
+              <div className="flex space-x-2 overflow-x-auto scrollbar-hide" 
+                   style={{ scrollSnapType: 'x mandatory' }}>
+                {tabs.map((tab, index) => (
+                  <Button
+                    key={tab.id}
+                    variant={selectedCategory === index ? "default" : "ghost"}
+                    className="whitespace-nowrap px-6 py-2 h-10 min-w-fit flex-shrink-0 transition-all duration-200"
+                    onClick={() => onTabSelect(index)}
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    <span className="font-medium">{tab.title}</span>
+                  </Button>
+                ))}
               </div>
-              
-              {/* Search Bar with Cart and Checkout - Fixed width to prevent overflow */}
-              {showSearch && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* Compact Search Bar - constrained width */}
-                  <div className="relative w-32 lg:w-48">
-                    <AdvancedSearchBar
-                      value={searchQuery}
-                      onChange={(newValue) => {
-                        onSearchChange(newValue);
-                        if (newValue.trim()) {
-                          setTimeout(() => onSearchSubmit(), 300);
-                        }
-                      }}
-                      onSubmit={onSearchSubmit}
-                      placeholder="Search..."
-                      className="w-full text-sm"
-                      allProducts={allProducts}
-                    />
-                    {isSearching && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Compact Cart and Checkout - minimal width */}
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    {/* Cart Button - Icon only on smaller screens */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={onOpenCart}
-                      className="h-8 px-2 text-xs hover:bg-accent flex-shrink-0 relative"
-                    >
-                      <ShoppingCart className="w-3 h-3" />
-                      <span className="hidden xl:inline ml-1 text-xs">Cart</span>
-                      {cartItemCount > 0 && (
-                        <span className="absolute -top-1 -right-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1 min-w-[16px] h-4 flex items-center justify-center">
-                          {cartItemCount}
-                        </span>
-                      )}
-                    </Button>
-                    
-                    {/* Checkout Button - Minimal */}
-                    {cartItemCount > 0 && (
-                      <Button
-                        size="sm"
-                        onClick={onCheckout}
-                        className="h-8 px-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 text-xs"
-                      >
-                        <Check className="w-3 h-3" />
-                        <span className="hidden lg:inline ml-1">Go</span>
-                        <span className="text-xs font-semibold ml-1">
-                          ${formatPrice(safePrice(totalAmount))}
-                        </span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Scroll indicator */}
+              <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
+            
+            {/* Search Bar with Cart and Checkout - Prioritize tabs visibility */}
+            {showSearch && (
+              <div className="flex items-center gap-2 ml-2">
+                {/* Compact Search Bar - shrinks first */}
+                <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
+                  <AdvancedSearchBar
+                    value={searchQuery}
+                    onChange={(newValue) => {
+                      onSearchChange(newValue);
+                      if (newValue.trim()) {
+                        setTimeout(() => onSearchSubmit(), 300);
+                      }
+                    }}
+                    onSubmit={onSearchSubmit}
+                    placeholder="Search products..."
+                    className="w-full"
+                    allProducts={allProducts}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Compact Cart and Checkout - shrink to icons on smaller screens */}
+                <div className="flex items-center gap-1">
+                  {/* Cart Button - Compact */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenCart}
+                    className="h-8 px-2 text-xs bg-background/50 hover:bg-background border-muted-foreground/20 hover:border-primary/50 flex-shrink-0"
+                  >
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                    <span className="hidden lg:inline text-xs">Cart</span>
+                    {cartItemCount > 0 && (
+                      <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Button>
+                  
+                  {/* Checkout Button - Compact with checkmark */}
+                  {cartItemCount > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={onCheckout}
+                      className="h-8 px-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+                    >
+                      <Check className="w-3 h-3 mr-1" />
+                      <span className="hidden xl:inline text-xs">Checkout</span>
+                      <span className="text-xs font-semibold ml-1">
+                        ${formatPrice(safePrice(totalAmount))}
+                      </span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
       {/* MOBILE Layout - Always show tabs, conditionally show search */}
       <div className="block md:hidden">
         
         {/* Search Bar Section - Only when search is active/expanded */}
         {showSearch && (isSearchExpanded || isSearchActive) && (
-          <div 
-            className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b"
-            data-mobile-search-handler
-          >
+          <div className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b">
             <div className="flex items-center justify-center">
               <AdvancedSearchBar
                 value={searchQuery}
@@ -462,7 +394,7 @@ export const CombinedSearchTabs = ({
                 }}
                 onSubmit={onSearchSubmit}
                 placeholder="Search products..."
-                className="flex-1 max-w-md mobile-search-input"
+                className="flex-1 max-w-md"
                 allProducts={allProducts}
                 autoFocus={isSearchExpanded}
               />
@@ -471,13 +403,13 @@ export const CombinedSearchTabs = ({
         )}
 
         {/* Tabs Section with improved responsive design */}
-        <div className="w-full max-w-screen-sm mx-auto px-2 py-1.5 bg-background border-b">
-          <div className="flex items-center w-full max-w-full overflow-hidden">
-            {/* Enhanced Responsive Tabs - Properly constrained */}
-            <div className="relative w-full min-w-0 max-w-full overflow-hidden">
+        <div className="container mx-auto px-2 py-1.5 bg-background border-b">
+          <div className="flex items-center">
+            {/* Enhanced Responsive Tabs - No icons, better text spacing */}
+            <div className="relative w-full">
               <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide w-full max-w-full pb-1"
+                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1"
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'
@@ -504,22 +436,22 @@ export const CombinedSearchTabs = ({
                     onClick={() => onTabSelect(index)}
                     title={tab.title}
                     style={{ 
-                      flex: '0 0 auto',
-                      maxWidth: '120px', // Constrain max width
+                      flex: '0 0 auto', // Natural width with no forced sizing
+                      minWidth: 'max-content', // Allow natural text width
                       scrollSnapAlign: 'start'
                     }}
                   >
-                    {/* Truncated text to prevent overflow */}
-                    <span className="font-medium text-xs leading-tight whitespace-nowrap truncate max-w-full px-1">
+                    {/* Only text - no icons to prevent overlap */}
+                    <span className="font-medium text-xs leading-tight whitespace-nowrap px-1">
                       {tab.title}
                     </span>
                   </Button>
                 ))}
               </div>
               
-              {/* Scroll indicator */}
-              <div className="absolute right-0 top-0 h-full w-4 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              {/* Animated scroll indicator */}
+              <div className="absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none animate-pulse" />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground animate-bounce">
                 →
               </div>
             </div>
@@ -548,7 +480,7 @@ export const CombinedSearchTabs = ({
                         }}
                         onSubmit={onSearchSubmit}
                         placeholder="Search products..."
-                        className="w-full mobile-search-input"
+                        className="w-full"
                         allProducts={allProducts}
                         autoFocus={true}
                       />
@@ -560,24 +492,13 @@ export const CombinedSearchTabs = ({
                     </div>
                   </div>
                 ) : (
-                /* Search Icon - Compact */
+                  /* Search Icon - Compact */
                   <Button
-                    variant="ghost" 
+                    variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('🔍 MOBILE SEARCH BUTTON CLICKED!');
-                      handleSearchIconClick();
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation();
-                      console.log('🔍 Mobile search button touch start');
-                    }}
-                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors mobile-search-button relative z-50"
+                    onClick={handleSearchIconClick}
+                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
                     title="Search"
-                    data-testid="mobile-search-button"
-                    style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
                   >
                     <Search className="w-4 h-4" />
                   </Button>

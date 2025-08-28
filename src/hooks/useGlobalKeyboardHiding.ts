@@ -26,32 +26,44 @@ export function useGlobalKeyboardHiding() {
       }
     };
 
-    // More conservative approach - only hide keyboard on document tap, not input touches
-    const handleDocumentTap = (event: TouchEvent) => {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    const handleScroll = () => {
       if (!isMobile()) return;
       
-      // Don't hide keyboard if user is touching an input, textarea, or editable element
-      const target = event.target as HTMLElement;
-      if (target && (
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' || 
-        target.contentEditable === 'true' ||
-        target.closest('input, textarea, [contenteditable="true"]')
-      )) {
-        return; // Allow normal keyboard behavior for form inputs
+      const currentScrollY = window.scrollY;
+      
+      // Hide keyboard on any significant scroll movement
+      if (Math.abs(currentScrollY - lastScrollY) > 10) {
+        hideKeyboard();
       }
       
-      // Hide keyboard when tapping outside form elements
-      setTimeout(() => {
-        hideKeyboard();
-      }, 100);
+      lastScrollY = currentScrollY;
+      ticking = false;
     };
 
-    // Only listen to touchstart on document, but be smart about inputs
-    document.addEventListener('touchstart', handleDocumentTap, { passive: true });
+    const requestScrollTick = () => {
+      if (!ticking) {
+        requestAnimationFrame(handleScroll);
+        ticking = true;
+      }
+    };
+
+    // Touch-based scroll detection for mobile
+    const handleTouchMove = () => {
+      if (isMobile()) {
+        requestScrollTick();
+      }
+    };
+
+    // Regular scroll listener
+    window.addEventListener('scroll', requestScrollTick, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', handleDocumentTap);
+      window.removeEventListener('scroll', requestScrollTick);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
   }, []);
 }

@@ -11,9 +11,6 @@ import { CartItem } from '../DeliveryWidget';
 import { CustomerInfo } from '@/hooks/useCustomerInfo';
 import { handlePaymentError, safeSupabaseInvoke, PaymentIntentResponse } from '@/utils/apiErrorHandler';
 
-// CACHE BUSTER: Force new deployment
-// console.log('🚀 PAYMENT STEP LOADED - BUILD 2025-01-27-17:20:00 🚀');
-
 interface PaymentStepProps {
   cartItems: CartItem[];
   subtotal: number;
@@ -120,24 +117,6 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           tip: `$${validTipAmount.toFixed(2)}`
         }
       });
-      
-      // 🔥 CRITICAL DEBUG: Log cart items being sent
-      console.log('🛒 CART ITEMS BEING SENT TO PAYMENT INTENT:', {
-        cartItems,
-        cartItemsLength: cartItems?.length,
-        cartItemsType: typeof cartItems,
-        firstItem: cartItems?.[0],
-        formattedForShopify: cartItems?.map(item => ({
-          id: item.id,
-          title: item.title || item.name,
-          name: item.name || item.title,
-          price: item.price,
-          quantity: item.quantity,
-          product_id: item.id,
-          variant_id: item.variant || null,
-          vendor: null
-        }))
-      });
 
       // Create payment intent with enhanced error handling and retries
       const response = await safeSupabaseInvoke<PaymentIntentResponse>(
@@ -147,16 +126,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           body: {
             amount: amountInCents,
             currency: 'usd',
-            cartItems: cartItems?.map(item => ({
-              id: item.id,
-              title: item.title || item.name,
-              name: item.name || item.title,
-              price: item.price,
-              quantity: item.quantity,
-              product_id: item.id,
-              variant_id: item.variant || null,
-              vendor: null
-            })), // 🔥 FIXED: Properly format cart items for Shopify
+            cartItems,
             customerInfo,
             deliveryInfo,
             appliedDiscount,
@@ -195,11 +165,11 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         setPaymentError(paymentError.message || 'Payment failed');
       } else {
         console.log('✅ Payment successful!');
-        console.log('🔥🔥🔥 CACHE BUSTER v2025-01-27-17:05 🔥🔥🔥');
         const paymentIntentId = data.client_secret.split('_secret_')[0];
         
-        // FIXED: Skip duplicate order creation - OrderComplete will handle this
-        console.log('💰 Payment successful - OrderComplete page will handle Shopify order creation');
+        // Webhook will handle Shopify order creation automatically
+        // Remove manual call to prevent duplicate orders
+        console.log('💰 Payment successful - webhook will create Shopify order automatically');
         
         // Call success handler
         onPaymentSuccess(paymentIntentId);

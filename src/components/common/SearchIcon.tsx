@@ -31,50 +31,17 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
     return "bg-background hover:bg-muted/50 shadow-md hover:shadow-lg transition-all duration-200";
   };
 
-  const handleClick = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    
+  const handleClick = () => {
     console.log('🔍 SearchIcon clicked, variant:', variant);
-    console.log('🔍 Click event details:', { target: event.target, currentTarget: event.currentTarget });
-    
     // Check if we're in a delivery app context by looking for mobile search handler
     const searchHandler = document.querySelector('[data-mobile-search-handler]');
     console.log('📱 Search handler found:', !!searchHandler);
     
     if (searchHandler) {
-      console.log('🚀 Mobile search activation in delivery app context');
-      
-      // FIXED: Dispatch custom event immediately - don't try to click the button that might disappear
-      const customEvent = new CustomEvent('mobileSearchActivate', { 
-        bubbles: true, 
-        cancelable: true, 
-        detail: { source: 'SearchIcon', variant, timestamp: Date.now() } 
-      });
-      
-      // Dispatch on multiple targets for maximum compatibility
-      document.dispatchEvent(customEvent);
-      searchHandler.dispatchEvent(customEvent);
-      window.dispatchEvent(customEvent);
-      console.log('📤 mobileSearchActivate event dispatched');
-      
-      // Also try direct input focus as immediate fallback
-      setTimeout(() => {
-        const searchInput = searchHandler.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
-                           searchHandler.querySelector('.mobile-search-input') as HTMLInputElement ||
-                           document.querySelector('input[type="text"]') as HTMLInputElement;
-                           
-        if (searchInput) {
-          console.log('🎯 Direct input focus fallback');
-          searchInput.focus();
-          searchInput.click();
-          
-          // Trigger focus event
-          const focusEvent = new FocusEvent('focus', { bubbles: true });
-          searchInput.dispatchEvent(focusEvent);
-        }
-      }, 100);
-      
+      // Always trigger mobile search expansion in delivery app, regardless of variant
+      console.log('🚀 Dispatching mobileSearchActivate event');
+      const event = new CustomEvent('mobileSearchActivate', { bubbles: true });
+      searchHandler.dispatchEvent(event);
     } else {
       // Default navigation to search page
       console.log('🔄 Navigating to search page');
@@ -85,17 +52,10 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
   return (
     <Button
       onClick={handleClick}
-      onTouchStart={(e) => {
-        // Ensure touch events also work on mobile
-        e.stopPropagation();
-        console.log('🔍 SearchIcon touch start');
-      }}
       variant="outline"
       size="icon"
-      className={`${getButtonSize()} ${getButtonStyle()} ${className} cursor-pointer select-none`}
+      className={`${getButtonSize()} ${getButtonStyle()} ${className}`}
       aria-label="Search products"
-      style={{ pointerEvents: 'auto', zIndex: 999 }}
-      data-testid="search-icon-button"
     >
       <Search className={getIconSize()} />
     </Button>

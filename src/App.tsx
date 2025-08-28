@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RequireAdmin from "./components/admin/RequireAdmin";
-import { RequireAdminPassword } from "./components/admin/RequireAdminPassword";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { AuthProvider } from '@/contexts/AuthContext';
 import { RobustErrorBoundary } from '@/components/common/RobustErrorBoundary';
@@ -41,7 +40,6 @@ import StandaloneCoverPage from "./components/cover-pages/StandaloneCoverPage";
 
 // Admin pages - using direct imports since they use named exports
 import AdminLogin from "./pages/AdminLogin";
-import AdminPasswordLogin from "./pages/AdminPasswordLogin";
 import AdminBypass from "./pages/AdminBypass";
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
@@ -108,10 +106,9 @@ const App = () => {
                     
                     {/* Admin Routes - consolidated to prevent remounting */}
                     <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/password-login" element={<AdminPasswordLogin />} />
                     <Route path="/admin/bypass" element={<AdminBypass />} />
-                    <Route path="/admin" element={<RequireAdminPassword><AdminDashboard /></RequireAdminPassword>} />
-                    <Route path="/admin/*" element={<RequireAdminPassword><AdminDashboard /></RequireAdminPassword>} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/*" element={<AdminDashboard />} />
                     
                     {/* Customer Routes */}
                     <Route path="/customer/login" element={<CustomerLogin />} />

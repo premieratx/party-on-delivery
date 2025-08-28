@@ -30,9 +30,8 @@ export function CustomDeliveryIntro({
     logoUrl,
     mainAppConfig
   });
-  // Debug disabled for production
-  // console.log('🚨 DEEP DEBUG - heroHeading type:', typeof heroHeading, 'length:', heroHeading?.length);
-  // console.log('🚨 DEEP DEBUG - heroSubheading type:', typeof heroSubheading, 'length:', heroSubheading?.length);
+  console.log('🚨 DEEP DEBUG - heroHeading type:', typeof heroHeading, 'length:', heroHeading?.length);
+  console.log('🚨 DEEP DEBUG - heroSubheading type:', typeof heroSubheading, 'length:', heroSubheading?.length);
 
   const getButtonText = () => {
     if (appName.toLowerCase().includes('airbnb')) {
@@ -43,10 +42,9 @@ export function CustomDeliveryIntro({
 
   // FIXED: Helper function to get the actual heading with proper fallback
   const getActualHeading = () => {
-    // Debug disabled for production
-    // console.log('🔥 HEADING DEBUG - heroHeading prop:', `"${heroHeading}"`);
-    // console.log('🔥 HEADING DEBUG - mainAppConfig.hero_heading:', `"${mainAppConfig?.hero_heading}"`);
-    // console.log('🔥 HEADING DEBUG - appName fallback:', `"${appName}"`);
+    console.log('🔥 HEADING DEBUG - heroHeading prop:', `"${heroHeading}"`);
+    console.log('🔥 HEADING DEBUG - mainAppConfig.hero_heading:', `"${mainAppConfig?.hero_heading}"`);
+    console.log('🔥 HEADING DEBUG - appName fallback:', `"${appName}"`);
     
     // Priority: heroHeading prop -> mainAppConfig.hero_heading -> appName fallback
     // CRITICAL: Only use appName as last resort if both are truly empty
@@ -67,9 +65,8 @@ export function CustomDeliveryIntro({
 
   // FIXED: Helper function to get the actual subheading with proper fallback
   const getActualSubheading = () => {
-    // Debug disabled for production
-    // console.log('🔥 SUBHEADING DEBUG - heroSubheading prop:', `"${heroSubheading}"`);
-    // console.log('🔥 SUBHEADING DEBUG - mainAppConfig.hero_subheading:', `"${mainAppConfig?.hero_subheading}"`);
+    console.log('🔥 SUBHEADING DEBUG - heroSubheading prop:', `"${heroSubheading}"`);
+    console.log('🔥 SUBHEADING DEBUG - mainAppConfig.hero_subheading:', `"${mainAppConfig?.hero_subheading}"`);
     
     // Priority: heroSubheading prop -> mainAppConfig.hero_subheading -> default fallback
     let subheading = '';

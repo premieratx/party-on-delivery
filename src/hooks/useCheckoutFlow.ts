@@ -138,8 +138,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
 
   // Validation helpers
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
-  // CRITICAL: Always allow address progression - handle verification on backend
-  const isAddressComplete = true; // Always true - customers can enter ANY address format
+  const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
 
   return {

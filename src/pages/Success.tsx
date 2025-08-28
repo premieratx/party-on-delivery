@@ -38,10 +38,10 @@ const Success = () => {
         localStorage.setItem('lastPaymentIntent', sessionId);
       }
 
-      // FIXED: Skip creating order here - it should be handled in OrderComplete page
-      console.log('💰 Skipping duplicate order creation - will be handled by OrderComplete');
+      // Webhook handles order creation automatically - no manual call needed
+      console.log('💰 Payment successful - webhook will handle order creation');
       
-      // Just set success status without calling the edge function
+      // Since webhook handles order creation, just set success status
       setOrderStatus({
         success: true,
         orderNumber: 'Processing...'

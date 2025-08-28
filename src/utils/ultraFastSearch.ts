@@ -17,11 +17,11 @@ class UltraFastSearchClient {
 
   async warmUpCache(): Promise<void> {
     if (this.isWarmedUp && Date.now() - this.lastWarmUp < this.WARMUP_INTERVAL) {
-      // console.log('🔥 Cache already warmed up');
+      console.log('🔥 Cache already warmed up');
       return;
     }
 
-    // console.log('🔥 Warming up ultra-fast search cache...');
+    console.log('🔥 Warming up ultra-fast search cache...');
     const startTime = performance.now();
 
     try {

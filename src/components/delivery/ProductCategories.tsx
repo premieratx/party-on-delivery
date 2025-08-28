@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { OptimizedProductImage } from '@/components/common/OptimizedProductImage';
-import { useVirtualizedProductList } from '@/hooks/useVirtualizedProductList';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { LazyImage } from '@/components/common/LazyImage';
 import { PullToRefreshIndicator } from '@/components/common/PullToRefreshIndicator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -173,7 +173,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // ONLY use Shopify collections from delivery app config - NO defaults
   const tabs = useMemo(() => {
     if (collectionsConfig?.tabs && collectionsConfig.tabs.length > 0) {
-      // console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
+      console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
       return collectionsConfig.tabs.map((tab, index) => {
         return {
           id: tab.collection_handle || `tab-${index}`,
@@ -195,7 +195,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     ultraFastSearch.warmUpCache().catch(console.error);
     
     const collectionHandles = tabs.map(tab => tab.handle);
-    // console.log('🚀 Preloading all collections:', collectionHandles);
+    console.log('🚀 Preloading all collections:', collectionHandles);
     preloadMultipleCollections(collectionHandles);
   }, [tabs, preloadMultipleCollections]);
 
@@ -261,8 +261,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return Array.isArray(handles) && handles.includes(currentCollectionHandle);
     });
     
-    // Return stable slice with pagination
-    return filteredProducts.slice(0, Math.min(maxProducts, 30)); // Limit initial render
+    // Return stable slice
+    return filteredProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts]);
 
   const currentTab = tabs[selectedCategory];
@@ -335,7 +335,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Also check main_app_config for styling (backward compatibility)
   const mainConfig = appConfig?.main_app_config || {};
 
-  // Debug styling data (disabled for production)
+  // Debug styling data
+  console.log('🎨 STYLING DEBUG - heroConfig:', heroConfig);
+  console.log('🎨 STYLING DEBUG - mainConfig:', mainConfig);
 
   // Helper function to generate responsive text styles
   const getResponsiveTextStyle = (type: 'headline' | 'subheadline' | 'scrollingText') => {
@@ -361,7 +363,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       lineHeight: type === 'headline' ? '1.1' : '1.5'
     };
 
-    
+    console.log(`🎨 STYLING DEBUG - ${type} style:`, { color, font, size, finalStyle });
     return finalStyle;
   };
 
@@ -526,14 +528,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                      onClick={() => setSelectedProduct(product)}
                    >
                     <div className="aspect-square relative overflow-hidden">
-                      <OptimizedProductImage
-                        src={product.image}
-                        alt={cleanTitle}
-                        className="w-full h-full object-cover hover-scale"
-                        priority={false}
-                        width={300}
-                        height={300}
-                      />
+                     <LazyImage
+                       src={product.image}
+                       alt={cleanTitle}
+                       className="w-full h-full object-cover hover-scale"
+                       priority={false}
+                       quality={85}
+                       width={300}
+                     />
                     </div>
                     <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                       <div className="space-y-1 text-center">
@@ -643,14 +645,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                    onClick={() => setSelectedProduct(product)}
                  >
                    <div className="aspect-square relative overflow-hidden">
-                      <OptimizedProductImage
-                        src={product.image}
-                        alt={cleanTitle}
-                        className="w-full h-full object-cover hover-scale"
-                        priority={false}
-                        width={300}
-                        height={300}
-                      />
+                     <LazyImage
+                       src={product.image}
+                       alt={cleanTitle}
+                       className="w-full h-full object-cover hover-scale"
+                       priority={false}
+                       quality={85}
+                       width={300}
+                     />
                    </div>
                   
                   <div className="p-3 flex flex-col flex-1 justify-between space-y-3">

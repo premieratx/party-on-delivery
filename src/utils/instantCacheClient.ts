@@ -1,7 +1,7 @@
 // OPTIMIZED SMART CACHE CLIENT - Build: 2025_08_18_SMART_CACHE
 
 export const getInstantProducts = async (category?: string, forceRefresh = false) => {
-  // console.log('🚀 Loading products via smart cache...', { category, forceRefresh });
+  console.log('🚀 Loading products via smart cache...', { category, forceRefresh });
   try {
     const { supabase } = await import('@/integrations/supabase/client');
     const { getProductsWithFallback } = await import('./emergencyFallback');
@@ -76,7 +76,7 @@ export const refreshProductCache = async () => {
 };
 
 export const getCacheStats = async () => {
-  // console.log('📊 Getting cache stats...');
+  console.log('📊 Getting cache stats...');
   try {
     const { supabase } = await import('@/integrations/supabase/client');
     const { data, error } = await supabase.functions.invoke('smart-cache-manager', {

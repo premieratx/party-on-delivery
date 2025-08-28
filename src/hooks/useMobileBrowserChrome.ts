@@ -163,10 +163,68 @@ export function useMobileBrowserChrome() {
       document.head.appendChild(style);
     };
 
-    // Minimal scroll handler - no forced scroll manipulation
+    // Scroll-based browser chrome control
     const setupScrollHandler = () => {
-      // Just return empty cleanup - let other hooks handle scroll behavior
-      return () => {};
+      let lastScrollY = window.scrollY;
+      let ticking = false;
+
+      const updateBrowserChrome = () => {
+        const currentScrollY = window.scrollY;
+        
+        // Force browser chrome to hide on scroll down
+        if (currentScrollY > lastScrollY && currentScrollY > 10) {
+          // Scrolling down - try to hide browser chrome
+          document.documentElement.style.setProperty('--browser-chrome-hidden', '1');
+          
+          // Force a small scroll to trigger browser chrome hiding
+          if (window.innerHeight < screen.height * 0.85) {
+            window.scrollBy(0, 1);
+            setTimeout(() => window.scrollBy(0, -1), 10);
+          }
+        } else if (currentScrollY < lastScrollY) {
+          // Scrolling up - allow browser chrome to show
+          document.documentElement.style.setProperty('--browser-chrome-hidden', '0');
+        }
+        
+        lastScrollY = currentScrollY;
+        ticking = false;
+      };
+
+      const requestUpdate = () => {
+        if (!ticking) {
+          requestAnimationFrame(updateBrowserChrome);
+          ticking = true;
+        }
+      };
+
+      // Throttled scroll handler
+      window.addEventListener('scroll', requestUpdate, { passive: true });
+      
+      // Touch handlers for mobile
+      let touchStartY = 0;
+      
+      const handleTouchStart = (e: TouchEvent) => {
+        touchStartY = e.touches[0].clientY;
+      };
+      
+      const handleTouchMove = (e: TouchEvent) => {
+        const touchY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchY;
+        
+        // Hide chrome on upward swipe (scroll down)
+        if (deltaY > 10 && window.scrollY > 0) {
+          document.documentElement.style.setProperty('--browser-chrome-hidden', '1');
+        }
+      };
+      
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+      return () => {
+        window.removeEventListener('scroll', requestUpdate);
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchmove', handleTouchMove);
+      };
     };
 
     // Initialize everything
@@ -176,7 +234,13 @@ export function useMobileBrowserChrome() {
     applyMobileChromeStyles();
     const cleanup = setupScrollHandler();
 
-    // Remove forced scroll positioning that conflicts with other scroll hooks
+    // Force initial browser chrome hide after a short delay
+    setTimeout(() => {
+      if (window.innerWidth <= 768) {
+        window.scrollTo(0, 1);
+        setTimeout(() => window.scrollTo(0, 0), 100);
+      }
+    }, 500);
 
     return cleanup;
   }, []);

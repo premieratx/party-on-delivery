@@ -105,9 +105,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
           return;
         }
 
-        // Debug disabled for production
-        // console.log('✅ Raw loaded app config:', data);
-        // console.log('🔥 CRITICAL DEBUG - Raw main_app_config from DB:', data.main_app_config);
+        console.log('✅ Raw loaded app config:', data);
+        console.log('🔥 CRITICAL DEBUG - Raw main_app_config from DB:', data.main_app_config);
         
         // Ensure main_app_config is properly parsed as JSON if it's a string
         let parsedData = { ...data };
@@ -115,25 +114,24 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
         if (typeof data.main_app_config === 'string') {
           try {
             parsedData.main_app_config = JSON.parse(data.main_app_config);
-            // console.log('📋 Parsed main_app_config from string:', parsedData.main_app_config);
+            console.log('📋 Parsed main_app_config from string:', parsedData.main_app_config);
           } catch (e) {
             console.error('❌ Failed to parse main_app_config:', e);
             parsedData.main_app_config = {};
           }
         } else if (data.main_app_config) {
-          // console.log('📋 main_app_config already object:', data.main_app_config);
+          console.log('📋 main_app_config already object:', data.main_app_config);
         } else {
-          // console.log('⚠️ No main_app_config found, using empty object');
+          console.log('⚠️ No main_app_config found, using empty object');
           parsedData.main_app_config = {};
         }
 
-        // Debug disabled for production
-        // console.log('🔥 CRITICAL DEBUG - Final parsed hero_heading:', (parsedData.main_app_config as any)?.hero_heading);
-        // console.log('🔥 CRITICAL DEBUG - Final parsed hero_subheading:', (parsedData.main_app_config as any)?.hero_subheading);
-        // console.log('🎯 FIXED - Direct hero_heading from DB:', (parsedData as any).hero_heading);
-        // console.log('🎯 FIXED - Direct hero_subheading from DB:', (parsedData as any).hero_subheading);
-        // console.log('🚨 ULTIMATE DEBUG - Raw data from database:', data);
-        // console.log('🚨 ULTIMATE DEBUG - ALL database fields:', Object.keys(data).sort());
+        console.log('🔥 CRITICAL DEBUG - Final parsed hero_heading:', (parsedData.main_app_config as any)?.hero_heading);
+        console.log('🔥 CRITICAL DEBUG - Final parsed hero_subheading:', (parsedData.main_app_config as any)?.hero_subheading);
+        console.log('🎯 FIXED - Direct hero_heading from DB:', (parsedData as any).hero_heading);
+        console.log('🎯 FIXED - Direct hero_subheading from DB:', (parsedData as any).hero_subheading);
+        console.log('🚨 ULTIMATE DEBUG - Raw data from database:', data);
+        console.log('🚨 ULTIMATE DEBUG - ALL database fields:', Object.keys(data).sort());
         
         // Ensure collections_config is properly parsed as JSON if it's a string
         if (typeof data.collections_config === 'string') {

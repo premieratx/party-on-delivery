@@ -1536,7 +1536,6 @@ export type Database = {
           is_shareable: boolean | null
           line_items: Json
           order_number: string
-          payment_intent_id: string | null
           session_id: string | null
           share_token: string | null
           shared_at: string | null
@@ -1565,7 +1564,6 @@ export type Database = {
           is_shareable?: boolean | null
           line_items?: Json
           order_number: string
-          payment_intent_id?: string | null
           session_id?: string | null
           share_token?: string | null
           shared_at?: string | null
@@ -1594,7 +1592,6 @@ export type Database = {
           is_shareable?: boolean | null
           line_items?: Json
           order_number?: string
-          payment_intent_id?: string | null
           session_id?: string | null
           share_token?: string | null
           shared_at?: string | null
