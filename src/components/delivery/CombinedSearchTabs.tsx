@@ -299,16 +299,16 @@ export const CombinedSearchTabs = ({
       {/* Desktop Layout */}
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-4">
-            {/* Tabs with scroll indicator */}
-            <div className="relative flex-1">
-              <div className="flex space-x-2 overflow-x-auto scrollbar-hide" 
+          <div className="flex items-center gap-2 w-full">
+            {/* Tabs Container - Limited width to prevent overflow */}
+            <div className="relative flex-1 max-w-[60%] min-w-0">
+              <div className="flex space-x-1 overflow-x-auto scrollbar-hide" 
                    style={{ scrollSnapType: 'x mandatory' }}>
                 {tabs.map((tab, index) => (
                   <Button
                     key={tab.id}
                     variant={selectedCategory === index ? "default" : "ghost"}
-                    className="whitespace-nowrap px-6 py-2 h-10 min-w-fit flex-shrink-0 transition-all duration-200"
+                    className="whitespace-nowrap px-4 py-2 h-9 min-w-fit flex-shrink-0 transition-all duration-200 text-sm"
                     onClick={() => onTabSelect(index)}
                     style={{ scrollSnapAlign: 'start' }}
                   >
@@ -317,14 +317,14 @@ export const CombinedSearchTabs = ({
                 ))}
               </div>
               {/* Scroll indicator */}
-              <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+              <div className="absolute right-0 top-0 h-full w-4 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
             
-            {/* Search Bar with Cart and Checkout - Prioritize tabs visibility */}
+            {/* Search Bar with Cart and Checkout - Fixed width to prevent overflow */}
             {showSearch && (
-              <div className="flex items-center gap-2 ml-2">
-                {/* Compact Search Bar - shrinks first */}
-                <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
+              <div className="flex items-center gap-2 flex-shrink-0 min-w-0 max-w-[40%]">
+                {/* Compact Search Bar */}
+                <div className="relative min-w-[100px] max-w-[180px] flex-shrink-1">
                   <AdvancedSearchBar
                     value={searchQuery}
                     onChange={(newValue) => {
@@ -334,8 +334,8 @@ export const CombinedSearchTabs = ({
                       }
                     }}
                     onSubmit={onSearchSubmit}
-                    placeholder="Search products..."
-                    className="w-full"
+                    placeholder="Search..."
+                    className="w-full text-sm"
                     allProducts={allProducts}
                   />
                   {isSearching && (
@@ -345,17 +345,17 @@ export const CombinedSearchTabs = ({
                   )}
                 </div>
                 
-                {/* Compact Cart and Checkout - shrink to icons on smaller screens */}
-                <div className="flex items-center gap-1">
-                  {/* Cart Button - Compact */}
+                {/* Compact Cart and Checkout */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Cart Button */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onOpenCart}
                     className="h-8 px-2 text-xs bg-background/50 hover:bg-background border-muted-foreground/20 hover:border-primary/50 flex-shrink-0"
                   >
-                    <ShoppingCart className="w-3 h-3 mr-1" />
-                    <span className="hidden lg:inline text-xs">Cart</span>
+                    <ShoppingCart className="w-3 h-3" />
+                    <span className="hidden xl:inline text-xs ml-1">Cart</span>
                     {cartItemCount > 0 && (
                       <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center">
                         {cartItemCount}
@@ -363,15 +363,15 @@ export const CombinedSearchTabs = ({
                     )}
                   </Button>
                   
-                  {/* Checkout Button - Compact with checkmark */}
+                  {/* Checkout Button */}
                   {cartItemCount > 0 && (
                     <Button
                       size="sm"
                       onClick={onCheckout}
                       className="h-8 px-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
                     >
-                      <Check className="w-3 h-3 mr-1" />
-                      <span className="hidden xl:inline text-xs">Checkout</span>
+                      <Check className="w-3 h-3" />
+                      <span className="hidden xl:inline text-xs ml-1">Checkout</span>
                       <span className="text-xs font-semibold ml-1">
                         ${formatPrice(safePrice(totalAmount))}
                       </span>
