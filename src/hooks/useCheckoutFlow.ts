@@ -80,10 +80,11 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
   useEffect(() => {
     if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
       const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
+      console.log('🏠 Updating delivery address:', { fullAddress, addressInfo });
       updateDeliveryInfo('address', fullAddress);
       updateDeliveryInfo('instructions', addressInfo.instructions || '');
     }
-  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, addressInfo.instructions]);
+  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, addressInfo.instructions, updateDeliveryInfo]);
 
   // Check for changes from original order (only for add-to-order flow)
   useEffect(() => {
