@@ -117,7 +117,7 @@ const App = () => {
                     <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                     <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
                     
-                    {/* Admin Routes - consolidated to prevent remounting */}
+                    {/* Admin Routes - No restrictions for logged-in users */}
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin/bypass" element={<AdminBypass />} />
                     <Route path="/admin" element={<AdminDashboard />} />

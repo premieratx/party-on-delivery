@@ -100,9 +100,9 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
       }
     };
 
-    // SECURITY FIX: Force fresh Google auth every time to prevent RLS context issues
-    // Disable cached session logic until we can guarantee context is properly set
-    const shouldForceFreshAuth = true; // Set to true to force Google login every time
+    // Allow cached sessions for logged in admin users - no forced re-auth
+    // Users should stay logged in and have full admin access once authenticated
+    const shouldForceFreshAuth = false; // Allow cached sessions for better UX
     
     if (shouldForceFreshAuth) {
       console.log('🔐 SECURITY: Forcing fresh Google authentication (cached sessions disabled)');
