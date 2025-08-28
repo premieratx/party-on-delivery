@@ -51,11 +51,22 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const { toast } = useToast();
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
   
-  // Simple state management without complex hooks
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>('datetime');
+  // COMPLETELY UNLOCKED - NO CONFIRMATIONS, NO LOCKS, NO RESTRICTIONS
   const [tipAmount, setTipAmount] = useState(0);
 
-  // Pricing calculations
+  // Update delivery info when address changes - ALWAYS ALLOWED
+  useEffect(() => {
+    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
+      const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
+      onDeliveryInfoChange({
+        ...deliveryInfo,
+        address: fullAddress,
+        instructions: addressInfo.instructions || ''
+      });
+    }
+  }, [addressInfo, deliveryInfo, onDeliveryInfoChange]);
+
+  // Pricing calculations - SIMPLE AND DIRECT
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
@@ -70,26 +81,14 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax
   const finalTotal = discountedSubtotal + deliveryFee + calculatedSalesTax + tipAmount;
 
-  // Discount management
+  // Discount management - ALWAYS ALLOWED
   const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
     if (onDiscountChange) {
       onDiscountChange(discount);
     }
   };
 
-  // Simple step handlers
-  const handleDateTimeConfirm = () => {
-    if (deliveryInfo.date && deliveryInfo.timeSlot) {
-      setCurrentStep('address');
-    }
-  };
-
-  const handleAddressConfirm = () => {
-    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
-      setCurrentStep('payment');
-    }
-  };
-
+  // COMPLETELY UNLOCKED HANDLERS - NO RESTRICTIONS
   const handlePaymentSuccess = (paymentIntentId?: string) => {
     // Clear checkout session
     try {
@@ -99,7 +98,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       console.warn('Failed to clear checkout session:', error);
     }
 
-    // Store checkout completion data for the OrderComplete page
+    // Store checkout completion data
     const checkoutCompletionData = {
       cartItems,
       customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
@@ -117,8 +116,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     };
     
     sessionStorage.setItem('checkout-completion-data', JSON.stringify(checkoutCompletionData));
-    
-    // Navigate to order complete page with payment intent in URL
     navigate(`/order-complete?payment_intent=${paymentIntentId}`);
   };
 
@@ -138,63 +135,78 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             <span className="hidden sm:inline">Back to Cart</span>
             <span className="sm:hidden">Back</span>
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Checkout</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Checkout - Everything Editable</h1>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">
           
-          {/* Left Column - Checkout Steps */}
-          <div className="xl:col-span-3 space-y-4">
+          {/* Left Column - ALL STEPS ALWAYS VISIBLE AND EDITABLE */}
+          <div className="xl:col-span-3 space-y-6">
             
-            {/* Date & Time Step */}
-            <ImprovedDateTimeStep
-              deliveryInfo={deliveryInfo}
-              onDeliveryInfoChange={onDeliveryInfoChange}
-              onConfirm={handleDateTimeConfirm}
-              isConfirmed={false}
-            />
+            {/* ALWAYS EDITABLE: Date & Time Step */}
+            <div className="bg-card rounded-lg border p-4">
+              <h3 className="text-lg font-semibold mb-4 text-primary">📅 Delivery Date & Time</h3>
+              <ImprovedDateTimeStep
+                deliveryInfo={deliveryInfo}
+                onDeliveryInfoChange={onDeliveryInfoChange}
+                onConfirm={() => {}} // No confirmation needed
+                isConfirmed={false} // NEVER confirmed - always editable
+              />
+            </div>
 
-            {/* Address Step */}
-            <AddressStep
-              addressInfo={addressInfo}
-              setAddressInfo={setAddressInfo}
-              onConfirm={handleAddressConfirm}
-              isConfirmed={false}
-            />
+            {/* ALWAYS EDITABLE: Address Step */}
+            <div className="bg-card rounded-lg border p-4">
+              <h3 className="text-lg font-semibold mb-4 text-primary">🏠 Delivery Address</h3>
+              <AddressStep
+                addressInfo={addressInfo}
+                setAddressInfo={setAddressInfo}
+                onConfirm={() => {}} // No confirmation needed
+                isConfirmed={false} // NEVER confirmed - always editable
+              />
+            </div>
 
-            {/* Customer Info Step */}
-            <CustomerInfoStep
-              customerInfo={customerInfo}
-              setCustomerInfo={setCustomerInfo}
-              onConfirm={() => {}}
-              isConfirmed={false}
-            />
+            {/* ALWAYS EDITABLE: Customer Info Step */}
+            <div className="bg-card rounded-lg border p-4">
+              <h3 className="text-lg font-semibold mb-4 text-primary">👤 Your Information</h3>
+              <CustomerInfoStep
+                customerInfo={customerInfo}
+                setCustomerInfo={setCustomerInfo}
+                onConfirm={() => {}} // No confirmation needed
+                isConfirmed={false} // NEVER confirmed - always editable
+              />
+            </div>
 
-            {/* Promo Code */}
-            <PromoCodeInput 
-              onDiscountApplied={handlePromoApplied}
-              appliedDiscount={appliedDiscount}
-              cartSubtotal={cartSubtotal}
-            />
+            {/* ALWAYS ACCESSIBLE: Promo Code */}
+            <div className="bg-card rounded-lg border p-4">
+              <h3 className="text-lg font-semibold mb-4 text-primary">🎫 Promo Code</h3>
+              <PromoCodeInput 
+                onDiscountApplied={handlePromoApplied}
+                appliedDiscount={appliedDiscount}
+                cartSubtotal={cartSubtotal}
+              />
+            </div>
 
-            {/* Payment Section */}
-            <StripePaymentWrapper
-              cartItems={cartItems}
-              subtotal={discountedSubtotal}
-              deliveryFee={deliveryFee}
-              salesTax={calculatedSalesTax}
-              customerInfo={customerInfo}
-              deliveryInfo={deliveryInfo}
-              appliedDiscount={appliedDiscount}
-              onPaymentSuccess={handlePaymentSuccess}
-              isAddingToOrder={isAddingToOrder}
-              affiliateCode={affiliateCode}
-              tipAmount={tipAmount}
-              onTipChange={(amount) => {
-                setTipAmount(amount);
-                if (onTipChange) onTipChange(amount);
-              }}
-            />
+            {/* ALWAYS ACCESSIBLE: Payment Section */}
+            <div className="bg-card rounded-lg border p-4">
+              <h3 className="text-lg font-semibold mb-4 text-primary">💳 Payment</h3>
+              <StripePaymentWrapper
+                cartItems={cartItems}
+                subtotal={discountedSubtotal}
+                deliveryFee={deliveryFee}
+                salesTax={calculatedSalesTax}
+                customerInfo={customerInfo}
+                deliveryInfo={deliveryInfo}
+                appliedDiscount={appliedDiscount}
+                onPaymentSuccess={handlePaymentSuccess}
+                isAddingToOrder={isAddingToOrder}
+                affiliateCode={affiliateCode}
+                tipAmount={tipAmount}
+                onTipChange={(amount) => {
+                  setTipAmount(amount);
+                  if (onTipChange) onTipChange(amount);
+                }}
+              />
+            </div>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -209,12 +221,23 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 appliedDiscount={appliedDiscount}
                 onUpdateQuantity={onUpdateQuantity}
               />
+              
+              {/* Confirmation Message */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-semibold text-green-800 mb-2">✅ Checkout Unlocked</h4>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• All fields are always editable</li>
+                  <li>• No confirmations or lockouts</li>
+                  <li>• Save and edit anything, anytime</li>
+                  <li>• Works on all devices</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Checkout Button */}
+      {/* Mobile Checkout Button - ALWAYS ACTIVE */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
         <div className="bg-background border-t p-4">
           <Button 
@@ -225,10 +248,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 form.dispatchEvent(submitEvent);
               }
             }}
-            className="w-full h-12 text-base font-semibold"
+            className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
             size="lg"
           >
-            Pay ${finalTotal.toFixed(2)}
+            Complete Order - ${finalTotal.toFixed(2)}
           </Button>
         </div>
       </div>
