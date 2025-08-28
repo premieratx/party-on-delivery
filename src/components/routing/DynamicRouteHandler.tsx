@@ -14,9 +14,10 @@ export const DynamicRouteHandler: React.FC = () => {
       console.log('🔍 DYNAMIC ROUTE HANDLER - Processing pathname:', pathname);
       console.log('🔍 Full location object:', location);
 
+      // Skip root path - it should never reach this handler
       if (!pathname || pathname === '') {
-        console.log('✅ Root path detected - using homepage');
-        setRouteType('homepage');
+        console.log('❌ Root path reached DynamicRouteHandler - this should not happen');
+        setRouteType('notfound');
         setLoading(false);
         return;
       }
@@ -81,10 +82,7 @@ export const DynamicRouteHandler: React.FC = () => {
     return <StandaloneCoverPage slug={pathname} />;
   }
 
-  if (routeType === 'homepage') {
-    console.log('🏠 Redirecting to active delivery app');
-    return <Navigate to="/app/party-on-delivery---concierge-" replace />;
-  }
+  // Removed homepage logic - root path should never reach here
 
   // Not found
   console.log('❌ Rendering 404 page for:', location.pathname);

@@ -139,7 +139,7 @@ const App = () => {
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
-                    {/* CRITICAL: Catch-all route for dynamic cover pages - MUST BE LAST */}
+                     {/* Cover page catch-all - only for non-root paths */}
                     <Route path="*" element={<DynamicRouteHandler />} />
                   </Routes>
                 </Suspense>
