@@ -19,7 +19,8 @@ const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const TestCheckout = lazy(() => import("./pages/TestCheckout"));
-const SearchPage = lazy(() => import("./pages/SearchPage"));
+// Deprecated - standalone search page not in use
+// const SearchPage = lazy(() => import("./pages/DeprecatedSearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
 import { AffiliateIntro } from "./pages/AffiliateIntro";
@@ -80,7 +81,8 @@ const App = () => {
                     
                     {/* Core app routes - MUST come before catch-all */}
                     <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/search" element={<SearchPage />} />
+                    {/* Deprecated - using in-app search instead */}
+                    {/* <Route path="/search" element={<SearchPage />} /> */}
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
                     {/* Standalone Cover Pages - No restrictions */}

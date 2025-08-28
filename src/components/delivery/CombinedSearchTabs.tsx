@@ -221,63 +221,27 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
+    console.log('🔍 Search icon clicked - expanding search bar');
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Focus search input after expansion with proper mobile handling
-    const focusSearchInput = () => {
-      // Try different selectors to find the search input
-      const selectors = [
-        '.mobile-search-input input',
-        'input[placeholder*="Search"]',
-        '[data-mobile-search-handler] input',
-        'input[type="text"]'
-      ];
+    // Focus the search input immediately after state update
+    setTimeout(() => {
+      const input = searchInputRef.current || 
+                   document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
       
-      for (const selector of selectors) {
-        const input = document.querySelector(selector) as HTMLInputElement;
-        if (input && input.offsetParent !== null) { // Check if visible
-          // Remove any readonly attributes that might prevent focus
-          input.removeAttribute('readonly');
-          input.removeAttribute('disabled');
-          
-          // Focus with delay for mobile
-          setTimeout(() => {
-            input.focus();
-            input.click();
-            
-            // For mobile browsers, dispatch touch events to ensure virtual keyboard
-            if ('ontouchstart' in window) {
-              const touch = new Touch({
-                identifier: Date.now(),
-                target: input,
-                clientX: 0,
-                clientY: 0,
-                radiusX: 2.5,
-                radiusY: 2.5,
-                rotationAngle: 10,
-                force: 0.5
-              });
-              
-              input.dispatchEvent(new TouchEvent('touchstart', {
-                touches: [touch],
-                targetTouches: [touch],
-                changedTouches: [touch],
-                bubbles: true
-              }));
-            }
-          }, 100);
-          
-          return true;
+      if (input) {
+        console.log('🔍 Focusing search input:', input);
+        input.focus();
+        
+        // For mobile, ensure virtual keyboard appears
+        if (window.innerWidth <= 768) {
+          input.click();
         }
+      } else {
+        console.warn('🔍 Search input not found');
       }
-      return false;
-    };
-    
-    // Try multiple times to ensure success
-    setTimeout(focusSearchInput, 50);
-    setTimeout(focusSearchInput, 200);
-    setTimeout(focusSearchInput, 400);
+    }, 100);
   };
 
   // Listen for mobile search activation from SearchIcon component
