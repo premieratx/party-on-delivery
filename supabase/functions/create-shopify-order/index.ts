@@ -327,19 +327,42 @@ serve(async (req) => {
       // Fallback if still empty - USE EVERYTHING WE HAVE
       if (!fullAddressString) {
         // Try every possible address field from metadata
-        fullAddressString = metadata.delivery_address || 
-                           metadata.address || 
-                           metadata.customer_address ||
-                           metadata.shipping_address ||
-                           JSON.stringify(metadata.delivery_address || {}) ||
-                           'FALLBACK: Raw metadata available but address parsing failed';
-        street = fullAddressString;
+        const possibleAddresses = [
+          metadata.delivery_address,
+          metadata.address, 
+          metadata.customer_address,
+          metadata.shipping_address
+        ].filter(addr => addr && addr.toString().trim());
+        
+        if (possibleAddresses.length > 0) {
+          fullAddressString = possibleAddresses[0].toString();
+        } else {
+          fullAddressString = 'CRITICAL: Address missing from metadata - check checkout form';
+        }
+        
+        // If we got a string, try to parse it for individual components
+        if (fullAddressString && fullAddressString !== 'CRITICAL: Address missing from metadata - check checkout form') {
+          street = fullAddressString; // Use full string as street at minimum
+          
+          // Try to parse comma-separated address
+          if (fullAddressString.includes(',')) {
+            const parts = fullAddressString.split(',').map(s => s.trim());
+            street = parts[0] || fullAddressString;
+            city = parts[1] || '';
+            if (parts[2]) {
+              const stateZip = parts[2].split(' ');
+              state = stateZip[0] || '';
+              zip = stateZip.slice(1).join(' ') || '';
+            }
+          }
+        }
         
         // Log this so we can see what we're missing
-        logStep("CRITICAL: Using ultimate fallback for address", {
-          attempted_address: fullAddressString,
-          all_metadata_keys: Object.keys(metadata),
-          full_metadata: metadata
+        logStep("USING FALLBACK ADDRESS LOGIC", {
+          finalAddress: fullAddressString,
+          street, city, state, zip,
+          allMetadataKeys: Object.keys(metadata),
+          possibleAddresses: possibleAddresses.map(addr => addr?.toString().substring(0, 50))
         });
       }
 
