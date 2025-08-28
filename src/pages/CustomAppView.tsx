@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useGlobalCart } from '@/components/common/GlobalCartProvider';
 
-const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
+const CustomAppView = () => {
   const { appSlug } = useParams<{ appSlug: string }>();
   const navigate = useNavigate();
   const [appConfig, setAppConfig] = useState<any>(null);
@@ -18,39 +18,7 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
   useEffect(() => {
     const loadDeliveryApp = async () => {
       try {
-        let targetSlug = appSlug;
-        
-        // If this is homepage, find the default delivery app
-        if (isHomepage) {
-          const { data: homepageApp, error: homepageError } = await supabase
-            .from('delivery_app_variations')
-            .select('app_slug, app_name')
-            .eq('is_active', true)
-            .eq('is_homepage', true)
-            .limit(1);
-            
-          if (homepageError) throw homepageError;
-          
-          if (homepageApp && homepageApp.length > 0) {
-            targetSlug = homepageApp[0].app_slug;
-          } else {
-            // Fallback to first active app if no homepage is set
-            const { data: fallbackApp, error: fallbackError } = await supabase
-              .from('delivery_app_variations')
-              .select('app_slug, app_name')
-              .eq('is_active', true)
-              .order('created_at', { ascending: true })
-              .limit(1);
-              
-            if (fallbackError || !fallbackApp || fallbackApp.length === 0) {
-              throw new Error('No active delivery apps found');
-            }
-            
-            targetSlug = fallbackApp[0].app_slug;
-          }
-        }
-
-        if (!targetSlug) {
+        if (!appSlug) {
           setError('No app specified');
           setLoading(false);
           return;
@@ -59,14 +27,14 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
         const { data: apps, error: appsError } = await supabase
           .from('delivery_app_variations')
           .select('*')
-          .eq('app_slug', targetSlug)
+          .eq('app_slug', appSlug)
           .eq('is_active', true)
           .limit(1);
 
         if (appsError) throw appsError;
 
         if (!apps || apps.length === 0) {
-          setError(`Delivery app "${targetSlug}" not found`);
+          setError(`Delivery app "${appSlug}" not found`);
           setLoading(false);
           return;
         }
@@ -82,7 +50,7 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
     };
 
     loadDeliveryApp();
-  }, [appSlug, isHomepage]);
+  }, [appSlug]);
 
   const handleCheckout = () => {
     console.log('🛒 CustomAppView: handleCheckout called - navigating to checkout');
@@ -90,7 +58,7 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
     console.log('🛒 Cart items:', cartItems);
     
     // Enhanced referrer tracking for proper "Back to Cart" functionality
-    const currentUrl = isHomepage ? '/' : `/app/${appSlug}`;
+    const currentUrl = `/app/${appSlug}`;
     try {
       localStorage.setItem('last-delivery-app-url', currentUrl);
       localStorage.setItem('deliveryAppReferrer', currentUrl);
@@ -129,7 +97,7 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
         <div className="text-center space-y-4">
           <LoadingSpinner />
           <div>
-            <h3 className="text-lg font-semibold">Loading {isHomepage ? 'Homepage' : appSlug}</h3>
+            <h3 className="text-lg font-semibold">Loading {appSlug}</h3>
             <p className="text-muted-foreground">Setting up your custom experience...</p>
           </div>
         </div>
