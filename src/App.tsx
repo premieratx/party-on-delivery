@@ -1,155 +1,39 @@
-import React, { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import RequireAdmin from "./components/admin/RequireAdmin";
-import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
-import { AuthProvider } from '@/contexts/AuthContext';
-import { RobustErrorBoundary } from '@/components/common/RobustErrorBoundary';
-import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
-import ColdStartSolution from '@/components/admin/ColdStartSolution';
-import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
-import { useMobileBrowserChrome } from '@/hooks/useMobileBrowserChrome';
-import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
-import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptimizer';
-import { MobileInputFix } from '@/components/checkout/MobileInputFix';
-import { CheckoutVerificationTool } from '@/components/checkout/CheckoutVerificationTool';
-import { UniversalCheckoutGuard } from '@/components/checkout/UniversalCheckoutGuard';
-import { CheckoutCacheBuster } from '@/components/checkout/CheckoutCacheBuster';
-const Success = lazy(() => import("./pages/Success"));
-const OrderComplete = lazy(() => import("./pages/OrderComplete"));
-const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
-const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const TestCheckout = lazy(() => import("./pages/TestCheckout"));
-// Deprecated - standalone search page not in use
-// const SearchPage = lazy(() => import("./pages/DeprecatedSearchPage"));
-
-// Affiliate pages - using direct imports since they use named exports
-import { AffiliateIntro } from "./pages/AffiliateIntro";
-import { AffiliateDashboard } from "./pages/AffiliateDashboard";  
-import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
-import { AffiliateLanding } from "./pages/AffiliateLanding";
-// AffiliateFlowLanding removed - standalone architecture
-import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
-
-// Custom app pages
-const CustomAppView = lazy(() => import("./pages/CustomAppView"));
-const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
-import PostCheckoutPage from '@/pages/PostCheckoutPage';
-
-// Cover pages
-import CoverPage from "./pages/CoverPage";
-import StandaloneCoverPage from "./components/cover-pages/StandaloneCoverPage";
-
-// Admin pages - using direct imports since they use named exports
-import AdminLogin from "./pages/AdminLogin";
-import AdminBypass from "./pages/AdminBypass";
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import React from "react";
 
 const App = () => {
-  // Global keyboard hiding on mobile scroll
-  useGlobalKeyboardHiding();
-  
-  // Global mobile browser chrome hiding
-  useMobileBrowserChrome();
+  console.log('🚀 BASIC APP LOADED');
   
   return (
-    <RobustErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <AdminAuthFix />
-              <ColdStartSolution />
-              {/* UNIVERSAL INPUT OPTIMIZERS - ACTIVE ON ALL PAGES & DEVICES */}
-              <CheckoutInputOptimizer />
-              <MobileInputFix />
-              <CheckoutVerificationTool />
-              <UniversalCheckoutGuard />
-              <CheckoutCacheBuster />
-              <GlobalCartProvider>
-                <Toaster />
-                <Sonner />
-                <div className="min-h-screen">
-                <Suspense fallback={<div />}>
-                  <Routes>
-                     {/* HOMEPAGE - Direct to delivery app */}
-                    <Route path="/" element={<Navigate to="/app/delivery" replace />} />
-                    
-                    {/* Core app routes - MUST come before catch-all */}
-                    <Route path="/checkout" element={<Checkout />} />
-                    {/* Deprecated - using in-app search instead */}
-                    {/* <Route path="/search" element={<SearchPage />} /> */}
-                    <Route path="/app/:appSlug" element={<CustomAppView />} />
-                    
-                    {/* Standalone Cover Pages - No restrictions */}
-                    <Route path="/cover/:slug" element={<StandaloneCoverPage />} />
-                    <Route path="/premier-concierge" element={<CoverPage />} />
-                    
-                    {/* Direct cover page routes to bypass dynamic handler */}
-                    <Route path="/lynn" element={<StandaloneCoverPage slug="lynn" />} />
-                    <Route path="/bachplan" element={<StandaloneCoverPage slug="bachplan" />} />
-                    <Route path="/allan" element={<StandaloneCoverPage slug="allan" />} />
-                    <Route path="/test" element={<StandaloneCoverPage slug="test" />} />
-                    <Route path="/big-tex" element={<StandaloneCoverPage slug="big-tex" />} />
-                    <Route path="/ppc" element={<StandaloneCoverPage slug="ppc" />} />
-                    <Route path="/premier-party-cruises" element={<StandaloneCoverPage slug="premier-party-cruises" />} />
-                    
-                    {/* Post-checkout pages only */}
-                    <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
-                    
-                    {/* Order completion - standardized routes */}
-                    <Route path="/success" element={<Success />} />
-                    <Route path="/order-complete" element={<OrderComplete />} />
-                    <Route path="/post-checkout/:appName" element={<CustomAppPostCheckout />} />
-                    
-                    {/* Affiliate Routes */}
-                    <Route path="/affiliate" element={<AffiliateIntro />} />
-                    <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
-                    <Route path="/affiliate/admin-login" element={<AdminLogin />} />
-                    <Route path="/affiliate/admin" element={<AdminDashboard />} />
-                    <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
-                    <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
-                    <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
-                    
-                    {/* Admin Routes - No restrictions for logged-in users */}
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/bypass" element={<AdminBypass />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/*" element={<AdminDashboard />} />
-                    
-                    {/* Customer Routes */}
-                    <Route path="/customer/login" element={<CustomerLogin />} />
-                    <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-                    
-                    {/* Test Routes */}
-                    <Route path="/test-checkout" element={<TestCheckout />} />
-                    
-                     {/* Cover page catch-all - only for non-root paths */}
-                    <Route path="*" element={<DynamicRouteHandler />} />
-                  </Routes>
-                </Suspense>
-                </div>
-              </GlobalCartProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </RobustErrorBoundary>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: 'white', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center' 
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: 'black', marginBottom: '16px' }}>
+          HOMEPAGE FIXED!
+        </h1>
+        <p style={{ fontSize: '18px', color: 'gray' }}>
+          Basic app is working
+        </p>
+        <a 
+          href="/app/delivery" 
+          style={{
+            display: 'inline-block',
+            marginTop: '16px',
+            padding: '12px 24px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            borderRadius: '8px',
+            textDecoration: 'none'
+          }}
+        >
+          Go to Delivery App
+        </a>
+      </div>
+    </div>
   );
 };
 

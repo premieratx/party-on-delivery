@@ -3,91 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="msapplication-navbutton-color" content="#000000" />
-    <meta name="apple-mobile-web-app-title" content="Party On Delivery" />
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Content Security Policy - Fixed for production -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://js.stripe.com https://*.stripe.com; img-src 'self' data: https: blob:; connect-src 'self' https: wss: https://*.supabase.co https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com; worker-src 'self' blob:;">
-    
-    <!-- Permissions Policy - Fixed for Stripe payments -->
-    <meta http-equiv="Permissions-Policy" content="payment=*, publickey-credentials-get=*, geolocation=(), camera=(), microphone=()">
-    
-    <!-- Google Fonts - CSP compliant loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700;900&family=Poppins:wght@400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Party On Delivery - Austin's Premier Party Supplies & Alcohol Delivery</title>
-    <meta name="description" content="Austin's #1 party supplies and alcohol delivery service. Same-day delivery of beer, wine, spirits, cocktails, and party essentials. Order now!" />
-    <meta name="keywords" content="party supplies austin, alcohol delivery austin, beer delivery, wine delivery, cocktail delivery, party planning austin" />
-    <link rel="canonical" href="https://order.partyondelivery.com" />
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://order.partyondelivery.com" />
-    <meta property="og:title" content="Party On Delivery - Austin's Premier Party Supplies & Alcohol Delivery" />
-    <meta property="og:description" content="Austin's #1 party supplies and alcohol delivery service. Same-day delivery available!" />
-    <meta property="og:image" content="https://order.partyondelivery.com/party-on-delivery-logo.png" />
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://order.partyondelivery.com" />
-    <meta property="twitter:title" content="Party On Delivery - Austin Party Supplies & Alcohol Delivery" />
-    <meta property="twitter:description" content="Austin's #1 party supplies and alcohol delivery service. Same-day delivery available!" />
-    <meta property="twitter:image" content="https://order.partyondelivery.com/party-on-delivery-logo.png" />
-
     <script>
-      (function() {
-        'use strict';
-        
-        // CLEAN STARTUP - REMOVE PROBLEMATIC TOKENS
-        console.log('🧹 Clean startup - removing problematic tokens');
-        
-        // Clean URL tokens immediately
-        try {
-          const url = new URL(window.location.href);
-          let urlChanged = false;
-          
-          // Remove problematic parameters
-          const problematicParams = ['__lovable_token', 'token', 'auth_token', 'session_token'];
-          problematicParams.forEach(param => {
-            if (url.searchParams.has(param)) {
-              url.searchParams.delete(param);
-              urlChanged = true;
-            }
-          });
-          
-          if (urlChanged) {
-            window.history.replaceState({}, document.title, url.toString());
-            console.log('🧹 Cleaned problematic URL parameters');
-          }
-        } catch (e) {
-          console.warn('URL cleanup failed:', e);
-        }
-        
-        // Domain redirect only
-        try {
-          var canonicalHost = 'order.partyondelivery.com';
-          var host = window.location.hostname;
-          var isLocal = host === 'localhost' || host === '127.0.0.1';
-          if (!isLocal && host !== canonicalHost) {
-            window.location.replace('https://' + canonicalHost + window.location.pathname + window.location.search + window.location.hash);
-          }
-        } catch (e) {}
-        
-        console.log('✅ Clean startup complete');
-      })();
+      console.log('🚀 HTML SCRIPT EXECUTING');
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 DOM LOADED');
+      });
     </script>
   </head>
 
   <body>
     <div id="root"></div>
+    <script>
+      console.log('🚀 BODY SCRIPT EXECUTING');
+    </script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      console.log('🚀 AFTER MODULE SCRIPT');
+    </script>
   </body>
 </html>
