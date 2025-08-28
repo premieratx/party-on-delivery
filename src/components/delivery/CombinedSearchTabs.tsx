@@ -224,23 +224,60 @@ export const CombinedSearchTabs = ({
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Force focus and keyboard on mobile
-    requestAnimationFrame(() => {
-      const searchInput = document.querySelector('.mobile-search-input') as HTMLInputElement ||
-                         searchInputRef.current ||
-                         document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
-                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+    // Focus search input after expansion with proper mobile handling
+    const focusSearchInput = () => {
+      // Try different selectors to find the search input
+      const selectors = [
+        '.mobile-search-input input',
+        'input[placeholder*="Search"]',
+        '[data-mobile-search-handler] input',
+        'input[type="text"]'
+      ];
       
-      if (searchInput) {
-        // For mobile, we need to focus and force the keyboard
-        searchInput.focus();
-        searchInput.setAttribute('readonly', 'false');
-        searchInput.removeAttribute('readonly');
-        // Trigger input event to ensure mobile keyboard
-        const event = new Event('input', { bubbles: true });
-        searchInput.dispatchEvent(event);
+      for (const selector of selectors) {
+        const input = document.querySelector(selector) as HTMLInputElement;
+        if (input && input.offsetParent !== null) { // Check if visible
+          // Remove any readonly attributes that might prevent focus
+          input.removeAttribute('readonly');
+          input.removeAttribute('disabled');
+          
+          // Focus with delay for mobile
+          setTimeout(() => {
+            input.focus();
+            input.click();
+            
+            // For mobile browsers, dispatch touch events to ensure virtual keyboard
+            if ('ontouchstart' in window) {
+              const touch = new Touch({
+                identifier: Date.now(),
+                target: input,
+                clientX: 0,
+                clientY: 0,
+                radiusX: 2.5,
+                radiusY: 2.5,
+                rotationAngle: 10,
+                force: 0.5
+              });
+              
+              input.dispatchEvent(new TouchEvent('touchstart', {
+                touches: [touch],
+                targetTouches: [touch],
+                changedTouches: [touch],
+                bubbles: true
+              }));
+            }
+          }, 100);
+          
+          return true;
+        }
       }
-    });
+      return false;
+    };
+    
+    // Try multiple times to ensure success
+    setTimeout(focusSearchInput, 50);
+    setTimeout(focusSearchInput, 200);
+    setTimeout(focusSearchInput, 400);
   };
 
   // Listen for mobile search activation from SearchIcon component
@@ -482,7 +519,7 @@ export const CombinedSearchTabs = ({
                         }}
                         onSubmit={onSearchSubmit}
                         placeholder="Search products..."
-                        className="w-full"
+                        className="w-full mobile-search-input"
                         allProducts={allProducts}
                         autoFocus={true}
                       />
