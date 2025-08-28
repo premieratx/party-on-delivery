@@ -551,16 +551,16 @@ serve(async (req) => {
           phone: customerPhone
         },
         shipping_address: {
-          first_name: firstName,
-          last_name: lastName,
+          first_name: firstName || 'Customer',
+          last_name: lastName || 'Name',
           company: `🚚 DELIVERY: ${deliveryDate} at ${deliveryTime}`,
-          address1: street,
-          address2: deliveryInstructions ? `📋 Instructions: ${deliveryInstructions}` : undefined,
-          city: city,
-          province: state,
+          address1: street || fullAddressString || 'Address not provided',
+          address2: deliveryInstructions || '',
+          city: city || 'City not provided',
+          province: state || 'TX',
           country: "US",
-          zip: zip,
-          phone: customerPhone
+          zip: zip || '00000',
+          phone: customerPhone || ''
         },
         email: customerEmail,
         phone: customerPhone,
