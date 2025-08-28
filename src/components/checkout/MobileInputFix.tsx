@@ -133,47 +133,33 @@ export const MobileInputFix = () => {
     // Apply fixes immediately
     enhanceMobileInputs();
 
-    // CRITICAL: Comprehensive input protection system
-    const protectAllInputs = () => {
-      // Find ALL inputs in the checkout area
+    // CRITICAL: Enhanced input accessibility (NO cloning to preserve React handlers)
+    const enhanceInputAccessibility = () => {
       const allInputs = document.querySelectorAll('input, textarea, select');
       
       allInputs.forEach((input) => {
-        // Remove any conflicting event listeners
-        const newInput = input.cloneNode(true) as HTMLElement;
-        input.parentNode?.replaceChild(newInput, input);
+        const element = input as HTMLElement;
         
-        // Add protected event handlers
-        newInput.addEventListener('touchstart', (e) => {
-          e.stopPropagation();
-          console.log('🔒 Input protected from touch interference');
-        }, { passive: true });
+        // Ensure input is always interactive
+        element.style.pointerEvents = 'auto';
+        element.style.touchAction = 'manipulation';
+        element.style.userSelect = 'text';
+        element.style.webkitUserSelect = 'text';
         
-        newInput.addEventListener('focus', (e) => {
-          e.stopPropagation();
-          console.log('🎯 Input focus protected');
-          
-          // Ensure input is visible and not blocked
-          newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
+        // Remove any readonly attributes that might block interaction
+        element.removeAttribute('readonly');
+        (element as HTMLInputElement).readOnly = false;
         
-        newInput.addEventListener('blur', (e) => {
-          console.log('👋 Input blur handled');
-        });
-        
-        // Prevent any drag/drop interference
-        newInput.addEventListener('dragstart', (e) => {
-          e.preventDefault();
-        });
+        console.log('✅ Input enhanced for accessibility:', element.getAttribute('placeholder') || element.tagName);
       });
     };
 
-    // Apply comprehensive protection
-    setTimeout(protectAllInputs, 100);
+    // Apply enhanced accessibility
+    setTimeout(enhanceInputAccessibility, 100);
     
-    // Re-apply protection when new elements are added
+    // Re-apply enhancements when new elements are added
     const observer = new MutationObserver(() => {
-      setTimeout(protectAllInputs, 50);
+      setTimeout(enhanceInputAccessibility, 50);
     });
     
     observer.observe(document.body, {

@@ -105,19 +105,22 @@ export const CheckoutInputOptimizer = () => {
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
         
-        /* CRITICAL: Container fixes to never block inputs */
+        /* CRITICAL: Ensure ALL containers allow input interaction */
         .checkout-form, 
         [data-checkout-form],
         .space-y-3, .space-y-4,
         .grid, .flex, .relative {
-          pointer-events: none !important;
+          pointer-events: auto !important;
         }
         
-        .checkout-form > *,
-        [data-checkout-form] > *,
-        .space-y-3 > *, .space-y-4 > *,
-        .grid > *, .flex > *, .relative > * {
+        .checkout-form input,
+        .checkout-form textarea,
+        .checkout-form select,
+        [data-checkout-form] input,
+        [data-checkout-form] textarea,
+        [data-checkout-form] select {
           pointer-events: auto !important;
+          touch-action: manipulation !important;
         }
         
         /* CRITICAL: ALWAYS allow buttons and search icons to work */
