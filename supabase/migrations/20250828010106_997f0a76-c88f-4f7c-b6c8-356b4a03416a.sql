@@ -1,0 +1,1 @@
+UPDATE admin_users SET email = 'brian@premierpartycruises.com' WHERE email = 'brian@partyondelivery.com';
