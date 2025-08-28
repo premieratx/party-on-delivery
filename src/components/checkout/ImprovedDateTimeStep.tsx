@@ -114,48 +114,9 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
     }
   };
 
-  const handleEdit = () => {
-    // Allow editing by resetting confirmation state via parent
-    if (onEdit) {
-      onEdit();
-    }
-  };
-
   const isDateTimeComplete = selectedDate && deliveryInfo.timeSlot;
 
-  if (isConfirmed && isDateTimeComplete) {
-    return (
-      <Card className="border-green-200 bg-green-50/30">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            Delivery Date & Time
-          </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEdit}
-            className="flex items-center gap-2"
-          >
-            <Edit2 className="w-3 h-3" />
-            Edit
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-sm font-medium">
-              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-              <span>{format(selectedDate!, 'EEEE, MMMM d, yyyy')}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm font-medium">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <span>{deliveryInfo.timeSlot}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // ALWAYS show editable form - never lock into confirmation view
 
   return (
     <Card>

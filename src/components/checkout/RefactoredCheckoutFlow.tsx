@@ -333,7 +333,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               onDeliveryInfoChange={onDeliveryInfoChange}
               onConfirm={handleDateTimeConfirm}
               onEdit={() => setConfirmedDateTime(false)}
-              isConfirmed={confirmedDateTime}
+              isConfirmed={false}
             />
 
             {/* Address & Customer Info Step */}
@@ -347,7 +347,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                     setConfirmedAddress(false);
                     setConfirmedCustomer(false);
                   }}
-                  isConfirmed={confirmedAddress}
+                  isConfirmed={false}
                 />
                 
                 {/* Customer Info - shown inline with address */}
@@ -359,7 +359,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                     onEdit={() => {
                       setConfirmedCustomer(false);
                     }}
-                    isConfirmed={confirmedCustomer}
+                    isConfirmed={false}
                   />
                 )}
               </>
