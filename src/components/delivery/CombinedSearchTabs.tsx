@@ -459,14 +459,14 @@ export const CombinedSearchTabs = ({
         </div>
 
         {/* Bottom Row - Search/Cart/Checkout Actions (Always visible) */}
-        <div className="container mx-auto px-4 py-2 bg-background border-b" data-mobile-search-handler>
-          <div className="flex items-center justify-center gap-2">
+        <div className="container mx-auto px-4 py-2 bg-background border-b relative z-30" data-mobile-search-handler>
+          <div className="flex items-center justify-center gap-2 relative">
             {/* Search Section - Expands when active */}
             {showSearch && (
-              <div className={`flex items-center transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'flex-1 mr-2' : 'flex-shrink-0'}`}>
+              <div className={`flex items-center transition-all duration-300 relative z-40 ${isSearchExpanded || isSearchActive ? 'flex-1 mr-2' : 'flex-shrink-0'}`}>
                 {isSearchExpanded || isSearchActive ? (
                   /* Expanded Search Bar - Full width */
-                  <div className="flex items-center w-full">
+                  <div className="flex items-center w-full relative z-50">
                     <div className="relative flex-1">
                       <AdvancedSearchBar
                         value={searchQuery}
@@ -497,8 +497,13 @@ export const CombinedSearchTabs = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleSearchIconClick}
-                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
+                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors relative z-50 touch-manipulation"
                     title="Search"
+                    style={{
+                      pointerEvents: 'auto',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
                   >
                     <Search className="w-4 h-4" />
                   </Button>

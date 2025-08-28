@@ -54,8 +54,12 @@ export const SearchIcon = ({ size = "md", variant = "mobile", className = "" }: 
       onClick={handleClick}
       variant="outline"
       size="icon"
-      className={`${getButtonSize()} ${getButtonStyle()} ${className}`}
+      className={`${getButtonSize()} ${getButtonStyle()} ${className} relative z-40 touch-manipulation`}
       aria-label="Search products"
+      style={{
+        pointerEvents: 'auto',
+        touchAction: 'manipulation'
+      }}
     >
       <Search className={getIconSize()} />
     </Button>
