@@ -20,7 +20,6 @@ export const Checkout = () => {
   
   console.log('🔄 Checkout page rendering, cart items:', cartItems.length);
   
-  const [loading, setLoading] = useState(true);
   const [deliveryInfo, setDeliveryInfo] = useState<LocalDeliveryInfo>({
     date: null,
     timeSlot: '',
@@ -31,26 +30,11 @@ export const Checkout = () => {
   // Add discount state management
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
 
-  useEffect(() => {
-    // No need to load separate cart - use unified cart directly
-    setLoading(false);
-  }, []);
-
+  // Remove loading state - not needed
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const totalAmount = cartItems.reduce((sum, item) => sum + (applyMarkup(item.price) * item.quantity), 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pb-20">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading checkout...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (cartItems.length === 0) {
     return (
