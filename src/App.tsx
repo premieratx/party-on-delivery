@@ -13,11 +13,6 @@ import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
 import { useMobileBrowserChrome } from '@/hooks/useMobileBrowserChrome';
 import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
-import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptimizer';
-import { MobileInputFix } from '@/components/checkout/MobileInputFix';
-import { CheckoutVerificationTool } from '@/components/checkout/CheckoutVerificationTool';
-import { UniversalCheckoutGuard } from '@/components/checkout/UniversalCheckoutGuard';
-import { CheckoutCacheBuster } from '@/components/checkout/CheckoutCacheBuster';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -75,12 +70,7 @@ const App = () => {
             <AuthProvider>
               <AdminAuthFix />
               <ColdStartSolution />
-              {/* UNIVERSAL INPUT OPTIMIZERS - ACTIVE ON ALL PAGES & DEVICES */}
-              <CheckoutInputOptimizer />
-              <MobileInputFix />
-              <CheckoutVerificationTool />
-              <UniversalCheckoutGuard />
-              <CheckoutCacheBuster />
+              {/* CHECKOUT OPTIMIZERS - Only active on checkout pages */}
               <GlobalCartProvider>
                 <Toaster />
                 <Sonner />

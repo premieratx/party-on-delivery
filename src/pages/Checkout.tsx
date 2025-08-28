@@ -6,6 +6,11 @@ import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { RefactoredCheckoutFlow } from "@/components/checkout/RefactoredCheckoutFlow";
 import { CheckoutIsolation } from "@/components/checkout/CheckoutIsolation";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
+import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptimizer';
+import { MobileInputFix } from '@/components/checkout/MobileInputFix';
+import { CheckoutVerificationTool } from '@/components/checkout/CheckoutVerificationTool';
+import { UniversalCheckoutGuard } from '@/components/checkout/UniversalCheckoutGuard';
+import { CheckoutCacheBuster } from '@/components/checkout/CheckoutCacheBuster';
 
 interface LocalDeliveryInfo {
   date: Date | null;
@@ -90,6 +95,13 @@ export const Checkout = () => {
 
   return (
     <CheckoutIsolation>
+      {/* Checkout-specific debugging components */}
+      <CheckoutInputOptimizer />
+      <MobileInputFix />
+      <CheckoutVerificationTool />
+      <UniversalCheckoutGuard />
+      <CheckoutCacheBuster />
+      
       {/* Mobile: Ensure checkout starts at very top */}
       <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-safe safe-area-top">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-6 max-w-4xl">
