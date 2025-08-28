@@ -35,15 +35,24 @@ interface RecentOrder {
   total_amount: number;
   subtotal?: number;
   delivery_fee?: number;
+  tip_amount?: number;
+  sales_tax?: number;
+  promo_code?: string;
+  discount_amount?: number;
+  payment_method?: string;
   status: string;
   delivery_date?: string;
   delivery_time?: string;
   delivery_address?: any;
   line_items: OrderItem[];
   created_at: string;
+  updated_at?: string;
+  delivered_at?: string;
   affiliate_code?: string;
   customer_phone?: string;
   special_instructions?: string;
+  shopify_order_id?: string;
+  payment_intent_id?: string;
 }
 
 interface RecentOrdersFeedProps {
@@ -312,8 +321,9 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
                       </div>
                     )}
 
-                    {/* Order Summary */}
+                    {/* Comprehensive Order Summary */}
                     <div className="pt-2 border-t">
+                      <h5 className="font-medium text-sm mb-2">Order Details</h5>
                       <div className="space-y-1 text-sm">
                         {order.subtotal && (
                           <div className="flex justify-between">
@@ -323,13 +333,59 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
                         )}
                         {order.delivery_fee !== undefined && (
                           <div className="flex justify-between">
-                            <span>Delivery:</span>
+                            <span>Delivery Fee:</span>
                             <span>{order.delivery_fee === 0 ? 'FREE' : formatCurrency(order.delivery_fee)}</span>
+                          </div>
+                        )}
+                        {order.tip_amount && order.tip_amount > 0 && (
+                          <div className="flex justify-between">
+                            <span>Tip:</span>
+                            <span>{formatCurrency(order.tip_amount)}</span>
+                          </div>
+                        )}
+                        {order.sales_tax && order.sales_tax > 0 && (
+                          <div className="flex justify-between">
+                            <span>Sales Tax:</span>
+                            <span>{formatCurrency(order.sales_tax)}</span>
+                          </div>
+                        )}
+                        {order.promo_code && (
+                          <div className="flex justify-between text-green-600">
+                            <span>Promo Code ({order.promo_code}):</span>
+                            <span>-{formatCurrency(order.discount_amount || 0)}</span>
                           </div>
                         )}
                         <div className="flex justify-between font-medium border-t pt-1">
                           <span>Total:</span>
                           <span>{formatCurrency(order.total_amount)}</span>
+                        </div>
+                        
+                        {/* Payment & Order Info */}
+                        <div className="pt-2 border-t space-y-1 text-xs text-muted-foreground">
+                          {order.payment_method && (
+                            <div className="flex justify-between">
+                              <span>Payment Method:</span>
+                              <span>{order.payment_method}</span>
+                            </div>
+                          )}
+                          {order.shopify_order_id && (
+                            <div className="flex justify-between">
+                              <span>Shopify ID:</span>
+                              <span>{order.shopify_order_id}</span>
+                            </div>
+                          )}
+                          {order.delivered_at && (
+                            <div className="flex justify-between">
+                              <span>Delivered:</span>
+                              <span>{format(new Date(order.delivered_at), 'MMM d, h:mm a')}</span>
+                            </div>
+                          )}
+                          {order.special_instructions && (
+                            <div className="pt-1">
+                              <span className="block font-medium">Special Instructions:</span>
+                              <span className="text-xs italic">{order.special_instructions}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -89,11 +89,11 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         onClick={onClose}
       />
       
-      {/* Cart Sidebar - Fixed positioning with proper flex layout */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate">
+      {/* Cart Sidebar - Full viewport overlay with proper flex layout */}
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden">
         
-        {/* Sticky Header */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 z-10">
+        {/* Sticky Header - Always at top of viewport */}
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 sticky top-0 z-20">
           <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
             <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline">Your Cart</span>
@@ -122,18 +122,20 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Scrollable Content - Complete Scroll Isolation */}
+        {/* Enhanced Scrollable Content - Independent viewport scrolling */}
         <div 
           ref={scrollContainerRef} 
-          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
+          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
           style={{ 
             /* Complete scroll isolation from main page */
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
             position: 'relative',
-            zIndex: 1,
             /* Ensure this container creates its own scroll context */
-            willChange: 'scroll-position'
+            willChange: 'scroll-position',
+            /* Ensure content takes full available space */
+            minHeight: 0,
+            height: '100%'
           }}
         >
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">{/* Removed bottom padding since checkout button is now separate */}
@@ -233,7 +235,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
             )}
           </div>
 
-          {/* Order Summary - Scrollable with content */}
+          {/* Order Summary - In scrollable content */}
           {cartItems.length > 0 && (
             <div className="border-t p-4 bg-muted/30">
               <h3 className="font-semibold mb-3">Order Summary</h3>
@@ -255,24 +257,26 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                   <span>Total</span>
                   <span>${formatPrice(finalTotal)}</span>
                 </div>
-                
-                {/* Checkout Button - Positioned directly below Total */}
-                <div className="pt-4">
-                  <Button 
-                    className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
-                    size="lg" 
-                    onClick={handleCheckout}
-                  >
-                    <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    <span className="hidden sm:inline">Proceed to Checkout - </span>
-                    <span className="sm:hidden">Checkout - </span>
-                    ${formatPrice(finalTotal)}
-                  </Button>
-                </div>
               </div>
             </div>
           )}
         </div>
+        
+        {/* Sticky Footer - Checkout Button always visible at bottom */}
+        {cartItems.length > 0 && (
+          <div className="border-t bg-background p-4 flex-shrink-0 sticky bottom-0 z-20">
+            <Button 
+              className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
+              size="lg" 
+              onClick={handleCheckout}
+            >
+              <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="hidden sm:inline">Proceed to Checkout - </span>
+              <span className="sm:hidden">Checkout - </span>
+              ${formatPrice(finalTotal)}
+            </Button>
+          </div>
+        )}
         
       </div>
     </RobustCartErrorBoundary>
