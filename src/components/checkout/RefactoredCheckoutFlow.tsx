@@ -54,15 +54,66 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   // COMPLETELY UNLOCKED - NO CONFIRMATIONS, NO LOCKS, NO RESTRICTIONS
   const [tipAmount, setTipAmount] = useState(0);
 
+  // LOAD SAVED DATA ON MOUNT - EVERYONE CAN SAVE AND LOAD
+  useEffect(() => {
+    try {
+      // Load saved customer info
+      const savedCustomer = localStorage.getItem('partyondelivery_customer');
+      if (savedCustomer) {
+        const parsedCustomer = JSON.parse(savedCustomer);
+        setCustomerInfo(parsedCustomer);
+        console.log('✅ Loaded saved customer info:', parsedCustomer);
+      }
+
+      // Load saved address info
+      const savedAddress = localStorage.getItem('partyondelivery_address');
+      if (savedAddress) {
+        const parsedAddress = JSON.parse(savedAddress);
+        setAddressInfo(parsedAddress);
+        console.log('✅ Loaded saved address info:', parsedAddress);
+      }
+
+      // Load saved delivery info
+      const savedDelivery = localStorage.getItem('partyondelivery_delivery_info');
+      if (savedDelivery) {
+        const parsedDelivery = JSON.parse(savedDelivery);
+        if (parsedDelivery.date && parsedDelivery.timeSlot) {
+          onDeliveryInfoChange({
+            ...deliveryInfo,
+            date: new Date(parsedDelivery.date),
+            timeSlot: parsedDelivery.timeSlot,
+            address: parsedDelivery.address || deliveryInfo.address,
+            instructions: parsedDelivery.instructions || deliveryInfo.instructions
+          });
+          console.log('✅ Loaded saved delivery info:', parsedDelivery);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load saved checkout data:', error);
+    }
+  }, []);
+
   // Update delivery info when address changes - ALWAYS ALLOWED
   useEffect(() => {
     if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
       const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
-      onDeliveryInfoChange({
+      const updatedDeliveryInfo = {
         ...deliveryInfo,
         address: fullAddress,
         instructions: addressInfo.instructions || ''
-      });
+      };
+      onDeliveryInfoChange(updatedDeliveryInfo);
+
+      // SAVE IMMEDIATELY - NO RESTRICTIONS
+      try {
+        localStorage.setItem('partyondelivery_delivery_info', JSON.stringify({
+          ...updatedDeliveryInfo,
+          date: updatedDeliveryInfo.date ? updatedDeliveryInfo.date.toISOString() : null
+        }));
+        console.log('✅ Auto-saved delivery info with address');
+      } catch (error) {
+        console.warn('Failed to auto-save delivery info:', error);
+      }
     }
   }, [addressInfo, deliveryInfo, onDeliveryInfoChange]);
 
@@ -145,33 +196,33 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             
             {/* ALWAYS EDITABLE: Date & Time Step */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">📅 Delivery Date & Time</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">📅 Delivery Date & Time - Auto-Saves</h3>
               <ImprovedDateTimeStep
                 deliveryInfo={deliveryInfo}
                 onDeliveryInfoChange={onDeliveryInfoChange}
-                onConfirm={() => {}} // No confirmation needed
+                onConfirm={() => toast({ title: "✅ Date & Time Saved!", description: "Your delivery preferences have been saved." })}
                 isConfirmed={false} // NEVER confirmed - always editable
               />
             </div>
 
             {/* ALWAYS EDITABLE: Address Step */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">🏠 Delivery Address</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">🏠 Delivery Address - Auto-Saves</h3>
               <AddressStep
                 addressInfo={addressInfo}
                 setAddressInfo={setAddressInfo}
-                onConfirm={() => {}} // No confirmation needed
+                onConfirm={() => toast({ title: "✅ Address Saved!", description: "Your delivery address has been saved." })}
                 isConfirmed={false} // NEVER confirmed - always editable
               />
             </div>
 
             {/* ALWAYS EDITABLE: Customer Info Step */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">👤 Your Information</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">👤 Your Information - Auto-Saves</h3>
               <CustomerInfoStep
                 customerInfo={customerInfo}
                 setCustomerInfo={setCustomerInfo}
-                onConfirm={() => {}} // No confirmation needed
+                onConfirm={() => toast({ title: "✅ Contact Info Saved!", description: "Your contact information has been saved." })}
                 isConfirmed={false} // NEVER confirmed - always editable
               />
             </div>
@@ -224,12 +275,13 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               
               {/* Confirmation Message */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2">✅ Checkout Unlocked</h4>
+                <h4 className="font-semibold text-green-800 mb-2">✅ Auto-Save Active</h4>
                 <ul className="text-sm text-green-700 space-y-1">
-                  <li>• All fields are always editable</li>
+                  <li>• All your info is saved automatically</li>
                   <li>• No confirmations or lockouts</li>
-                  <li>• Save and edit anything, anytime</li>
+                  <li>• Edit anything, anytime</li>
                   <li>• Works on all devices</li>
+                  <li>• Data persists between sessions</li>
                 </ul>
               </div>
             </div>
