@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    logStep("=== CREATE SHOPIFY ORDER STARTED ===");
+    logStep("=== CREATE SHOPIFY ORDER STARTED (FIXED VERSION) ===");
 
     const body = await req.json();
     logStep("Request received", { 
@@ -127,7 +127,6 @@ serve(async (req) => {
           
         if (!error && orderDraft?.draft_data) {
           cartItems = orderDraft.draft_data.cart_items || [];
-          // CRITICAL FIX: Don't double-convert amounts - they're already in dollars in draft_data
           orderAmounts = {
             subtotal: orderDraft.draft_data.subtotal || 0,
             delivery_fee: orderDraft.draft_data.delivery_fee || 0,
@@ -135,7 +134,7 @@ serve(async (req) => {
             tip_amount: orderDraft.draft_data.tip_amount || 0,
             total_amount: orderDraft.total_amount || 0
           };
-          logStep("Order data loaded from database (FIXED DECIMAL CONVERSION)", { 
+          logStep("Order data loaded from database", { 
             itemCount: cartItems.length,
             totalAmount: orderAmounts.total_amount,
             deliveryFee: orderAmounts.delivery_fee,
@@ -169,7 +168,6 @@ serve(async (req) => {
 
     // Get order amounts (fallback to metadata if not from database)
     if (!orderAmounts.total_amount) {
-      // CRITICAL FIX: Properly parse and round tip amount from metadata
       const rawTipAmount = parseFloat(metadata.tip_amount || '0');
       orderAmounts = {
         subtotal: parseFloat(metadata.subtotal || '0'),
@@ -184,7 +182,7 @@ serve(async (req) => {
       });
     }
 
-    // CRITICAL FIX: Check for duplicate orders before creating
+    // Check for duplicate orders before creating
     try {
       const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
         auth: { autoRefreshToken: false, persistSession: false }
@@ -223,14 +221,12 @@ serve(async (req) => {
       logStep("WARNING: Could not check for duplicates", { error: duplicateCheckError.message });
     }
 
-    // FIX: Don't recalculate total - use the stored total_amount directly
-    // The individual breakdown amounts are often corrupted/wrong, but total_amount is correct
-    const calculatedTotal = orderAmounts.total_amount;
-    const totalDifference = Math.abs(paymentAmount - calculatedTotal);
+    // Validate payment amount
+    const totalDifference = Math.abs(paymentAmount - orderAmounts.total_amount);
     
     logStep("Using stored total_amount directly", {
       paymentAmount,
-      storedTotalAmount: calculatedTotal,
+      storedTotalAmount: orderAmounts.total_amount,
       difference: totalDifference,
       breakdown: orderAmounts
     });
@@ -238,16 +234,16 @@ serve(async (req) => {
     if (totalDifference > 0.02) {
       logStep("ERROR: Amount mismatch", {
         paymentAmount,
-        calculatedTotal,
+        calculatedTotal: orderAmounts.total_amount,
         difference: totalDifference,
         breakdown: orderAmounts
       });
-      throw new Error(`Payment amount mismatch: Payment $${paymentAmount} vs Order $${calculatedTotal}`);
+      throw new Error(`Payment amount mismatch: Payment $${paymentAmount} vs Order $${orderAmounts.total_amount}`);
     }
 
     logStep("Amount validation passed", { 
       paymentAmount,
-      calculatedTotal,
+      calculatedTotal: orderAmounts.total_amount,
       difference: totalDifference
     });
 
@@ -259,15 +255,13 @@ serve(async (req) => {
     const deliveryTime = metadata.delivery_time || '';
     const deliveryInstructions = metadata.delivery_instructions || '';
 
-    // Parse delivery address - handle both string and JSON formats
-    let deliveryAddressObj = {};
+    // IMPROVED ADDRESS PARSING - Enhanced for Shopify standards
     let street = '';
     let city = '';
     let state = '';
     let zip = '';
     let fullAddressString = '';
 
-    // First, log what we received
     logStep("Raw delivery address data received", {
       delivery_address: metadata.delivery_address,
       delivery_date: deliveryDate,
@@ -276,36 +270,44 @@ serve(async (req) => {
     });
 
     try {
-      // Handle different address formats
       if (metadata.delivery_address) {
         if (typeof metadata.delivery_address === 'object') {
           // Already an object
-          deliveryAddressObj = metadata.delivery_address;
-          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || deliveryAddressObj.address || '';
-          city = deliveryAddressObj.city || '';
-          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
-          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
+          const addr = metadata.delivery_address;
+          street = addr.street || addr.address1 || addr.line1 || addr.address || '';
+          city = addr.city || '';
+          state = addr.state || addr.province || '';
+          zip = addr.zip || addr.postal_code || addr.zipCode || '';
         } else if (typeof metadata.delivery_address === 'string' && metadata.delivery_address.trim().startsWith('{')) {
           // JSON string
-          deliveryAddressObj = JSON.parse(metadata.delivery_address);
-          street = deliveryAddressObj.street || deliveryAddressObj.address1 || deliveryAddressObj.line1 || deliveryAddressObj.address || '';
-          city = deliveryAddressObj.city || '';
-          state = deliveryAddressObj.state || deliveryAddressObj.province || '';
-          zip = deliveryAddressObj.zip || deliveryAddressObj.postal_code || deliveryAddressObj.zipCode || '';
+          const addr = JSON.parse(metadata.delivery_address);
+          street = addr.street || addr.address1 || addr.line1 || addr.address || '';
+          city = addr.city || '';
+          state = addr.state || addr.province || '';
+          zip = addr.zip || addr.postal_code || addr.zipCode || '';
         } else {
-          // Plain string address
+          // Plain string address - Enhanced parsing
           const deliveryAddress = metadata.delivery_address.toString().trim();
           fullAddressString = deliveryAddress;
           
-          // Try to parse if it contains commas
+          // Better comma-based parsing
           if (deliveryAddress.includes(',')) {
             const addressParts = deliveryAddress.split(',').map(p => p.trim());
             street = addressParts[0] || '';
             city = addressParts[1] || '';
-            const stateZip = addressParts[2] || '';
-            const stateParts = stateZip.split(' ');
-            state = stateParts[0] || '';
-            zip = stateParts.slice(1).join(' ') || '';
+            
+            // Handle "City, State ZIP" format
+            const stateZipPart = addressParts[2] || '';
+            const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+            if (stateZipMatch) {
+              state = stateZipMatch[1];
+              zip = stateZipMatch[2];
+            } else {
+              // Fallback parsing
+              const parts = stateZipPart.split(' ');
+              state = parts[0] || '';
+              zip = parts.slice(1).join(' ') || '';
+            }
           } else {
             // Use entire string as street if no structure
             street = deliveryAddress;
@@ -318,28 +320,23 @@ serve(async (req) => {
           fullAddressString = parts.join(', ');
         }
 
-        // Fallback to ensure we always have something
+        // Final fallback
         if (!fullAddressString) {
           fullAddressString = metadata.delivery_address.toString();
         }
       }
 
-      // Fallback if still empty - USE EVERYTHING WE HAVE
+      // Ultimate fallback if still empty
       if (!fullAddressString) {
-        // Try every possible address field from metadata
         fullAddressString = metadata.delivery_address || 
                            metadata.address || 
                            metadata.customer_address ||
-                           metadata.shipping_address ||
-                           JSON.stringify(metadata.delivery_address || {}) ||
-                           'FALLBACK: Raw metadata available but address parsing failed';
+                           'Address parsing failed - check metadata';
         street = fullAddressString;
         
-        // Log this so we can see what we're missing
         logStep("CRITICAL: Using ultimate fallback for address", {
           attempted_address: fullAddressString,
-          all_metadata_keys: Object.keys(metadata),
-          full_metadata: metadata
+          all_metadata_keys: Object.keys(metadata)
         });
       }
 
@@ -348,25 +345,17 @@ serve(async (req) => {
         error: addressParseError.message,
         rawAddress: metadata.delivery_address 
       });
-      // Robust fallback
       fullAddressString = metadata.delivery_address ? metadata.delivery_address.toString() : 'Address parsing failed';
       street = fullAddressString;
     }
 
-    logStep("Address parsing completed", {
-      customerName,
-      customerEmail,
-      deliveryDate,
-      deliveryTime,
-      itemCount: cartItems.length,
-      finalAddressData: { 
-        street, 
-        city, 
-        state, 
-        zip, 
-        fullAddressString,
-        willGoToShopifyAs: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '') 
-      }
+    logStep("ENHANCED ADDRESS PARSING COMPLETED", {
+      street, 
+      city, 
+      state, 
+      zip, 
+      fullAddressString,
+      willDisplayInShopifyAs: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '') 
     });
 
     // Create customer in Shopify
@@ -452,9 +441,8 @@ serve(async (req) => {
               phone: customerPhone,
               default: true
             }],
-            // Ensure customer can receive marketing emails
-            accepts_marketing: true,
-            marketing_opt_in_level: "single_opt_in"
+            verified_email: false,
+            accepts_marketing: false
           }
         };
 
@@ -473,36 +461,37 @@ serve(async (req) => {
         if (customerResponse.ok) {
           const customerResult = await customerResponse.json();
           shopifyCustomerId = customerResult.customer.id;
-          logStep("✅ New Shopify customer created with contact info", { 
-            customerId: shopifyCustomerId,
-            email: customerEmail,
-            phone: customerPhone
-          });
+          logStep("Created new Shopify customer", { customerId: shopifyCustomerId });
         } else {
           const errorText = await customerResponse.text();
-          logStep("⚠️ Customer creation failed, order will continue without customer link", { 
-            status: customerResponse.status,
-            error: errorText
-          });
+          logStep("Customer creation failed", { error: errorText });
         }
       } catch (customerError) {
-        logStep("⚠️ Customer creation error, order will continue", { error: customerError.message });
+        logStep("Customer creation error", { error: customerError.message });
       }
     }
 
-    // Prepare line items for Shopify - MUST include ALL payment components as separate line items
-    const lineItems = [];
+    // SHOPIFY STANDARD ORDER STRUCTURE - Following Official Documentation
     
-    // Add actual product line items first
-    for (const item of cartItems) {
-      const lineItem: any = {
-        title: item.title || item.name || 'Unknown Item',
-        price: item.price.toString(),
-        quantity: item.quantity || 1,
+    // Build line items - ONLY ACTUAL PRODUCTS + DRIVER TIP
+    const lineItems = [];
+    let productSubtotal = 0;
+    
+    cartItems.forEach((item) => {
+      const itemPrice = item.price || 0;
+      const itemQuantity = item.quantity || 1;
+      const itemTotal = itemPrice * itemQuantity;
+      productSubtotal += itemTotal;
+      
+      const lineItem = {
+        title: item.title || item.name,
+        price: itemPrice.toFixed(2),
+        quantity: itemQuantity,
         requires_shipping: true,
-        taxable: true
+        taxable: true,
+        fulfillment_service: "manual"
       };
-
+      
       // Handle Shopify product/variant IDs (clean up GIDs)
       if (item.id && typeof item.id === 'string') {
         if (item.id.includes('gid://shopify/Product/')) {
@@ -512,7 +501,7 @@ serve(async (req) => {
           }
         }
       }
-
+      
       if (item.variant && typeof item.variant === 'string') {
         if (item.variant.includes('gid://shopify/ProductVariant/')) {
           const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
@@ -522,62 +511,79 @@ serve(async (req) => {
           }
         }
       }
-
+      
       lineItems.push(lineItem);
-    }
+    });
 
-    // CRITICAL FIX: Add delivery fee as line item (required for accurate Shopify totals)
-    if (orderAmounts.delivery_fee > 0) {
-      lineItems.push({
-        title: "Delivery Fee",
-        price: orderAmounts.delivery_fee.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-
-    // CRITICAL FIX: Add driver tip as line item (required for accurate Shopify totals)
-    if (orderAmounts.tip_amount > 0) {
+    // Add driver tip as line item (this is custom, not standard shipping/tax)
+    const tipAmountInDollars = orderAmounts.tip_amount || 0;
+    if (tipAmountInDollars > 0) {
       lineItems.push({
         title: "Driver Tip",
-        price: orderAmounts.tip_amount.toFixed(2),
+        price: tipAmountInDollars.toFixed(2),
         quantity: 1,
         requires_shipping: false,
         taxable: false
       });
     }
 
-    // CRITICAL FIX: Add sales tax as line item (required for accurate Shopify totals)
+    // Build shipping lines (Shopify standard for delivery fees)
+    const shippingLines = [];
+    const deliveryFeeInDollars = orderAmounts.delivery_fee || 0;
+    if (deliveryFeeInDollars > 0) {
+      shippingLines.push({
+        title: "Delivery Service",
+        price: deliveryFeeInDollars.toFixed(2),
+        code: "DELIVERY",
+        source: "delivery_app"
+      });
+    }
+
+    // Build tax lines (Shopify standard for taxes)  
+    const taxLines = [];
     if (orderAmounts.sales_tax > 0) {
-      lineItems.push({
+      taxLines.push({
         title: "Sales Tax",
         price: orderAmounts.sales_tax.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
+        rate: orderAmounts.sales_tax / (productSubtotal || 1), // Calculate actual rate
+        price_set: {
+          shop_money: {
+            amount: orderAmounts.sales_tax.toFixed(2),
+            currency_code: "USD"
+          }
+        }
       });
     }
 
-    logStep("All line items prepared (PRODUCTS + FEES + TIP + TAX)", { 
-      totalItemCount: lineItems.length,
+    logStep("SHOPIFY STANDARD STRUCTURE PREPARED", { 
+      lineItemCount: lineItems.length,
       productCount: cartItems.length,
-      deliveryFee: orderAmounts.delivery_fee,
-      tipAmount: orderAmounts.tip_amount,
-      salesTax: orderAmounts.sales_tax,
-      calculatedTotal: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0)
+      productSubtotal: productSubtotal.toFixed(2),
+      shippingLineCount: shippingLines.length,
+      taxLineCount: taxLines.length,
+      deliveryFee: deliveryFeeInDollars,
+      tipAmount: tipAmountInDollars,
+      salesTax: orderAmounts.sales_tax
     });
 
     // Extract affiliate code if present
     const affiliateCode = metadata.affiliate_code || '';
 
-    // Create Shopify order with PROPER structure following documentation standards
+    // Create Shopify order with OFFICIAL SHOPIFY STRUCTURE
     const orderData = {
       order: {
-        // ALL payment components as line items (products + delivery fee + tip + tax)
+        // PRODUCTS + TIP ONLY in line_items (Shopify standard)
         line_items: lineItems,
         
+        // DELIVERY FEE in shipping_lines (Shopify standard)
+        shipping_lines: shippingLines,
+        
+        // SALES TAX in tax_lines (Shopify standard) 
+        tax_lines: taxLines,
+        
         customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
+        
+        // Billing address (customer's billing info)
         billing_address: {
           first_name: firstName,
           last_name: lastName,
@@ -588,6 +594,8 @@ serve(async (req) => {
           zip: zip,
           phone: customerPhone
         },
+        
+        // Shipping address (delivery address)
         shipping_address: {
           first_name: firstName,
           last_name: lastName,
@@ -600,14 +608,20 @@ serve(async (req) => {
           zip: zip,
           phone: customerPhone
         },
+        
         email: customerEmail,
         phone: customerPhone,
         
-        // Set correct totals - subtotal should be products only, total should match line items
-        subtotal_price: orderAmounts.subtotal.toFixed(2),
+        // CORRECT SHOPIFY TOTALS
+        subtotal_price: (productSubtotal + tipAmountInDollars).toFixed(2), // Products + tip
+        total_shipping_price_set: deliveryFeeInDollars > 0 ? {
+          shop_money: {
+            amount: deliveryFeeInDollars.toFixed(2),
+            currency_code: "USD"
+          }
+        } : undefined,
+        total_tax: orderAmounts.sales_tax.toFixed(2),
         total_price: orderAmounts.total_amount.toFixed(2),
-        
-        // NO tax_lines or shipping_lines - everything is in line_items now
         
         // Custom attributes for delivery details
         note_attributes: [
@@ -629,7 +643,7 @@ serve(async (req) => {
           },
           {
             name: "💰 Driver Tip Amount",
-            value: `$${orderAmounts.tip_amount.toFixed(2)}`
+            value: `$${tipAmountInDollars.toFixed(2)}`
           },
           {
             name: "💳 Stripe Payment ID",
@@ -637,7 +651,7 @@ serve(async (req) => {
           }
         ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
         
-        // Order notes with comprehensive delivery and payment information
+        // Comprehensive order notes
         note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
 📍 DELIVERY ADDRESS: 
@@ -647,16 +661,16 @@ ${city}, ${state} ${zip}
 ${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}
 
 💰 PAYMENT BREAKDOWN:
-• Subtotal: $${orderAmounts.subtotal.toFixed(2)}
-• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}  
-• Tax: $${orderAmounts.sales_tax.toFixed(2)}
-• Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
+• Product Subtotal: $${productSubtotal.toFixed(2)}
+• Delivery Fee: $${deliveryFeeInDollars.toFixed(2)}  
+• Sales Tax: $${orderAmounts.sales_tax.toFixed(2)}
+• Driver Tip: $${tipAmountInDollars.toFixed(2)}
 • TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)}
 
 💳 STRIPE CONFIRMATION: ${paymentIntentId || sessionId}
 ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
 
-⚠️ NOTE: Driver tip ($${orderAmounts.tip_amount.toFixed(2)}) included as separate line item above.`,
+✅ NOTE: Order structure follows Shopify standards - delivery fee in shipping_lines, tax in tax_lines, tip as line item.`,
         
         // Financial status
         financial_status: "paid",
@@ -664,10 +678,11 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
         // Tags for tracking and filtering
         tags: [
           "delivery-order",
-          "stripe-paid",
+          "stripe-paid", 
+          "shopify-standard-structure",
           affiliateCode ? `affiliate-${affiliateCode}` : null,
-          orderAmounts.tip_amount > 0 ? "has-tip" : "no-tip",
-          `tip-${orderAmounts.tip_amount.toFixed(2).replace('.', '_')}`,
+          tipAmountInDollars > 0 ? "has-tip" : "no-tip",
+          `tip-${tipAmountInDollars.toFixed(2).replace('.', '_')}`,
           `delivery-${deliveryDate}`
         ].filter(Boolean).join(", "),
         
@@ -682,9 +697,12 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
       }
     };
 
-    logStep("Creating Shopify order", { 
+    logStep("Creating Shopify order with STANDARD STRUCTURE", { 
       totalAmount: orderAmounts.total_amount,
-      lineItemCount: lineItems.length
+      lineItemCount: lineItems.length,
+      shippingLineCount: shippingLines.length,
+      taxLineCount: taxLines.length,
+      addressFormatted: `${street}, ${city}, ${state} ${zip}`
     });
 
     try {
@@ -702,76 +720,81 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
 
       if (!orderResponse.ok) {
         const errorText = await orderResponse.text();
-        logStep("ERROR: Shopify order creation failed", {
+        logStep("ERROR: Shopify order creation failed", { 
           status: orderResponse.status,
           statusText: orderResponse.statusText,
-          error: errorText
+          error: errorText 
         });
-        throw new Error(`Shopify API error (${orderResponse.status}): ${errorText}`);
+        throw new Error(`Shopify order creation failed: ${orderResponse.status} - ${errorText}`);
       }
 
       const orderResult = await orderResponse.json();
-      const shopifyOrder = orderResult.order;
+      const shopifyOrderId = orderResult.order.id;
+      const orderNumber = orderResult.order.order_number;
 
-      logStep("✅ Shopify order created successfully", {
-        shopifyOrderId: shopifyOrder.id,
-        orderNumber: shopifyOrder.name,
-        totalPrice: shopifyOrder.total_price,
-        status: shopifyOrder.financial_status
+      logStep("✅ SHOPIFY ORDER CREATED SUCCESSFULLY (STANDARD STRUCTURE)", {
+        shopifyOrderId,
+        orderNumber,
+        totalAmount: orderResult.order.total_price,
+        subtotalPrice: orderResult.order.subtotal_price,
+        totalTax: orderResult.order.total_tax,
+        shippingAddress: orderResult.order.shipping_address
       });
 
-      // Store order in our database
+      // Store the order in our database
       try {
         const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
           auth: { autoRefreshToken: false, persistSession: false }
         });
-
-        const orderRecord = {
-          order_number: shopifyOrder.name || shopifyOrder.order_number || `#${shopifyOrder.number}`,
-          session_id: paymentIntentId || sessionId,
-          shopify_order_id: shopifyOrder.id.toString(),
-          delivery_date: deliveryDate,
-          delivery_time: deliveryTime,
-          delivery_address: {
-            street,
-            city,
-            state,
-            zip,
-            full_address: fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, ''),
-            email: customerEmail,
-            phone: customerPhone
-          },
-          line_items: cartItems,
-          subtotal: orderAmounts.subtotal,
-          delivery_fee: orderAmounts.delivery_fee,
-          total_amount: orderAmounts.total_amount,
-          special_instructions: deliveryInstructions,
-          status: 'paid'
-        };
-
-        const { error: dbError } = await supabaseClient
+        
+        const { error: insertError } = await supabaseClient
           .from('customer_orders')
-          .insert(orderRecord);
+          .insert({
+            order_number: orderNumber.toString(),
+            shopify_order_id: shopifyOrderId.toString(),
+            session_id: paymentIntentId || sessionId,
+            payment_intent_id: paymentIntentId,
+            customer_id: null, // We might not have auth user
+            subtotal: productSubtotal + tipAmountInDollars, // Products + tip
+            delivery_fee: deliveryFeeInDollars,
+            total_amount: orderAmounts.total_amount,
+            status: 'confirmed',
+            delivery_date: deliveryDate || null,
+            delivery_time: deliveryTime || null,
+            delivery_address: {
+              street: street,
+              city: city,
+              state: state,
+              zip: zip,
+              full_address: fullAddressString,
+              instructions: deliveryInstructions
+            },
+            line_items: cartItems,
+            special_instructions: deliveryInstructions,
+            affiliate_code: affiliateCode || null
+          });
 
-        if (dbError) {
-          logStep("WARNING: Failed to store order in database", { error: dbError.message });
+        if (insertError) {
+          logStep("WARNING: Failed to store order in database", { error: insertError.message });
         } else {
-          logStep("Order stored in database successfully");
+          logStep("✅ Order stored in database successfully");
         }
       } catch (dbError) {
-        logStep("WARNING: Database storage error", { error: dbError.message });
+        logStep("WARNING: Database storage failed", { error: dbError.message });
       }
-
-      logStep("=== CREATE SHOPIFY ORDER COMPLETED SUCCESSFULLY ===");
 
       return new Response(
         JSON.stringify({
           success: true,
-          shopify_order_id: shopifyOrder.id,
-          order_number: shopifyOrder.name || shopifyOrder.order_number || `#${shopifyOrder.number}`,
-          shopify_order_name: shopifyOrder.name,
+          shopify_order_id: shopifyOrderId.toString(),
+          order_number: orderNumber.toString(),
           total_amount: orderAmounts.total_amount,
-          message: "Order created successfully in Shopify"
+          subtotal: productSubtotal + tipAmountInDollars,
+          delivery_fee: deliveryFeeInDollars,
+          sales_tax: orderAmounts.sales_tax,
+          tip_amount: tipAmountInDollars,
+          shipping_address: orderResult.order.shipping_address,
+          message: "Order created successfully using Shopify standard structure"
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -779,12 +802,12 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
         }
       );
 
-    } catch (shopifyError) {
-      logStep("ERROR: Shopify order creation failed", {
-        error: shopifyError.message,
-        stack: shopifyError.stack
+    } catch (orderError) {
+      logStep("ERROR: Order creation failed", { 
+        error: orderError.message,
+        stack: orderError.stack 
       });
-      throw shopifyError;
+      throw new Error(`Order creation failed: ${orderError.message}`);
     }
 
   } catch (error) {
@@ -795,9 +818,8 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
 
     return new Response(
       JSON.stringify({
-        success: false,
         error: error.message,
-        details: "Check edge function logs for detailed error information"
+        success: false
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
