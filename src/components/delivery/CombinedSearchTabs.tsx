@@ -410,13 +410,14 @@ export const CombinedSearchTabs = ({
         <div className="container mx-auto px-2 py-1.5 bg-background border-b">
           <div className="flex items-center">
             {/* Enhanced Responsive Tabs - No icons, better text spacing */}
-            <div className="relative w-full">
+            <div className="relative w-full overflow-hidden">
                 <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide max-w-full pb-1"
+                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1"
                 style={{ 
                   scrollSnapType: 'x mandatory',
-                  WebkitOverflowScrolling: 'touch'
+                  WebkitOverflowScrolling: 'touch',
+                  maxWidth: '100%'
                 }}
                 onScroll={() => {
                   if (isMobileDevice) {

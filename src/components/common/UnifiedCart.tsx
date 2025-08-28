@@ -89,8 +89,8 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         onClick={onClose}
       />
       
-      {/* Cart Sidebar - Full viewport overlay with proper flex layout */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden">
+      {/* Cart Sidebar - Viewport height overlay with proper flex layout */}
+      <div className="fixed right-0 top-0 h-screen max-h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden">
         
         {/* Sticky Header - Always at top of viewport */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 sticky top-0 z-20">
