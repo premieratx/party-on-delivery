@@ -120,6 +120,16 @@ export const CheckoutInputOptimizer = () => {
           pointer-events: auto !important;
         }
         
+        /* CRITICAL: ALWAYS allow buttons and search icons to work */
+        button, [role="button"], .cursor-pointer,
+        button *, [role="button"] *, .cursor-pointer *,
+        .search-icon, .search-icon *,
+        [data-search-trigger], [data-search-trigger] * {
+          pointer-events: auto !important;
+          touch-action: manipulation !important;
+          z-index: 1000 !important;
+        }
+        
         /* CRITICAL: Force ALL pre-filled inputs to be editable */
         input[value]:not([value=""]),
         textarea[value]:not([value=""]) {
@@ -176,21 +186,38 @@ export const CheckoutInputOptimizer = () => {
       console.log('✅ Ultimate input CSS applied - inputs work everywhere');
     };
 
-    // CRITICAL: Enhanced event protection
+    // CRITICAL: Enhanced event protection that DOESN'T block buttons
     const protectInputEvents = () => {
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
+        
+        // ONLY protect input elements, NEVER buttons or search icons
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
-          e.stopPropagation();
-          console.log('🛡️ Input click protected from interference');
+          // Only stop propagation for inputs that are inside forms
+          if (target.closest('form') || target.closest('.checkout-form')) {
+            e.stopPropagation();
+            console.log('🛡️ Input click protected from interference');
+          }
+        }
+        
+        // ALWAYS allow button clicks to work
+        if (target.tagName === 'BUTTON' || target.closest('button') || target.hasAttribute('role') && target.getAttribute('role') === 'button') {
+          console.log('🔍 Button click allowed through');
         }
       }, { capture: true });
 
       document.addEventListener('touchstart', (e) => {
         const target = e.target as HTMLElement;
+        
+        // ONLY protect input elements, NEVER buttons
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
           e.stopPropagation();
           console.log('🛡️ Input touch protected from interference');
+        }
+        
+        // ALWAYS allow button touches to work
+        if (target.tagName === 'BUTTON' || target.closest('button')) {
+          console.log('🔍 Button touch allowed through');
         }
       }, { capture: true, passive: true });
 
