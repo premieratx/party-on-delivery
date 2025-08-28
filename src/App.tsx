@@ -16,6 +16,7 @@ import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
 import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptimizer';
 import { MobileInputFix } from '@/components/checkout/MobileInputFix';
 import { CheckoutVerificationTool } from '@/components/checkout/CheckoutVerificationTool';
+import { UniversalCheckoutGuard } from '@/components/checkout/UniversalCheckoutGuard';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -70,17 +71,18 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter>
-              <AuthProvider>
-                <AdminAuthFix />
-                <ColdStartSolution />
-                {/* UNIVERSAL INPUT OPTIMIZERS - ACTIVE ON ALL PAGES & DEVICES */}
-                <CheckoutInputOptimizer />
-                <MobileInputFix />
-                <CheckoutVerificationTool />
-                <GlobalCartProvider>
+            <AuthProvider>
+              <AdminAuthFix />
+              <ColdStartSolution />
+              {/* UNIVERSAL INPUT OPTIMIZERS - ACTIVE ON ALL PAGES & DEVICES */}
+              <CheckoutInputOptimizer />
+              <MobileInputFix />
+              <CheckoutVerificationTool />
+              <UniversalCheckoutGuard />
+              <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
-              <div className="min-h-screen">
+                <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
                     {/* HOMEPAGE - Shows default delivery app directly, no redirect */}
@@ -130,7 +132,7 @@ const App = () => {
                     <Route path="*" element={<DynamicRouteHandler />} />
                   </Routes>
                 </Suspense>
-              </div>
+                </div>
               </GlobalCartProvider>
             </AuthProvider>
           </BrowserRouter>
