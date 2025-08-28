@@ -11,11 +11,13 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { ProductSearchBar } from '@/components/delivery/ProductSearchBar';
+import { UltraFastMobileSearch } from '@/components/search/UltraFastMobileSearch';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealTimeSearch } from '@/hooks/useRealTimeSearch';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WhiteLabelAppConfig {
   id: string;
@@ -115,6 +117,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   const { toast } = useToast();
   const { getCollections } = useOptimizedShopify();
   const { cartItems, getTotalItems, getTotalPrice, emptyCart, updateQuantity, getCartItemQuantity } = useUnifiedCart();
+  const isMobile = useIsMobile();
   
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);

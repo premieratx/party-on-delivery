@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { SuperOptimizedProductGrid } from './SuperOptimizedProductGrid';
 import { ProductSearchBar } from './ProductSearchBar';
+import { UltraFastMobileSearch } from '@/components/search/UltraFastMobileSearch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface InstantProductCategoriesProps {
   app_slug?: string;
@@ -16,6 +18,7 @@ export const InstantProductCategories: React.FC<InstantProductCategoriesProps> =
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const isMobile = useIsMobile();
   
   const { collections, loading } = useOptimizedProductLoader({
     app_slug,
@@ -55,15 +58,29 @@ export const InstantProductCategories: React.FC<InstantProductCategoriesProps> =
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Search Bar */}
+      {/* Ultra-Fast Mobile Search or Regular Search */}
       <div className="w-full max-w-md mx-auto">
-        <ProductSearchBar
-          onProductSelect={(product) => console.log('Selected:', product)}
-          placeholder="Search products..."
-          value={searchTerm}
-          onQueryChange={setSearchTerm}
-          showDropdownResults={false}
-        />
+        {isMobile ? (
+          <UltraFastMobileSearch
+            onProductSelect={(product) => {
+              console.log('Ultra-fast selected:', product);
+              // Update search term to show results in grid
+              setSearchTerm(product.title);
+            }}
+            placeholder="🚀 Ultra-fast search..."
+            autoFocus={false}
+            onSearchStart={() => console.log('🔍 Ultra-fast search started')}
+            onSearchEnd={() => console.log('✅ Ultra-fast search complete')}
+          />
+        ) : (
+          <ProductSearchBar
+            onProductSelect={(product) => console.log('Selected:', product)}
+            placeholder="Search products..."
+            value={searchTerm}
+            onQueryChange={setSearchTerm}
+            showDropdownResults={false}
+          />
+        )}
       </div>
 
       {/* Category Filters */}

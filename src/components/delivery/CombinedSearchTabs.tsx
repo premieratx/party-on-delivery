@@ -6,6 +6,8 @@ import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { safePrice, formatPrice } from '@/utils/safeCalculations';
 import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import { AdvancedSearchBar } from '@/components/search/AdvancedSearchBar';
+import { UltraFastMobileSearch } from '@/components/search/UltraFastMobileSearch';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Preload critical images
 const preloadImage = (src: string): Promise<void> => {
@@ -64,6 +66,7 @@ export const CombinedSearchTabs = ({
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [tabLayout, setTabLayout] = useState<'full' | 'compact' | 'minimal' | 'icon-only'>('full');
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   
   // Use unified scroll behavior for better mobile performance
   const { 
@@ -388,20 +391,36 @@ export const CombinedSearchTabs = ({
         {showSearch && (isSearchExpanded || isSearchActive) && (
           <div className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b">
             <div className="flex items-center justify-center">
-              <AdvancedSearchBar
-                value={searchQuery}
-                onChange={(newValue) => {
-                  onSearchChange(newValue);
-                  // Real-time search - trigger immediately for faster results
-                  if (newValue.trim()) {
+              {isMobile ? (
+                <UltraFastMobileSearch
+                  onProductSelect={(product) => {
+                    console.log('Ultra-fast mobile search selected:', product);
+                    // Update search query to show results
+                    onSearchChange(product.title);
                     onSearchSubmit();
-                  }
-                }}
-                onSubmit={onSearchSubmit}
-                placeholder="Search products..."
-                className="flex-1 max-w-md mobile-search-input"
-                autoFocus={isSearchExpanded}
-              />
+                  }}
+                  placeholder="🚀 Ultra-fast search..."
+                  autoFocus={isSearchExpanded}
+                  onSearchStart={() => console.log('🔍 Ultra-fast mobile search started')}
+                  onSearchEnd={() => console.log('✅ Ultra-fast mobile search complete')}
+                  className="flex-1 max-w-md mobile-search-input"
+                />
+              ) : (
+                <AdvancedSearchBar
+                  value={searchQuery}
+                  onChange={(newValue) => {
+                    onSearchChange(newValue);
+                    // Real-time search - trigger immediately for faster results
+                    if (newValue.trim()) {
+                      onSearchSubmit();
+                    }
+                  }}
+                  onSubmit={onSearchSubmit}
+                  placeholder="Search products..."
+                  className="flex-1 max-w-md mobile-search-input"
+                  autoFocus={isSearchExpanded}
+                />
+              )}
             </div>
           </div>
         )}
