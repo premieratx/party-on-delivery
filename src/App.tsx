@@ -1,39 +1,31 @@
 import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
+import { DynamicRouteHandler } from "@/components/routing/DynamicRouteHandler";
+import CustomAppView from "@/pages/CustomAppView";
 
 const App = () => {
-  console.log('🚀 BASIC APP LOADED');
+  console.log('🚀 APP STARTING WITH PROPER ROUTING');
   
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: 'white', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center' 
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: 'black', marginBottom: '16px' }}>
-          HOMEPAGE FIXED!
-        </h1>
-        <p style={{ fontSize: '18px', color: 'gray' }}>
-          Basic app is working
-        </p>
-        <a 
-          href="/app/delivery" 
-          style={{
-            display: 'inline-block',
-            marginTop: '16px',
-            padding: '12px 24px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            borderRadius: '8px',
-            textDecoration: 'none'
-          }}
-        >
-          Go to Delivery App
-        </a>
-      </div>
-    </div>
+    <BrowserRouter>
+      <GlobalCartProvider>
+        <div className="min-h-screen">
+          <Routes>
+            {/* Homepage - redirect to delivery app */}
+            <Route path="/" element={<Navigate to="/app/delivery" replace />} />
+            
+            {/* Delivery apps */}
+            <Route path="/app/:appSlug" element={<CustomAppView />} />
+            
+            {/* Catch-all for cover pages and 404 */}
+            <Route path="*" element={<DynamicRouteHandler />} />
+          </Routes>
+        </div>
+        <Toaster />
+      </GlobalCartProvider>
+    </BrowserRouter>
   );
 };
 
