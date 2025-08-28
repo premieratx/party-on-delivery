@@ -12,9 +12,10 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className,
   text 
 }) => {
-  // NO SPINNING ANIMATION - DISABLED
+  // Show actual loading indicator instead of disabled one
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2", className)}>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       <div className="text-sm text-muted-foreground">
         {text || 'Loading...'}
       </div>
