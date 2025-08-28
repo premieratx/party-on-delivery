@@ -490,15 +490,17 @@ serve(async (req) => {
       }
     }
 
-    // Prepare line items for Shopify
+    // Prepare line items for Shopify - MUST include ALL payment components as separate line items
     const lineItems = [];
     
+    // Add actual product line items first
     for (const item of cartItems) {
       const lineItem: any = {
         title: item.title || item.name || 'Unknown Item',
         price: item.price.toString(),
         quantity: item.quantity || 1,
-        requires_shipping: true
+        requires_shipping: true,
+        taxable: true
       };
 
       // Handle Shopify product/variant IDs (clean up GIDs)
@@ -524,20 +526,56 @@ serve(async (req) => {
       lineItems.push(lineItem);
     }
 
-    logStep("Line items prepared (PRODUCTS ONLY)", { 
-      itemCount: lineItems.length,
-      productSubtotal: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
-      note: "Only actual products included as line items - delivery fee, tip, and tax handled separately"
+    // CRITICAL FIX: Add delivery fee as line item (required for accurate Shopify totals)
+    if (orderAmounts.delivery_fee > 0) {
+      lineItems.push({
+        title: "Delivery Fee",
+        price: orderAmounts.delivery_fee.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+
+    // CRITICAL FIX: Add driver tip as line item (required for accurate Shopify totals)
+    if (orderAmounts.tip_amount > 0) {
+      lineItems.push({
+        title: "Driver Tip",
+        price: orderAmounts.tip_amount.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+
+    // CRITICAL FIX: Add sales tax as line item (required for accurate Shopify totals)
+    if (orderAmounts.sales_tax > 0) {
+      lineItems.push({
+        title: "Sales Tax",
+        price: orderAmounts.sales_tax.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+
+    logStep("All line items prepared (PRODUCTS + FEES + TIP + TAX)", { 
+      totalItemCount: lineItems.length,
+      productCount: cartItems.length,
+      deliveryFee: orderAmounts.delivery_fee,
+      tipAmount: orderAmounts.tip_amount,
+      salesTax: orderAmounts.sales_tax,
+      calculatedTotal: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0)
     });
 
     // Extract affiliate code if present
     const affiliateCode = metadata.affiliate_code || '';
 
-    // Create Shopify order with EXACT structure matching screenshot
+    // Create Shopify order with PROPER structure following documentation standards
     const orderData = {
       order: {
-        // ONLY actual products as line items - NO TIP, NO FEES
-        line_items: lineItems, // Just the real products
+        // ALL payment components as line items (products + delivery fee + tip + tax)
+        line_items: lineItems,
         
         customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
         billing_address: {
@@ -565,41 +603,13 @@ serve(async (req) => {
         email: customerEmail,
         phone: customerPhone,
         
-        // EXACT BREAKDOWN - Products subtotal only (without tip)
-        subtotal_price: orderAmounts.subtotal.toFixed(2),  // Products only ($441.88)
-        total_price: orderAmounts.total_amount.toFixed(2),  // Full total ($560.47)
+        // Set correct totals - subtotal should be products only, total should match line items
+        subtotal_price: orderAmounts.subtotal.toFixed(2),
+        total_price: orderAmounts.total_amount.toFixed(2),
         
-        // Tax lines - ONLY sales tax (no tip here)
-        tax_lines: orderAmounts.sales_tax > 0 ? [{
-          title: "Sales Tax 8.25%", 
-          price: orderAmounts.sales_tax.toFixed(2),  // $38.59
-          rate: 0.0825
-        }] : [],
+        // NO tax_lines or shipping_lines - everything is in line_items now
         
-        // Shipping lines - ONLY delivery fee ($30.00)
-        shipping_lines: orderAmounts.delivery_fee > 0 ? [{
-          title: "Delivery Fee",
-          price: orderAmounts.delivery_fee.toFixed(2),  // $30.00
-          code: "LOCAL_DELIVERY"
-        }] : [],
-        
-        // Tip handling - Use Shopify's NATIVE tip system (same as POS transactions)
-        ...(orderAmounts.tip_amount > 0 ? {
-          tip_payment_gateway: "stripe",
-          tip_payment_method: "credit_card", 
-          current_total_additional_fees_set: {
-            shop_money: {
-              amount: orderAmounts.tip_amount.toFixed(2),
-              currency_code: "USD"
-            },
-            presentment_money: {
-              amount: orderAmounts.tip_amount.toFixed(2),
-              currency_code: "USD" 
-            }
-          }
-        } : {}),
-        
-        // Custom attributes - delivery details displayed prominently
+        // Custom attributes for delivery details
         note_attributes: [
           {
             name: "🚚 Delivery Date", 
@@ -627,34 +637,31 @@ serve(async (req) => {
           }
         ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
         
-        // Order notes - COMPREHENSIVE delivery information display
+        // Order notes with comprehensive delivery and payment information
         note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
-📍 DELIVERY ADDRESS:
-${fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')}
-📞 Customer Phone: ${customerPhone}
-✉️ Customer Email: ${customerEmail}
+📍 DELIVERY ADDRESS: 
+${street}
+${city}, ${state} ${zip}
+📞 Customer: ${customerPhone}
 ${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}
 
-💰 PAYMENT BREAKDOWN (MATCHES STRIPE EXACTLY):
-• Subtotal (Products): $${orderAmounts.subtotal.toFixed(2)}
-• Sales Tax 8.25%: $${orderAmounts.sales_tax.toFixed(2)}
-• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}
+💰 PAYMENT BREAKDOWN:
+• Subtotal: $${orderAmounts.subtotal.toFixed(2)}
+• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}  
+• Tax: $${orderAmounts.sales_tax.toFixed(2)}
 • Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
 • TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)}
 
-💳 STRIPE PAYMENT CONFIRMATION:
-Payment ID: ${paymentIntentId || sessionId}
-Status: PAID ✅
-${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
+💳 STRIPE CONFIRMATION: ${paymentIntentId || sessionId}
+${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
 
-⚠️ IMPORTANT: Driver tip ($${orderAmounts.tip_amount.toFixed(2)}) appears as separate line item in order totals above.
-📦 ORDER FULFILLMENT: Prepare for delivery on ${deliveryDate} between ${deliveryTime}`,
+⚠️ NOTE: Driver tip ($${orderAmounts.tip_amount.toFixed(2)}) included as separate line item above.`,
         
-        // Financial status - paid
+        // Financial status
         financial_status: "paid",
         
-        // Tags for tracking
+        // Tags for tracking and filtering
         tags: [
           "delivery-order",
           "stripe-paid",
@@ -664,7 +671,7 @@ ${affiliateCode ? `🤝 AFFILIATE CODE: ${affiliateCode}` : ''}
           `delivery-${deliveryDate}`
         ].filter(Boolean).join(", "),
         
-        // Transaction record
+        // Transaction record showing payment completed
         transactions: [{
           amount: orderAmounts.total_amount.toFixed(2),
           kind: "sale",
