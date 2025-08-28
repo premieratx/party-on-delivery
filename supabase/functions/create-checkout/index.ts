@@ -59,8 +59,18 @@ serve(async (req) => {
       affiliate_code: affiliateCode
     });
 
-    // Calculate total
+    // Calculate total with detailed logging
     const totalAmount = Math.round((subtotal + deliveryFee + salesTax + tipAmount) * 100);
+    
+    console.log('💰 Checkout Session Amount Details:', {
+      subtotal: subtotal,
+      delivery_fee: deliveryFee,
+      sales_tax: salesTax,
+      tip_amount: tipAmount,
+      calculated_total_dollars: (subtotal + deliveryFee + salesTax + tipAmount).toFixed(2),
+      total_amount_cents: totalAmount,
+      total_amount_dollars: (totalAmount / 100).toFixed(2)
+    });
 
     // Validate amount
     if (totalAmount < 50 || totalAmount > 1000000) {
@@ -69,7 +79,8 @@ serve(async (req) => {
         total_amount: totalAmount,
         subtotal,
         delivery_fee: deliveryFee,
-        sales_tax: salesTax
+        sales_tax: salesTax,
+        tip_amount: tipAmount
       }, error);
       throw error;
     }
@@ -164,9 +175,10 @@ serve(async (req) => {
         customer_email: customerInfo.email,
         customer_phone: customerInfo.phone || '',
         
-        // Delivery information
+        // Delivery information with CST timezone
         delivery_date: deliveryInfo?.date || '',
         delivery_time: deliveryInfo?.timeSlot || '',
+        delivery_timezone: 'America/Chicago', // Ensure CST timezone is documented
         delivery_address: fullDeliveryAddress,
         delivery_instructions: deliveryInfo?.specialInstructions || '',
         

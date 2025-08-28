@@ -67,7 +67,25 @@ serve(async (req) => {
       affiliate_code: affiliateCode
     });
 
-    // Validate amount
+    // Enhanced amount validation with detailed logging
+    console.log('💰 Payment Intent Amount Details:', {
+      received_amount: amount,
+      amount_in_cents: amount,
+      amount_in_dollars: (amount / 100).toFixed(2),
+      subtotal: subtotal,
+      delivery_fee: deliveryFee,
+      sales_tax: salesTax,
+      tip_amount: tipAmount,
+      calculated_total: subtotal + deliveryFee + salesTax + tipAmount,
+      calculated_total_cents: Math.round((subtotal + deliveryFee + salesTax + tipAmount) * 100)
+    });
+
+    // Verify amount matches expected calculation
+    const expectedAmountCents = Math.round((subtotal + deliveryFee + salesTax + tipAmount) * 100);
+    if (Math.abs(amount - expectedAmountCents) > 1) {
+      throw new Error(`Amount mismatch: Received ${amount} cents but expected ${expectedAmountCents} cents based on breakdown`);
+    }
+
     if (!amount || amount < 50 || amount > 1000000) {
       throw new Error(`Invalid amount: ${amount}. Must be between 50 and 1000000 cents.`);
     }
@@ -118,6 +136,7 @@ serve(async (req) => {
         // Delivery info with proper CST formatting
         delivery_date: (deliveryInfo?.date || '').substring(0, 50),
         delivery_time: (deliveryInfo?.timeSlot || '').substring(0, 50),
+        delivery_timezone: 'America/Chicago', // Ensure CST timezone is documented
         delivery_address: (deliveryInfo?.address || '').substring(0, 250),
         delivery_instructions: (deliveryInfo?.instructions || '').substring(0, 250),
         
