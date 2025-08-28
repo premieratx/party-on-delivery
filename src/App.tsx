@@ -5,6 +5,7 @@ import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { DynamicRouteHandler } from "@/components/routing/DynamicRouteHandler";
 import CustomAppView from "@/pages/CustomAppView";
 import Checkout from "@/pages/Checkout";
+import OrderComplete from "@/pages/OrderComplete";
 
 const App = () => {
   console.log('🚀 APP STARTING WITH PROPER ROUTING');
@@ -22,6 +23,9 @@ const App = () => {
             
             {/* Checkout */}
             <Route path="/checkout" element={<Checkout />} />
+            
+            {/* Order Complete */}
+            <Route path="/order-complete" element={<OrderComplete />} />
             
             {/* Catch-all for cover pages and 404 */}
             <Route path="*" element={<DynamicRouteHandler />} />

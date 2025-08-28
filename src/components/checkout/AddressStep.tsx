@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { SimpleAddressInput } from '@/components/ui/SimpleAddressInput';
 import { useAppConfig } from '@/hooks/useAppConfig';
-import { MapPin, CheckCircle } from 'lucide-react';
+import { MapPin, CheckCircle, Edit2 } from 'lucide-react';
 import { AddressInfo } from '@/hooks/useCustomerInfo';
 
 interface AddressStepProps {
@@ -109,8 +109,39 @@ export const AddressStep: React.FC<AddressStepProps> = ({
 
   const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
 
-  // CRITICAL: NEVER show read-only confirmed state - ALWAYS keep editable
-  // Remove this locked confirmation view entirely to prevent address lockout
+  // Confirmed (collapsed) view
+  if (isConfirmed && isAddressComplete) {
+    const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">{fullAddress}</p>
+                {addressInfo.instructions && (
+                  <p className="text-xs text-muted-foreground">Note: {addressInfo.instructions}</p>
+                )}
+                <p className="text-xs text-muted-foreground">Delivery address confirmed</p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onEdit}
+              className="flex items-center gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Full edit view
 
   return (
     <Card>

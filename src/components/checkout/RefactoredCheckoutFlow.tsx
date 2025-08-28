@@ -51,8 +51,13 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const { toast } = useToast();
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
   
-  // COMPLETELY UNLOCKED - NO CONFIRMATIONS, NO LOCKS, NO RESTRICTIONS
+  // AUTO-CLOSE FIELD STATE MANAGEMENT
   const [tipAmount, setTipAmount] = useState(0);
+  const [confirmedSteps, setConfirmedSteps] = useState({
+    dateTime: false,
+    address: false,
+    customerInfo: false
+  });
 
   // LOAD SAVED DATA ON MOUNT - EVERYONE CAN SAVE AND LOAD
   useEffect(() => {
@@ -132,6 +137,27 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax
   const finalTotal = discountedSubtotal + deliveryFee + calculatedSalesTax + tipAmount;
 
+  // Step confirmation handlers - auto-close fields after saving
+  const handleDateTimeConfirm = () => {
+    setConfirmedSteps(prev => ({ ...prev, dateTime: true }));
+    toast({ title: "✅ Date & Time Saved!", description: "Your delivery preferences have been saved." });
+  };
+
+  const handleAddressConfirm = () => {
+    setConfirmedSteps(prev => ({ ...prev, address: true }));
+    toast({ title: "✅ Address Saved!", description: "Your delivery address has been saved." });
+  };
+
+  const handleCustomerInfoConfirm = () => {
+    setConfirmedSteps(prev => ({ ...prev, customerInfo: true }));
+    toast({ title: "✅ Contact Info Saved!", description: "Your contact information has been saved." });
+  };
+
+  // Step edit handlers - re-open fields for editing
+  const handleEditStep = (step: keyof typeof confirmedSteps) => {
+    setConfirmedSteps(prev => ({ ...prev, [step]: false }));
+  };
+
   // Discount management - ALWAYS ALLOWED
   const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
     if (onDiscountChange) {
@@ -186,7 +212,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             <span className="hidden sm:inline">Back to Cart</span>
             <span className="sm:hidden">Back</span>
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Checkout - Everything Editable</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Checkout</h1>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">
@@ -194,36 +220,39 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           {/* Left Column - ALL STEPS ALWAYS VISIBLE AND EDITABLE */}
           <div className="xl:col-span-3 space-y-6">
             
-            {/* ALWAYS EDITABLE: Date & Time Step */}
+            {/* COLLAPSIBLE: Date & Time Step */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">📅 Delivery Date & Time - Auto-Saves</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">📅 Delivery Date & Time</h3>
               <ImprovedDateTimeStep
                 deliveryInfo={deliveryInfo}
                 onDeliveryInfoChange={onDeliveryInfoChange}
-                onConfirm={() => toast({ title: "✅ Date & Time Saved!", description: "Your delivery preferences have been saved." })}
-                isConfirmed={false} // NEVER confirmed - always editable
+                onConfirm={handleDateTimeConfirm}
+                onEdit={() => handleEditStep('dateTime')}
+                isConfirmed={confirmedSteps.dateTime}
               />
             </div>
 
-            {/* ALWAYS EDITABLE: Address Step */}
+            {/* COLLAPSIBLE: Address Step */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">🏠 Delivery Address - Auto-Saves</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">🏠 Delivery Address</h3>
               <AddressStep
                 addressInfo={addressInfo}
                 setAddressInfo={setAddressInfo}
-                onConfirm={() => toast({ title: "✅ Address Saved!", description: "Your delivery address has been saved." })}
-                isConfirmed={false} // NEVER confirmed - always editable
+                onConfirm={handleAddressConfirm}
+                onEdit={() => handleEditStep('address')}
+                isConfirmed={confirmedSteps.address}
               />
             </div>
 
-            {/* ALWAYS EDITABLE: Customer Info Step */}
+            {/* COLLAPSIBLE: Customer Info Step */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">👤 Your Information - Auto-Saves</h3>
+              <h3 className="text-lg font-semibold mb-4 text-primary">👤 Your Information</h3>
               <CustomerInfoStep
                 customerInfo={customerInfo}
                 setCustomerInfo={setCustomerInfo}
-                onConfirm={() => toast({ title: "✅ Contact Info Saved!", description: "Your contact information has been saved." })}
-                isConfirmed={false} // NEVER confirmed - always editable
+                onConfirm={handleCustomerInfoConfirm}
+                onEdit={() => handleEditStep('customerInfo')}
+                isConfirmed={confirmedSteps.customerInfo}
               />
             </div>
 
@@ -275,13 +304,12 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               
               {/* Confirmation Message */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2">✅ Auto-Save Active</h4>
+                <h4 className="font-semibold text-green-800 mb-2">✅ Smart Auto-Save</h4>
                 <ul className="text-sm text-green-700 space-y-1">
-                  <li>• All your info is saved automatically</li>
-                  <li>• No confirmations or lockouts</li>
-                  <li>• Edit anything, anytime</li>
-                  <li>• Works on all devices</li>
-                  <li>• Data persists between sessions</li>
+                  <li>• Click "Confirm" to close each section</li>
+                  <li>• All info saves automatically as you type</li>
+                  <li>• Click "Edit" to reopen any section</li>
+                  <li>• Works on all devices & browsers</li>
                 </ul>
               </div>
             </div>

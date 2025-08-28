@@ -74,8 +74,37 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
 
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone;
 
-  // CRITICAL: NEVER show read-only confirmed state - ALWAYS keep editable
-  // Remove this locked confirmation view entirely to prevent customer info lockout
+  // Confirmed (collapsed) view
+  if (isConfirmed && isCustomerComplete) {
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">{customerInfo.firstName} {customerInfo.lastName}</p>
+                <p className="text-xs text-muted-foreground">{customerInfo.email}</p>
+                <p className="text-xs text-muted-foreground">{customerInfo.phone}</p>
+                <p className="text-xs text-muted-foreground">Contact information confirmed</p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onEdit}
+              className="flex items-center gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Full edit view
 
   return (
     <Card>
