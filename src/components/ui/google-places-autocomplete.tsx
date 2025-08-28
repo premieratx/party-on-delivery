@@ -95,8 +95,8 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
               onPlaceSelect(place);
             }
             
-            // Trigger blur to improve mobile experience
-            if (inputRef.current) {
+            // FIXED: Don't auto-blur on mobile - let user control focus
+            if (inputRef.current && window.innerWidth > 768) {
               inputRef.current.blur();
             }
           }

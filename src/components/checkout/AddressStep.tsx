@@ -184,7 +184,9 @@ export const AddressStep: React.FC<AddressStepProps> = ({
               value={addressInfo.city}
               onChange={(e) => handleAddressChange('city', e.target.value)}
               placeholder="City"
-              className="h-8 sm:h-10"
+              className="h-8 sm:h-10 touch-manipulation"
+              autoComplete="address-level2"
+              inputMode="text"
             />
             {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
           </div>
@@ -196,7 +198,9 @@ export const AddressStep: React.FC<AddressStepProps> = ({
               onChange={(e) => handleAddressChange('state', e.target.value)}
               placeholder="TX"
               maxLength={2}
-              className="h-8 sm:h-10"
+              className="h-8 sm:h-10 touch-manipulation"
+              autoComplete="address-level1"
+              inputMode="text"
             />
             {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
           </div>
@@ -211,7 +215,9 @@ export const AddressStep: React.FC<AddressStepProps> = ({
               onChange={(e) => handleAddressChange('zipCode', e.target.value)}
               placeholder="12345"
               maxLength={10}
-              className="h-8 sm:h-10"
+              className="h-8 sm:h-10 touch-manipulation"
+              autoComplete="postal-code"
+              inputMode="numeric"
             />
             {errors.zipCode && <p className="text-xs text-destructive mt-1">{errors.zipCode}</p>}
           </div>

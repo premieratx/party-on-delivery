@@ -12,9 +12,9 @@ export function useMobileBrowserChrome() {
         document.head.appendChild(viewportMeta);
       }
       
-      // Enhanced viewport configuration for mobile chrome hiding
+      // FIXED: Allow zoom on input fields for mobile accessibility
       viewportMeta.setAttribute('content', 
-        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui'
+        'width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, minimal-ui'
       );
     };
 
@@ -204,10 +204,21 @@ export function useMobileBrowserChrome() {
       let touchStartY = 0;
       
       const handleTouchStart = (e: TouchEvent) => {
+        // FIXED: Don't interfere with input fields
+        const target = e.target as Element;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('input, textarea'))) {
+          return;
+        }
         touchStartY = e.touches[0].clientY;
       };
       
       const handleTouchMove = (e: TouchEvent) => {
+        // FIXED: Don't interfere with input fields
+        const target = e.target as Element;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('input, textarea'))) {
+          return;
+        }
+        
         const touchY = e.touches[0].clientY;
         const deltaY = touchStartY - touchY;
         

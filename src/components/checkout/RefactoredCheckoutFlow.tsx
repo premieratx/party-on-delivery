@@ -23,6 +23,7 @@ import { CleanCheckoutTotal } from './CleanCheckoutTotal';
 import { PromoCodeInput } from './PromoCodeInput';
 import { CheckoutSafeguards } from './CheckoutSafeguards';
 import { CheckoutFlowValidator } from './CheckoutFlowValidator';
+import { MobileInputFix } from './MobileInputFix';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -277,8 +278,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   }, [hasChanges, onChangesDetected]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 overflow-x-hidden">
-      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 overflow-x-hidden" data-checkout-form>
+      <MobileInputFix />
+      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full checkout-form">
         
         {/* Header with Back Button */}
         <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
@@ -316,7 +318,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">
           
           {/* Left Column - Checkout Steps (Wider on Large Screens) */}
-          <div className="xl:col-span-3 space-y-4">
+          <div className="xl:col-span-3 space-y-4 checkout-form">
             
             {/* Date & Time Step */}
             <ImprovedDateTimeStep

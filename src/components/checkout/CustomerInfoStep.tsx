@@ -122,7 +122,9 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
               value={customerInfo.firstName}
               onChange={(e) => handleInfoChange('firstName', e.target.value)}
               placeholder="First name"
-              className="h-8 sm:h-10 text-xs sm:text-sm"
+              className="h-8 sm:h-10 text-xs sm:text-sm touch-manipulation"
+              autoComplete="given-name"
+              inputMode="text"
             />
             {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
           </div>
@@ -133,7 +135,9 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
               value={customerInfo.lastName}
               onChange={(e) => handleInfoChange('lastName', e.target.value)}
               placeholder="Last name"
-              className="h-8 sm:h-10 text-xs sm:text-sm"
+              className="h-8 sm:h-10 text-xs sm:text-sm touch-manipulation"
+              autoComplete="family-name"
+              inputMode="text"
             />
             {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
           </div>
@@ -147,7 +151,9 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
             value={customerInfo.email}
             onChange={(e) => handleInfoChange('email', e.target.value)}
             placeholder="your@email.com"
-            className="h-8 sm:h-10 text-xs sm:text-sm"
+            className="h-8 sm:h-10 text-xs sm:text-sm touch-manipulation"
+            autoComplete="email"
+            inputMode="email"
           />
           {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
         </div>
@@ -160,7 +166,9 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
             value={customerInfo.phone}
             onChange={(e) => handleInfoChange('phone', e.target.value)}
             placeholder="(555) 123-4567"
-            className="h-8 sm:h-10 text-xs sm:text-sm"
+            className="h-8 sm:h-10 text-xs sm:text-sm touch-manipulation"
+            autoComplete="tel"
+            inputMode="tel"
           />
           {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
         </div>
