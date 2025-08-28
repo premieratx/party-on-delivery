@@ -177,66 +177,102 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   return (
     <div className={`relative w-full ${className} ${isMobile && isSearchFocused ? 'z-[100]' : ''}`}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
           <Input
-            type="text"
+            type="search"
             placeholder={placeholder}
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
-            ref={searchInputRef}
-            className={`pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary ${inputClassName || ''}`}
+            ref={inputRef || searchInputRef}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck="false"
+            inputMode="search"
+            className={`pl-10 pr-10 h-12 text-[16px] border-2 border-primary/20 focus:border-primary transition-colors touch-manipulation ${inputClassName || ''}`}
+            style={{ 
+              fontSize: '16px', // Prevent iOS zoom
+              WebkitAppearance: 'none',
+              appearance: 'none'
+            }}
           />
         {searchQuery && (
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             onClick={clearSearch}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            onTouchEnd={(e) => { e.preventDefault(); clearSearch(); }}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 touch-manipulation"
           >
             <X className="h-4 w-4" />
           </Button>
         )}
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin pointer-events-none" />
         )}
       </div>
 
       {/* Search Results Dropdown */}
       {showDropdownResults && showResults && searchResults.length > 0 && (
-        <div className={`absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 overflow-y-auto ${
-          isMobile && isSearchFocused ? 'max-h-[70vh] fixed left-4 right-4 top-16' : 'max-h-96'
-        }`}>
-          <div className="p-2">
-            <div className="text-sm text-muted-foreground mb-2">
+        <div className={`${
+          isMobile && isSearchFocused 
+            ? 'fixed inset-x-2 top-20 bottom-20 z-[9999] bg-background border border-border rounded-lg shadow-2xl' 
+            : 'absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-96'
+        } overflow-y-auto overscroll-contain`}>
+          <div className="p-3">
+            <div className="text-sm text-muted-foreground mb-3 font-medium">
               Found {searchResults.length} products
             </div>
-            {searchResults.map((product) => (
-              <button
-                key={product.id}
-                onClick={(e) => { e.preventDefault(); handleProductClick(product); }}
-                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleProductClick(product); }}
-                className="w-full text-left p-3 hover:bg-muted rounded-md transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className="w-12 h-12 object-cover rounded"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">
-                      {product.title}
-                    </div>
-                    <div className="text-primary font-semibold">
-                      ${typeof product.price === 'number' ? applyMarkup(product.price).toFixed(2) : product.price}
+            <div className="space-y-1">
+              {searchResults.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    handleProductClick(product); 
+                  }}
+                  onTouchStart={(e) => { 
+                    e.currentTarget.style.backgroundColor = 'hsl(var(--muted))'; 
+                  }}
+                  onTouchEnd={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    e.currentTarget.style.backgroundColor = ''; 
+                    handleProductClick(product); 
+                  }}
+                  onTouchCancel={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
+                  className="w-full text-left p-3 hover:bg-muted active:bg-muted/80 rounded-lg transition-colors touch-manipulation border border-transparent hover:border-border/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className="w-14 h-14 object-cover rounded-md flex-shrink-0"
+                      loading="lazy"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm leading-tight truncate mb-1">
+                        {product.title}
+                      </div>
+                      <div className="text-primary font-bold text-base">
+                        ${typeof product.price === 'number' ? applyMarkup(product.price).toFixed(2) : product.price}
+                      </div>
+                      {product.category && (
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          {product.category}
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

@@ -65,26 +65,50 @@ export function useAdvancedSearch(
     const suggestions: SearchSuggestion[] = [];
     const queryLower = query.toLowerCase();
 
-    // Extract unique categories, brands, and product names
+    // Recent searches that match current query
+    searchHistory
+      .filter(term => term.toLowerCase().includes(queryLower))
+      .slice(0, 3)
+      .forEach(term => {
+        suggestions.push({
+          text: term,
+          type: 'recent'
+        });
+      });
+
+    // Extract unique categories, brands, and product names with better matching
     const categories = new Set<string>();
     const brands = new Set<string>();
-    const productNames = new Set<string>();
+    const productTitles = new Set<string>();
 
     allProducts.forEach(product => {
+      // Better category matching
       if (product.category && product.category.toLowerCase().includes(queryLower)) {
         categories.add(product.category);
       }
+      if (product.product_type && product.product_type.toLowerCase().includes(queryLower)) {
+        categories.add(product.product_type);
+      }
+      
+      // Brand/vendor matching
       if (product.vendor && product.vendor.toLowerCase().includes(queryLower)) {
         brands.add(product.vendor);
       }
-      if (product.title && product.title.toLowerCase().includes(queryLower)) {
-        productNames.add(product.title);
+      
+      // Product title matching with priority for starts-with
+      if (product.title) {
+        const titleLower = product.title.toLowerCase();
+        if (titleLower.startsWith(queryLower) || titleLower.includes(queryLower)) {
+          productTitles.add(product.cleanTitle || product.title);
+        }
       }
     });
 
-    // Add category suggestions
+    // Add category suggestions with counts
     Array.from(categories).slice(0, 2).forEach(category => {
-      const count = allProducts.filter(p => p.category === category).length;
+      const count = allProducts.filter(p => 
+        p.category === category || p.product_type === category
+      ).length;
       suggestions.push({
         text: category,
         type: 'category',
@@ -92,7 +116,7 @@ export function useAdvancedSearch(
       });
     });
 
-    // Add brand suggestions
+    // Add brand suggestions with counts
     Array.from(brands).slice(0, 2).forEach(brand => {
       const count = allProducts.filter(p => p.vendor === brand).length;
       suggestions.push({
@@ -102,10 +126,18 @@ export function useAdvancedSearch(
       });
     });
 
-    // Add product suggestions
-    Array.from(productNames).slice(0, 4).forEach(name => {
+    // Add product title suggestions (prioritize exact starts-with matches)
+    const exactMatches = Array.from(productTitles)
+      .filter(title => title.toLowerCase().startsWith(queryLower))
+      .slice(0, 3);
+    
+    const partialMatches = Array.from(productTitles)
+      .filter(title => !title.toLowerCase().startsWith(queryLower))
+      .slice(0, Math.max(0, 3 - exactMatches.length));
+    
+    [...exactMatches, ...partialMatches].forEach(title => {
       suggestions.push({
-        text: name,
+        text: title,
         type: 'product'
       });
     });

@@ -119,16 +119,25 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
           
           <Input
             ref={inputRef}
-            type="text"
+            type="search"
             value={value}
             onChange={handleInputChange}
             onFocus={() => setShowSuggestions(true)}
             placeholder={placeholder}
-            className="pl-10 pr-20"
+            className="pl-10 pr-20 text-[16px] touch-manipulation"
             autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck="false"
+            inputMode="search"
             role="combobox"
             aria-expanded={showSuggestions}
             aria-haspopup="listbox"
+            style={{ 
+              fontSize: '16px', // Prevent iOS zoom
+              WebkitAppearance: 'none',
+              appearance: 'none'
+            }}
           />
 
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
