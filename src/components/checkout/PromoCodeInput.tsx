@@ -114,8 +114,9 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
     });
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       validatePromoCode();
     }
   };
@@ -157,9 +158,15 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
                 placeholder="Enter promo code"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 disabled={isValidating}
-                className="flex-1 h-8 sm:h-10 text-xs sm:text-sm"
+                className="flex-1 h-8 sm:h-10 text-xs sm:text-sm touch-manipulation select-text"
+                autoComplete="off"
+                inputMode="text"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck="false"
+                type="text"
               />
               <Button
                 onClick={validatePromoCode}

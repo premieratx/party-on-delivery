@@ -11,28 +11,19 @@ export const MobileInputFix = () => {
       const style = document.createElement('style');
       style.id = 'mobile-input-fixes';
       style.textContent = `
-        /* CRITICAL: Mobile input fixes - HIGHEST PRIORITY */
         input, textarea, select {
-          /* Prevent zoom on focus (iOS) */
           font-size: 16px !important;
-          
-          /* Better touch targets */
-          min-height: 44px !important;
-          
-          /* CRITICAL: Ensure inputs are ALWAYS interactive */
-          pointer-events: auto !important;
-          touch-action: manipulation !important;
-          user-select: text !important;
           -webkit-user-select: text !important;
-          -moz-user-select: text !important;
-          
-          /* Enhanced mobile touch handling */
-          -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+          user-select: text !important;
           -webkit-touch-callout: default !important;
-          
-          /* Prevent any blocking overlays */
+          -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+          touch-action: manipulation !important;
+          pointer-events: auto !important;
+          z-index: 1 !important;
           position: relative !important;
-          z-index: 999 !important;
+          background-color: transparent;
+          -webkit-appearance: none;
+          appearance: none;
         }
         
         /* CRITICAL: Override ALL potential conflicts */

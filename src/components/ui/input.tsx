@@ -24,9 +24,23 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         // Enhanced mobile attributes
         autoCapitalize={props.autoCapitalize || (type === 'email' ? 'none' : 'words')}
         autoCorrect={props.autoCorrect || (type === 'email' ? 'off' : 'on')}
-        // Ensure input is always interactive
+        // Ensure input is always interactive and accessible
         onTouchStart={(e) => {
           e.stopPropagation();
+          // Ensure the input can always be focused
+          if (e.currentTarget && typeof e.currentTarget.focus === 'function') {
+            setTimeout(() => e.currentTarget.focus(), 0);
+          }
+        }}
+        onFocus={(e) => {
+          // Prevent any parent handlers from interfering
+          e.stopPropagation();
+          if (props.onFocus) props.onFocus(e);
+        }}
+        onClick={(e) => {
+          // Ensure clicks always work
+          e.stopPropagation();
+          if (props.onClick) props.onClick(e);
         }}
         {...props}
       />

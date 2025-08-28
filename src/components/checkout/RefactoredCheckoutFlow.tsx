@@ -23,6 +23,7 @@ import { CleanCheckoutTotal } from './CleanCheckoutTotal';
 import { PromoCodeInput } from './PromoCodeInput';
 import { CheckoutSafeguards } from './CheckoutSafeguards';
 import { CheckoutFlowValidator } from './CheckoutFlowValidator';
+import { CheckoutInputOptimizer } from './CheckoutInputOptimizer';
 import { MobileInputFix } from './MobileInputFix';
 
 interface RefactoredCheckoutFlowProps {
@@ -280,6 +281,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 overflow-x-hidden" data-checkout-form>
       <MobileInputFix />
+      <CheckoutInputOptimizer />
       <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full checkout-form">
         
         {/* Header with Back Button */}
