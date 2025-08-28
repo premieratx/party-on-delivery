@@ -22,7 +22,6 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
         
         // If this is homepage, find the default delivery app
         if (isHomepage) {
-          console.log('🏠 Loading homepage - finding delivery app with is_homepage=true...');
           const { data: homepageApp, error: homepageError } = await supabase
             .from('delivery_app_variations')
             .select('app_slug, app_name')
@@ -30,16 +29,11 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
             .eq('is_homepage', true)
             .limit(1);
             
-          if (homepageError) {
-            console.error('Error finding homepage app:', homepageError);
-            throw homepageError;
-          }
+          if (homepageError) throw homepageError;
           
           if (homepageApp && homepageApp.length > 0) {
             targetSlug = homepageApp[0].app_slug;
-            console.log(`🏠 Using homepage delivery app: ${homepageApp[0].app_name} (${targetSlug})`);
           } else {
-            console.warn('⚠️ No delivery app set as homepage, falling back to first active app');
             // Fallback to first active app if no homepage is set
             const { data: fallbackApp, error: fallbackError } = await supabase
               .from('delivery_app_variations')
@@ -53,7 +47,6 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
             }
             
             targetSlug = fallbackApp[0].app_slug;
-            console.log(`🏠 Using fallback delivery app: ${fallbackApp[0].app_name} (${targetSlug})`);
           }
         }
 
@@ -63,8 +56,6 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
           return;
         }
 
-        console.log(`🚀 Loading custom delivery app: ${targetSlug}`);
-        
         const { data: apps, error: appsError } = await supabase
           .from('delivery_app_variations')
           .select('*')
@@ -72,25 +63,19 @@ const CustomAppView = ({ isHomepage = false }: { isHomepage?: boolean }) => {
           .eq('is_active', true)
           .limit(1);
 
-        if (appsError) {
-          console.error('Error fetching delivery app:', appsError);
-          throw appsError;
-        }
+        if (appsError) throw appsError;
 
         if (!apps || apps.length === 0) {
-          console.warn(`No delivery app found for slug: ${targetSlug}`);
           setError(`Delivery app "${targetSlug}" not found`);
           setLoading(false);
           return;
         }
 
         const app = apps[0];
-        console.log(`✅ Loaded delivery app: ${app.app_name}`);
         setAppConfig(app);
         
       } catch (err) {
-        console.error('Error loading delivery app:', err);
-        setError('Failed to load delivery app: ' + err.message);
+        setError('Failed to load delivery app: ' + (err?.message || 'Unknown error'));
       } finally {
         setLoading(false);
       }
