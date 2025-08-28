@@ -9,7 +9,7 @@ import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 // AffiliateFlowAssignmentManager removed - standalone architecture
 import { EnhancedCoverPageManager } from '@/components/admin/EnhancedCoverPageManager';
 import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryAppManager';
-import { FreeShippingManager } from '@/components/admin/FreeShippingManager';
+import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { HomepageTestComponent } from '@/components/admin/HomepageTestComponent';
@@ -339,14 +339,11 @@ export default function AdminDashboard() {
                 New Post-Checkout
               </Button>
             </div>
-            <div>Post-checkout management functionality available via creator</div>
+            <EnhancedPostCheckoutManager />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
             <div className="grid gap-6">
-              {/* Free Shipping Manager */}
-              <FreeShippingManager />
-              
               {/* Customer Flow Manager removed - standalone architecture */}
               <HomepageDiagnosticTool />
               <HomepageAppSwitcher />

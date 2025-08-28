@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
 import { usePersistentCheckout } from '@/hooks/usePersistentCheckout';
 import { checkoutStorage } from '@/utils/universalStorage';
-import { hasCoverPageFreeShipping } from '@/utils/freeShippingLogic';
 
 // Import our new modular components
 import { CheckoutSteps } from './CheckoutSteps';
@@ -355,23 +354,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                   />
                 )}
               </>
-            )}
-
-            {/* Free Shipping Notice for Cover Page */}
-            {hasCoverPageFreeShipping() && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <h3 className="font-semibold text-green-800 dark:text-green-200">Free Shipping Applied!</h3>
-                </div>
-                <p className="text-sm text-green-700 dark:text-green-300 mb-2">
-                  You've got free shipping from this cover page promotion.
-                </p>
-                <div className="bg-white dark:bg-green-950 border border-green-200 dark:border-green-700 rounded p-2">
-                  <p className="text-xs text-muted-foreground mb-1">Promo code (for manual entry if needed):</p>
-                  <code className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">PREMIERE2025</code>
-                </div>
-              </div>
             )}
 
             {/* Promo Code Section - Move Above Payment */}

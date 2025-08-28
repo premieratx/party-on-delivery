@@ -267,14 +267,12 @@ serve(async (req) => {
     let zip = '';
     let fullAddressString = '';
 
-    // CRITICAL DEBUG: Log what we received for address
-    logStep("🔍 DEBUGGING ADDRESS DATA", {
+    // First, log what we received
+    logStep("Raw delivery address data received", {
       delivery_address: metadata.delivery_address,
       delivery_date: deliveryDate,
       delivery_time: deliveryTime,
-      type: typeof metadata.delivery_address,
-      all_metadata_keys: Object.keys(metadata),
-      raw_metadata_sample: JSON.stringify(metadata).substring(0, 500)
+      type: typeof metadata.delivery_address
     });
 
     try {
@@ -329,42 +327,19 @@ serve(async (req) => {
       // Fallback if still empty - USE EVERYTHING WE HAVE
       if (!fullAddressString) {
         // Try every possible address field from metadata
-        const possibleAddresses = [
-          metadata.delivery_address,
-          metadata.address, 
-          metadata.customer_address,
-          metadata.shipping_address
-        ].filter(addr => addr && addr.toString().trim());
-        
-        if (possibleAddresses.length > 0) {
-          fullAddressString = possibleAddresses[0].toString();
-        } else {
-          fullAddressString = 'CRITICAL: Address missing from metadata - check checkout form';
-        }
-        
-        // If we got a string, try to parse it for individual components
-        if (fullAddressString && fullAddressString !== 'CRITICAL: Address missing from metadata - check checkout form') {
-          street = fullAddressString; // Use full string as street at minimum
-          
-          // Try to parse comma-separated address
-          if (fullAddressString.includes(',')) {
-            const parts = fullAddressString.split(',').map(s => s.trim());
-            street = parts[0] || fullAddressString;
-            city = parts[1] || '';
-            if (parts[2]) {
-              const stateZip = parts[2].split(' ');
-              state = stateZip[0] || '';
-              zip = stateZip.slice(1).join(' ') || '';
-            }
-          }
-        }
+        fullAddressString = metadata.delivery_address || 
+                           metadata.address || 
+                           metadata.customer_address ||
+                           metadata.shipping_address ||
+                           JSON.stringify(metadata.delivery_address || {}) ||
+                           'FALLBACK: Raw metadata available but address parsing failed';
+        street = fullAddressString;
         
         // Log this so we can see what we're missing
-        logStep("USING FALLBACK ADDRESS LOGIC", {
-          finalAddress: fullAddressString,
-          street, city, state, zip,
-          allMetadataKeys: Object.keys(metadata),
-          possibleAddresses: possibleAddresses.map(addr => addr?.toString().substring(0, 50))
+        logStep("CRITICAL: Using ultimate fallback for address", {
+          attempted_address: fullAddressString,
+          all_metadata_keys: Object.keys(metadata),
+          full_metadata: metadata
         });
       }
 
@@ -652,11 +627,11 @@ serve(async (req) => {
           }
         ].filter(attr => attr.value && attr.value.trim() !== '' && attr.value !== 'None'),
         
-        // Order notes - DISPLAY DELIVERY ADDRESS PROMINENTLY
+        // Order notes - COMPREHENSIVE delivery information display
         note: `🚚 DELIVERY ORDER (CST) - ${deliveryDate} at ${deliveryTime}
 
 📍 DELIVERY ADDRESS:
-${fullAddressString || street || 'NO ADDRESS PROVIDED - CHECK METADATA'}
+${fullAddressString || `${street}, ${city}, ${state} ${zip}`.replace(/,\s*,/g, ',').replace(/^\s*,\s*|\s*,\s*$/g, '')}
 📞 Customer Phone: ${customerPhone}
 ✉️ Customer Email: ${customerEmail}
 ${deliveryInstructions ? `📋 SPECIAL INSTRUCTIONS: ${deliveryInstructions}` : '📋 SPECIAL INSTRUCTIONS: None'}
