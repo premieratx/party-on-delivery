@@ -4515,6 +4515,10 @@ export type Database = {
         Args: { template_name_param: string }
         Returns: Json
       }
+      finalize_security_setup: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       find_group_order_by_token: {
         Args: { p_share_token: string }
         Returns: {
@@ -4736,6 +4740,10 @@ export type Database = {
       optimized_cache_cleanup: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      request_admin_password_reset: {
+        Args: { admin_email: string }
+        Returns: Json
       }
       revoke_all_public_access: {
         Args: Record<PropertyKey, never>
