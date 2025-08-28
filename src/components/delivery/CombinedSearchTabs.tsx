@@ -407,9 +407,9 @@ export const CombinedSearchTabs = ({
           <div className="flex items-center">
             {/* Enhanced Responsive Tabs - No icons, better text spacing */}
             <div className="relative w-full">
-              <div 
+                <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1"
+                className="flex gap-1 overflow-x-auto scrollbar-hide max-w-full pb-1"
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch'

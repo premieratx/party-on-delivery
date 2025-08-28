@@ -136,7 +136,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
   // Use the proper delivery fee hook that handles PREMIERE2025 and other free shipping codes
-  const finalDeliveryFee = useDeliveryFee(cartSubtotal, appliedDiscount);
+  const finalDeliveryFee = useDeliveryFee(cartSubtotal, appliedDiscount, tracking.freeShippingEligible);
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? cartSubtotal * (1 - appliedDiscount.value / 100)

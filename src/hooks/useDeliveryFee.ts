@@ -15,13 +15,16 @@ import { useMemo } from 'react';
  * - PARTYON10: 10% off subtotal (delivery fee still applies)
  */
 // FIXED: Reliable delivery fee calculation that works every time
-export function useDeliveryFee(subtotal: number, appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) {
+export function useDeliveryFee(subtotal: number, appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null, coverPageFreeShipping?: boolean) {
   const deliveryFee = useMemo(() => {
     // Input validation
     const validSubtotal = Math.max(0, Number(subtotal) || 0);
     
-    // If free shipping discount is applied, delivery is $0
-    if (appliedDiscount?.type === 'free_shipping') {
+    // Check for free shipping from cover page toggle
+    const freeShippingFromCover = sessionStorage.getItem('shipping.free') === '1';
+    
+    // If free shipping discount is applied OR cover page free shipping is enabled, delivery is $0
+    if (appliedDiscount?.type === 'free_shipping' || coverPageFreeShipping || freeShippingFromCover) {
       return 0;
     }
     
@@ -31,7 +34,7 @@ export function useDeliveryFee(subtotal: number, appliedDiscount?: {code: string
     } else {
       return 20; // $20 minimum delivery fee
     }
-  }, [subtotal, appliedDiscount]);
+  }, [subtotal, appliedDiscount, coverPageFreeShipping]);
 
   return deliveryFee;
 }
