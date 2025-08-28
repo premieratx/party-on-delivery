@@ -13,6 +13,8 @@ import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import { useGlobalKeyboardHiding } from '@/hooks/useGlobalKeyboardHiding';
 import { useMobileBrowserChrome } from '@/hooks/useMobileBrowserChrome';
 import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
+import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptimizer';
+import { MobileInputFix } from '@/components/checkout/MobileInputFix';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -67,10 +69,13 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter>
-            <AuthProvider>
-              <AdminAuthFix />
-              <ColdStartSolution />
-              <GlobalCartProvider>
+              <AuthProvider>
+                <AdminAuthFix />
+                <ColdStartSolution />
+                {/* UNIVERSAL INPUT OPTIMIZERS - ACTIVE ON ALL PAGES & DEVICES */}
+                <CheckoutInputOptimizer />
+                <MobileInputFix />
+                <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
               <div className="min-h-screen">
