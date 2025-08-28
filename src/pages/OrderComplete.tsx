@@ -105,7 +105,7 @@ const OrderComplete = () => {
                 
                 const { data: orders, error } = await supabase
                   .from('customer_orders')
-                  .select(`*, customer:customers(first_name, last_name, email)`)
+                  .select('*')
                   .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm},payment_intent_id.eq.${searchTerm}`)
                   .order('created_at', { ascending: false })
                   .limit(3);
