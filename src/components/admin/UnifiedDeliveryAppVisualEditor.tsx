@@ -350,7 +350,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden" aria-describedby="dialog-description">
         <div className="h-full flex flex-col">
           {/* Header */}
           <DialogHeader className="p-4 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">

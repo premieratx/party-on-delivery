@@ -34,7 +34,7 @@ export const ThemeColorToggle: React.FC<ThemeColorToggleProps> = ({ className })
       root.style.setProperty('--brand-blue', color.primary);
     }
     
-    console.log(`🎨 Applied ${color.name} theme: primary(${color.primary}) secondary(${color.secondary})`);
+    // Theme applied silently
     setIsOpen(false);
   };
 

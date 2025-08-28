@@ -340,7 +340,7 @@ export const MediaLibraryManager: React.FC<MediaLibraryManagerProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl h-[90vh]">
+      <DialogContent className="max-w-6xl h-[90vh]" aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle>
             {selectMode ? 'Select Media' : 'Media Library Manager'}

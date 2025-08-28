@@ -127,7 +127,7 @@ export const AffiliateIntro: React.FC = () => {
 
       {/* Signup Modal */}
       <Dialog open={showSignup} onOpenChange={setShowSignup}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="dialog-description">
           <DialogHeader>
             <DialogTitle>Join Our Affiliate Program</DialogTitle>
           </DialogHeader>

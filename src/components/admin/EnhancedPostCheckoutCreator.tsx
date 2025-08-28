@@ -322,7 +322,7 @@ const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorProps> = 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden p-0">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden p-0" aria-describedby="dialog-description">
         <DialogDescription className="sr-only">
           Enhanced post-checkout page creation interface
         </DialogDescription>

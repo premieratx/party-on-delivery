@@ -292,7 +292,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
   if (previewMode) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden p-0">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden p-0" aria-describedby="dialog-description">
           <DialogDescription className="sr-only">
             Post-checkout screen preview interface
           </DialogDescription>
@@ -330,7 +330,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0">
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0" aria-describedby="dialog-description">
         <DialogDescription className="sr-only">
           Simplified post-checkout editor interface
         </DialogDescription>

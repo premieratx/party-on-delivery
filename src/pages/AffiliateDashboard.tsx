@@ -1043,7 +1043,7 @@ Link in bio: ${buildAffiliateUrl(affiliate?.affiliate_code || '')}`;
 
       {/* Profile Completion Dialog */}
       <Dialog open={showProfileForm} onOpenChange={setShowProfileForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="dialog-description">
           <DialogHeader>
             <DialogTitle>Complete Your Profile</DialogTitle>
           </DialogHeader>

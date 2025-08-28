@@ -1096,7 +1096,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   <EnhancedFigmaTemplateLibrary 
                     category="cover_page"
                     onSelectTemplate={(template) => {
-                      console.log('🎨 Applying Figma template:', template);
+                      // Apply Figma template silently
                       setTemplateData(template);
                       
                       // Apply template data to form
@@ -1293,7 +1293,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   if (fullscreenPreview) {
     return (
       <Dialog open={fullscreenPreview} onOpenChange={setFullscreenPreview}>
-        <DialogContent className="max-w-screen-xl h-[90vh] p-0 border-2 border-border/50">
+        <DialogContent className="max-w-screen-xl h-[90vh] p-0 border-2 border-border/50" aria-describedby="dialog-description">
           <div className="h-full flex flex-col">
             <div className="p-4 border-b border-border/30 bg-muted/20">
               <div className="flex items-center justify-between">
@@ -1338,7 +1338,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
   return embedded ? content : (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-screen-2xl h-[95vh] p-0 border-2 border-border/50">
+      <DialogContent className="max-w-screen-2xl h-[95vh] p-0 border-2 border-border/50" aria-describedby="dialog-description">
         <DialogHeader className="p-6 border-b border-border/30 bg-muted/20">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Wand2 className="w-6 h-6 text-primary animate-pulse" />

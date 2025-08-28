@@ -263,18 +263,10 @@ export default function CoverPage() {
   const subtitle = pageData.subtitle || '';
   const logoUrl = pageData.logo_url || '';
   
-  console.log('🔍 Features from database:', features);
-  console.log('🔍 Features type:', typeof features);
   
   // Parse YOUR EXACT SAVED STYLES
   const savedStyles = pageData.styles || {};
   const theme = pageData.theme || pageData.unified_theme || 'gold';
-  
-  console.log('🎨 USING YOUR EXACT SAVED STYLES:');
-  console.log('Theme:', theme);
-  console.log('Saved styles:', savedStyles);
-  console.log('🔍 Raw checklist from pageData:', pageData.checklist);
-  console.log('🔍 Parsed features array:', features);
   
   // Apply YOUR EXACT SIZING from saved styles
   const logoSize = pageData.logo_height || savedStyles.title_size || 120;

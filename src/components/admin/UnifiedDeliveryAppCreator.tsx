@@ -303,9 +303,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       // Load styling configuration if it exists
       if (initial.main_app_config) {
         const config = initial.main_app_config;
-        console.log('🎨 Loading styling config:', config);
         
-        console.log('Setting logoSize from:', config.logo_size, 'to state');
         setLogoSize(config.logo_size ?? 50);
         setHeadlineSize(config.headline_size ?? 24);
         setSubheadlineSize(config.subheadline_size ?? 14);
@@ -316,15 +314,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         setBackgroundOpacity(config.background_opacity ?? 0.7);
         setOverlayColor(config.overlay_color || '#000000');
         
-        console.log('🎨 Setting font/color config:');
-        console.log('- headline_font:', config.headline_font);
-        console.log('- headline_color:', config.headline_color);
         setHeadlineFont(config.headline_font || 'Inter');
         setHeadlineColor(config.headline_color || '#ffffff');
         setSubheadlineFont(config.subheadline_font || 'Inter');
         setSubheadlineColor(config.subheadline_color || '#ffffff');
-        
-        console.log('✅ Configuration loaded successfully');
       }
       
       // Load tabs configuration

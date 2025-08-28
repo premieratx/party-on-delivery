@@ -449,7 +449,7 @@ const [showSearchModal, setShowSearchModal] = useState(false);
 
       {/* Search Modal */}
       <Dialog open={showSearchModal} onOpenChange={setShowSearchModal}>
-        <DialogContent className="max-w-md mx-auto">
+        <DialogContent className="max-w-md mx-auto" aria-describedby="dialog-description">
           <DialogHeader>
             <DialogTitle>Search Products</DialogTitle>
             <DialogDescription>

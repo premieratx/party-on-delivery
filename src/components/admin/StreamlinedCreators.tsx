@@ -32,7 +32,7 @@ export const StreamlinedModal: React.FC<StreamlinedModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden flex flex-col" aria-describedby="dialog-description">
         <DialogDescription className="sr-only">
           Streamlined creation interface
         </DialogDescription>
