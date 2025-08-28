@@ -19,7 +19,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
+import CoverStartScreen from '@/components/cover-pages/CoverStartScreen';
 import { EnhancedFigmaTemplateLibrary } from "./EnhancedFigmaTemplateLibrary";
 import { AnimatedCoverPreview } from "./AnimatedCoverPreview";
 import { MobileFirstCoverPreview } from "./MobileFirstCoverPreview";

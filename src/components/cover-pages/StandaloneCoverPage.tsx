@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import CoverStartScreen from '@/components/custom-delivery/CoverStartScreen';
+import CoverStartScreen from '@/components/cover-pages/CoverStartScreen';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Eye } from 'lucide-react';
 
