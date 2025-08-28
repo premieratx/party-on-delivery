@@ -224,18 +224,23 @@ export const CombinedSearchTabs = ({
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Focus search input immediately with better selector
-    setTimeout(() => {
-      const searchInput = searchInputRef.current ||
+    // Force focus and keyboard on mobile
+    requestAnimationFrame(() => {
+      const searchInput = document.querySelector('.mobile-search-input') as HTMLInputElement ||
+                         searchInputRef.current ||
                          document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
-                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
-                         document.querySelector('.mobile-search-input') as HTMLInputElement;
+                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
       
       if (searchInput) {
+        // For mobile, we need to focus and force the keyboard
         searchInput.focus();
-        searchInput.click(); // Also trigger click to ensure mobile keyboard opens
+        searchInput.setAttribute('readonly', 'false');
+        searchInput.removeAttribute('readonly');
+        // Trigger input event to ensure mobile keyboard
+        const event = new Event('input', { bubbles: true });
+        searchInput.dispatchEvent(event);
       }
-    }, 150); // Slightly longer delay for mobile
+    });
   };
 
   // Listen for mobile search activation from SearchIcon component
