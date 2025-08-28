@@ -255,7 +255,7 @@ serve(async (req) => {
     const deliveryTime = metadata.delivery_time || '';
     const deliveryInstructions = metadata.delivery_instructions || '';
 
-    // IMPROVED ADDRESS PARSING - Enhanced for Shopify standards
+    // FIXED: Enhanced address parsing with proper metadata extraction
     let street = '';
     let city = '';
     let state = '';
@@ -270,83 +270,93 @@ serve(async (req) => {
     });
 
     try {
-      if (metadata.delivery_address) {
-        if (typeof metadata.delivery_address === 'object') {
-          // Already an object
-          const addr = metadata.delivery_address;
-          street = addr.street || addr.address1 || addr.line1 || addr.address || '';
-          city = addr.city || '';
-          state = addr.state || addr.province || '';
-          zip = addr.zip || addr.postal_code || addr.zipCode || '';
-        } else if (typeof metadata.delivery_address === 'string' && metadata.delivery_address.trim().startsWith('{')) {
-          // JSON string
-          const addr = JSON.parse(metadata.delivery_address);
-          street = addr.street || addr.address1 || addr.line1 || addr.address || '';
-          city = addr.city || '';
-          state = addr.state || addr.province || '';
-          zip = addr.zip || addr.postal_code || addr.zipCode || '';
-        } else {
-          // Plain string address - Enhanced parsing
-          const deliveryAddress = metadata.delivery_address.toString().trim();
-          fullAddressString = deliveryAddress;
-          
-          // Better comma-based parsing
-          if (deliveryAddress.includes(',')) {
-            const addressParts = deliveryAddress.split(',').map(p => p.trim());
-            street = addressParts[0] || '';
-            city = addressParts[1] || '';
-            
-            // Handle "City, State ZIP" format
-            const stateZipPart = addressParts[2] || '';
-            const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
-            if (stateZipMatch) {
-              state = stateZipMatch[1];
-              zip = stateZipMatch[2];
-            } else {
-              // Fallback parsing
-              const parts = stateZipPart.split(' ');
-              state = parts[0] || '';
-              zip = parts.slice(1).join(' ') || '';
-            }
-          } else {
-            // Use entire string as street if no structure
-            street = deliveryAddress;
-          }
-        }
-
-        // Build formatted address string if we have parts
-        if (!fullAddressString && (street || city || state || zip)) {
-          const parts = [street, city, state && zip ? `${state} ${zip}` : state || zip].filter(Boolean);
-          fullAddressString = parts.join(', ');
-        }
-
-        // Final fallback
-        if (!fullAddressString) {
-          fullAddressString = metadata.delivery_address.toString();
-        }
+      // First, try to get from delivery_address in metadata
+      let deliveryAddressSource = metadata.delivery_address;
+      
+      // If delivery_address is empty, try alternative metadata keys
+      if (!deliveryAddressSource || deliveryAddressSource.trim() === '') {
+        deliveryAddressSource = metadata.shipping_address || 
+                               metadata.address || 
+                               metadata.customer_address ||
+                               '';
       }
+      
+      logStep("Address parsing attempt", { 
+        delivery_address: deliveryAddressSource,
+        all_metadata_keys: Object.keys(metadata),
+        type: typeof deliveryAddressSource
+      });
 
-      // Ultimate fallback if still empty
-      if (!fullAddressString) {
-        fullAddressString = metadata.delivery_address || 
-                           metadata.address || 
-                           metadata.customer_address ||
-                           'Address parsing failed - check metadata';
-        street = fullAddressString;
+      if (deliveryAddressSource && typeof deliveryAddressSource === 'string' && deliveryAddressSource.trim() !== '') {
+        // Parse standard address format: "123 Main St, City, ST 12345"
+        const addressParts = deliveryAddressSource.split(',').map(part => part.trim());
         
-        logStep("CRITICAL: Using ultimate fallback for address", {
-          attempted_address: fullAddressString,
-          all_metadata_keys: Object.keys(metadata)
+        if (addressParts.length >= 3) {
+          street = addressParts[0];
+          city = addressParts[1];
+          const stateZipPart = addressParts[2];
+          
+          // Extract state and ZIP from "ST 12345" format
+          const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s*(\d{5}(?:-\d{4})?)$/i);
+          
+          if (stateZipMatch) {
+            state = stateZipMatch[1].toUpperCase();
+            zip = stateZipMatch[2];
+          } else {
+            // Fallback: use parts as-is
+            const parts = stateZipPart.split(' ');
+            state = parts[0] || '';
+            zip = parts.slice(1).join(' ') || '';
+          }
+        } else if (addressParts.length === 2) {
+          // Format: "123 Main St, City ST"
+          street = addressParts[0];
+          city = addressParts[1]; 
+        } else {
+          // Single string - use as street
+          street = deliveryAddressSource;
+        }
+        
+        // Build full address string
+        fullAddressString = deliveryAddressSource;
+        
+      } else if (deliveryAddressSource && typeof deliveryAddressSource === 'object') {
+        // Handle JSON object format
+        const addrObj = deliveryAddressSource;
+        street = addrObj.street || addrObj.address || addrObj.line1 || addrObj.address1 || '';
+        city = addrObj.city || '';
+        state = addrObj.state || addrObj.province || '';
+        zip = addrObj.zip || addrObj.zipCode || addrObj.postal_code || '';
+        
+        // Build full address string from parts
+        const parts = [street, city, state && zip ? `${state} ${zip}` : state || zip].filter(Boolean);
+        fullAddressString = parts.join(', ');
+        
+      } else {
+        // CRITICAL: If no address found, this is a major issue
+        logStep("CRITICAL: No delivery address found in metadata", {
+          all_metadata: metadata,
+          attempted_sources: ['delivery_address', 'shipping_address', 'address', 'customer_address']
         });
+        
+        // Set error message that will be visible in Shopify
+        street = 'DELIVERY ADDRESS MISSING - CHECK CHECKOUT FLOW';
+        city = 'UNKNOWN';
+        state = 'UNKNOWN';
+        zip = 'UNKNOWN';
+        fullAddressString = 'DELIVERY ADDRESS MISSING - CHECK CHECKOUT FLOW';
       }
-
+      
     } catch (addressParseError) {
-      logStep("WARNING: Could not parse delivery address", { 
+      logStep("WARNING: Address parsing error", { 
         error: addressParseError.message,
         rawAddress: metadata.delivery_address 
       });
-      fullAddressString = metadata.delivery_address ? metadata.delivery_address.toString() : 'Address parsing failed';
-      street = fullAddressString;
+      street = 'ADDRESS PARSING ERROR';
+      city = 'UNKNOWN';
+      state = 'UNKNOWN';
+      zip = 'UNKNOWN';
+      fullAddressString = 'ADDRESS PARSING ERROR';
     }
 
     logStep("ENHANCED ADDRESS PARSING COMPLETED", {
@@ -473,7 +483,7 @@ serve(async (req) => {
 
     // SHOPIFY STANDARD ORDER STRUCTURE - Following Official Documentation
     
-    // Build line items - ONLY ACTUAL PRODUCTS + DRIVER TIP
+    // Build line items - ONLY ACTUAL PRODUCTS (NO TIPS/FEES)
     const lineItems = [];
     let productSubtotal = 0;
     
@@ -515,26 +525,27 @@ serve(async (req) => {
       lineItems.push(lineItem);
     });
 
-    // Add driver tip as line item (this is custom, not standard shipping/tax)
-    const tipAmountInDollars = orderAmounts.tip_amount || 0;
-    if (tipAmountInDollars > 0) {
-      lineItems.push({
-        title: "Driver Tip",
-        price: tipAmountInDollars.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-
-    // Build shipping lines (Shopify standard for delivery fees)
+    // FIXED: Build shipping lines (delivery fee + driver tip)
     const shippingLines = [];
     const deliveryFeeInDollars = orderAmounts.delivery_fee || 0;
+    const tipAmountInDollars = orderAmounts.tip_amount || 0;
+    
+    // Add delivery fee
     if (deliveryFeeInDollars > 0) {
       shippingLines.push({
         title: "Delivery Service",
         price: deliveryFeeInDollars.toFixed(2),
         code: "DELIVERY",
+        source: "delivery_app"
+      });
+    }
+    
+    // FIXED: Add driver tip to shipping lines (NOT as line item)
+    if (tipAmountInDollars > 0) {
+      shippingLines.push({
+        title: "Driver Tip",
+        price: tipAmountInDollars.toFixed(2),
+        code: "DRIVER_TIP",
         source: "delivery_app"
       });
     }
@@ -572,10 +583,10 @@ serve(async (req) => {
     // Create Shopify order with OFFICIAL SHOPIFY STRUCTURE
     const orderData = {
       order: {
-        // PRODUCTS + TIP ONLY in line_items (Shopify standard)
+        // PRODUCTS ONLY in line_items (Shopify standard)
         line_items: lineItems,
         
-        // DELIVERY FEE in shipping_lines (Shopify standard)
+        // DELIVERY FEE + DRIVER TIP in shipping_lines (Shopify standard)
         shipping_lines: shippingLines,
         
         // SALES TAX in tax_lines (Shopify standard) 
@@ -612,11 +623,11 @@ serve(async (req) => {
         email: customerEmail,
         phone: customerPhone,
         
-        // CORRECT SHOPIFY TOTALS
-        subtotal_price: (productSubtotal + tipAmountInDollars).toFixed(2), // Products + tip
-        total_shipping_price_set: deliveryFeeInDollars > 0 ? {
+        // CORRECT SHOPIFY TOTALS - Products only in subtotal, tip with shipping
+        subtotal_price: productSubtotal.toFixed(2), // Products only
+        total_shipping_price_set: (deliveryFeeInDollars + tipAmountInDollars) > 0 ? {
           shop_money: {
-            amount: deliveryFeeInDollars.toFixed(2),
+            amount: (deliveryFeeInDollars + tipAmountInDollars).toFixed(2),
             currency_code: "USD"
           }
         } : undefined,
@@ -755,7 +766,7 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
             session_id: paymentIntentId || sessionId,
             payment_intent_id: paymentIntentId,
             customer_id: null, // We might not have auth user
-            subtotal: productSubtotal + tipAmountInDollars, // Products + tip
+            subtotal: productSubtotal, // Products only (tip now in shipping)
             delivery_fee: deliveryFeeInDollars,
             total_amount: orderAmounts.total_amount,
             status: 'confirmed',
@@ -789,12 +800,12 @@ ${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
           shopify_order_id: shopifyOrderId.toString(),
           order_number: orderNumber.toString(),
           total_amount: orderAmounts.total_amount,
-          subtotal: productSubtotal + tipAmountInDollars,
+          subtotal: productSubtotal, // Products only
           delivery_fee: deliveryFeeInDollars,
           sales_tax: orderAmounts.sales_tax,
           tip_amount: tipAmountInDollars,
           shipping_address: orderResult.order.shipping_address,
-          message: "Order created successfully using Shopify standard structure"
+          message: "Order created successfully - driver tip moved to shipping_lines with delivery fee"
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
