@@ -221,21 +221,21 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
-    console.log('🔍 Mobile search icon clicked directly');
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Focus search input immediately
+    // Focus search input immediately with better selector
     setTimeout(() => {
       const searchInput = searchInputRef.current ||
                          document.querySelector('[data-mobile-search-handler] input') as HTMLInputElement ||
-                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+                         document.querySelector('input[placeholder*="Search"]') as HTMLInputElement ||
+                         document.querySelector('.mobile-search-input') as HTMLInputElement;
       
       if (searchInput) {
         searchInput.focus();
-        console.log('🎯 Direct search input focused');
+        searchInput.click(); // Also trigger click to ensure mobile keyboard opens
       }
-    }, 100);
+    }, 150); // Slightly longer delay for mobile
   };
 
   // Listen for mobile search activation from SearchIcon component
@@ -385,7 +385,6 @@ export const CombinedSearchTabs = ({
               <AdvancedSearchBar
                 value={searchQuery}
                 onChange={(newValue) => {
-                  console.log('🔍 Mobile search query changed:', newValue);
                   onSearchChange(newValue);
                   // Real-time search - trigger immediately for faster results
                   if (newValue.trim()) {
@@ -394,8 +393,7 @@ export const CombinedSearchTabs = ({
                 }}
                 onSubmit={onSearchSubmit}
                 placeholder="Search products..."
-                className="flex-1 max-w-md"
-                allProducts={allProducts}
+                className="flex-1 max-w-md mobile-search-input"
                 autoFocus={isSearchExpanded}
               />
             </div>
@@ -471,7 +469,6 @@ export const CombinedSearchTabs = ({
                       <AdvancedSearchBar
                         value={searchQuery}
                         onChange={(newValue) => {
-                          console.log('🔍 Mobile search query changed:', newValue);
                           onSearchChange(newValue);
                           // Instant search - trigger immediately as user types
                           if (newValue.trim()) {
