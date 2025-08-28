@@ -109,43 +109,8 @@ export const AddressStep: React.FC<AddressStepProps> = ({
 
   const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
 
-  if (isConfirmed && isAddressComplete) {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-500" />
-            Delivery Address
-          </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              console.log('🔄 User editing address');
-              onEdit?.();
-            }}
-            className="flex items-center gap-2"
-          >
-            Edit Address
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground" />
-            <div>
-              <div>{addressInfo.street}</div>
-              <div>{addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</div>
-              {addressInfo.instructions && (
-                <div className="text-muted-foreground mt-1">
-                  Instructions: {addressInfo.instructions}
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // CRITICAL: NEVER show read-only confirmed state - ALWAYS keep editable
+  // Remove this locked confirmation view entirely to prevent address lockout
 
   return (
     <Card>

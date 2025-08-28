@@ -118,12 +118,17 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     }
   }, [persistentDataLoaded, persistedCustomer, persistedAddress, setCustomerInfo, setAddressInfo]);
 
-  // CRITICAL: Always allow editing - never auto-confirm to prevent user lockout
+  // CRITICAL: NEVER auto-confirm pre-filled data - ALWAYS keep editable
   useEffect(() => {
-    // Remove any auto-confirmation that could block users from editing
-    // Users must manually confirm each step to ensure they can always edit
-    console.log('✅ Checkout safeguard: Auto-confirmation disabled to ensure editability');
-  }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer]);
+    // Force all confirmations to FALSE to ensure pre-filled data stays editable
+    if (persistentDataLoaded && (persistedAddress.address || persistedCustomer.email)) {
+      console.log('🔒 PREVENTING auto-confirmation of pre-filled data to keep it editable');
+      setConfirmedDateTime(false);
+      setConfirmedAddress(false);
+      setConfirmedCustomer(false);
+      setCurrentStep('datetime'); // Always start at step 1 for editing
+    }
+  }, [persistentDataLoaded, persistedAddress, persistedCustomer, setConfirmedDateTime, setConfirmedAddress, setConfirmedCustomer, setCurrentStep]);
 
   // Pricing calculations - use proper delivery fee hook with tip support
   const markupPercent = (() => {

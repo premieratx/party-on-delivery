@@ -42,12 +42,18 @@ export const CheckoutInputOptimizer = () => {
           /* CRITICAL: iOS zoom prevention */
           font-size: 16px !important;
           
-          /* CRITICAL: Always accessible */
-          pointer-events: auto !important;
-          touch-action: manipulation !important;
-          user-select: text !important;
-          -webkit-user-select: text !important;
-          -moz-user-select: text !important;
+        /* CRITICAL: Always accessible and selectable */
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        user-select: text !important;
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        
+        /* CRITICAL: Force text selection even in pre-filled fields */
+        cursor: text !important;
+        
+        /* CRITICAL: Prevent any readonly-like behavior */
+        -webkit-user-modify: read-write !important;
           
           /* CRITICAL: Mobile optimizations */
           -webkit-appearance: none !important;
@@ -112,6 +118,24 @@ export const CheckoutInputOptimizer = () => {
         .space-y-3 > *, .space-y-4 > *,
         .grid > *, .flex > *, .relative > * {
           pointer-events: auto !important;
+        }
+        
+        /* CRITICAL: Force ALL pre-filled inputs to be editable */
+        input[value]:not([value=""]),
+        textarea[value]:not([value=""]) {
+          background-color: white !important;
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          cursor: text !important;
+          pointer-events: auto !important;
+          -webkit-user-modify: read-write !important;
+        }
+        
+        /* CRITICAL: Prevent any "readonly" appearance */
+        input[readonly], textarea[readonly] {
+          readonly: false !important;
+          background-color: white !important;
+          cursor: text !important;
         }
         
         /* CRITICAL: Focus handling */

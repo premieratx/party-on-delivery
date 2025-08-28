@@ -74,36 +74,8 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
 
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone;
 
-  if (isConfirmed && isCustomerComplete) {
-    return (
-      <Card className="border-green-200 bg-green-50/30">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
-          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-            Contact Information
-          </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onEdit?.();
-            }}
-            className="flex items-center gap-2 h-7 sm:h-8 text-xs sm:text-sm"
-          >
-            <Edit2 className="w-3 h-3" />
-            Edit
-          </Button>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-1 text-xs sm:text-sm">
-            <div className="font-medium">{customerInfo.firstName} {customerInfo.lastName}</div>
-            <div className="text-muted-foreground">{customerInfo.email}</div>
-            <div className="text-muted-foreground">{customerInfo.phone}</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // CRITICAL: NEVER show read-only confirmed state - ALWAYS keep editable
+  // Remove this locked confirmation view entirely to prevent customer info lockout
 
   return (
     <Card>
