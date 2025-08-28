@@ -14,9 +14,7 @@ interface CheckoutState {
     value: number;
   } | null;
   currentStep: 'datetime' | 'address' | 'payment';
-  confirmedDateTime: boolean;
-  confirmedAddress: boolean;
-  confirmedCustomer: boolean;
+  // REMOVED: confirmedDateTime, confirmedAddress, confirmedCustomer - these caused lockouts
 }
 
 const CHECKOUT_STORAGE_KEY = 'partyondelivery_checkout_state';

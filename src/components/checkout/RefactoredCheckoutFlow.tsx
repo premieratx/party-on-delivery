@@ -309,9 +309,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         {/* Progress Steps */}
         <CheckoutSteps 
           currentStep={currentStep}
-          confirmedDateTime={false} // FORCE ALWAYS EDITABLE
-          confirmedAddress={false}  // FORCE ALWAYS EDITABLE
-          confirmedCustomer={false} // FORCE ALWAYS EDITABLE
         />
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">

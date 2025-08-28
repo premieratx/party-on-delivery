@@ -17,6 +17,7 @@ import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptim
 import { MobileInputFix } from '@/components/checkout/MobileInputFix';
 import { CheckoutVerificationTool } from '@/components/checkout/CheckoutVerificationTool';
 import { UniversalCheckoutGuard } from '@/components/checkout/UniversalCheckoutGuard';
+import { CheckoutCacheBuster } from '@/components/checkout/CheckoutCacheBuster';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -79,6 +80,7 @@ const App = () => {
               <MobileInputFix />
               <CheckoutVerificationTool />
               <UniversalCheckoutGuard />
+              <CheckoutCacheBuster />
               <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
