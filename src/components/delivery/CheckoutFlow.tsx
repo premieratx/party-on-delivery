@@ -633,8 +633,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     setPhoneError(phoneErr);
     
     if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
-      setConfirmedDateTime(true);
-      setConfirmedCustomer(true);
+      // CONFIRMATION SYSTEM DISABLED - Never lock users out
+      console.log('🔓 Confirmation system disabled - users can edit all information');
+      // setConfirmedDateTime(true); // REMOVED - was locking users out
+      // setConfirmedCustomer(true);  // REMOVED - was locking users out
       
       // Navigate to address step
       if (!confirmedAddress) {
@@ -655,7 +657,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (!isAddressComplete) return;
     
     console.log('🟢 Address validation passed, confirming...');
-    setConfirmedAddress(true);
+    // CONFIRMATION SYSTEM DISABLED - Never lock users out
+    console.log('🔓 Address confirmation disabled - users can edit all information');
+    // setConfirmedAddress(true); // REMOVED - was locking users out
     
     // Return to previous step if editing, otherwise auto-proceed to payment if all sections are confirmed  
     if (previousStep !== currentStep) {
@@ -689,7 +693,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
       console.log('🟢 Customer validation passed, confirming DateTime...');
-      setConfirmedDateTime(true);
+      // CONFIRMATION SYSTEM DISABLED - Never lock users out
+      console.log('🔓 DateTime confirmation disabled - users can edit all information');
+      // setConfirmedDateTime(true); // REMOVED - was locking users out
       
       // ALWAYS proceed to address step after confirming date/time/customer - remove complex logic
       console.log('DateTime confirmed, proceeding to address step...');
@@ -972,7 +978,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         size="sm"
                         onClick={() => {
                           setPreviousStep(currentStep);
-                          setConfirmedDateTime(false);
+                      // CONFIRMATION SYSTEM DISABLED - Never lock users out
+                      console.log('🔓 DateTime confirmation disabled - editing always available');
+                      // setConfirmedDateTime(false); // REMOVED - confirmation system disabled
                           setCurrentStep('datetime');
                         }}
                         className="text-green-600 hover:text-green-800 h-6 md:h-8 px-2 md:px-3 text-xs md:text-sm"
@@ -988,7 +996,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         size="sm"
                         onClick={() => {
                           setPreviousStep(currentStep);
-                          setConfirmedAddress(false);
+                        // CONFIRMATION SYSTEM DISABLED - Never lock users out
+                        console.log('🔓 Address confirmation disabled - editing always available');
+                        // setConfirmedAddress(false); // REMOVED - confirmation system disabled
                           setCurrentStep('address');
                         }}
                         className="text-green-600 hover:text-green-800 h-6 md:h-8 px-2 md:px-3 text-xs md:text-sm"

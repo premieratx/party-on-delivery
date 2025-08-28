@@ -25,6 +25,7 @@ import { CheckoutSafeguards } from './CheckoutSafeguards';
 import { CheckoutFlowValidator } from './CheckoutFlowValidator';
 import { CheckoutInputOptimizer } from './CheckoutInputOptimizer';
 import { MobileInputFix } from './MobileInputFix';
+import { CheckoutVerificationTool } from './CheckoutVerificationTool';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -162,36 +163,30 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     }
   };
 
-  // Step confirmation handlers
+  // UNIVERSAL HANDLERS - ADVANCE STEPS WITHOUT CONFIRMATION LOCKS
   const handleDateTimeConfirm = () => {
-    console.log('📅 DateTime confirm attempted:', { isDateTimeComplete, deliveryInfo });
+    console.log('📅 Date/time step completed - advancing without locking');
+    // REMOVED: setConfirmedDateTime(true) - this was the lockout mechanism
     if (isDateTimeComplete) {
-      setConfirmedDateTime(true);
       setCurrentStep('address');
-      console.log('✅ DateTime confirmed, moving to address step');
-    } else {
-      console.warn('⚠️ DateTime incomplete, cannot confirm');
+      console.log('✅ Moving to address step (inputs remain editable)');
     }
   };
 
   const handleAddressConfirm = () => {
-    console.log('🏠 Address confirm attempted:', { isAddressComplete, addressInfo });
+    console.log('🏠 Address step completed - advancing without locking');
+    // REMOVED: setConfirmedAddress(true) - this was the lockout mechanism
     if (isAddressComplete) {
-      setConfirmedAddress(true);
-      console.log('✅ Address confirmed');
-    } else {
-      console.warn('⚠️ Address incomplete, cannot confirm');
+      setCurrentStep('payment');
+      console.log('✅ Moving to payment step (inputs remain editable)');
     }
   };
 
   const handleCustomerConfirm = () => {
-    console.log('👤 Customer confirm attempted:', { isCustomerComplete, customerInfo });
+    console.log('👤 Customer step completed - staying accessible');
+    // REMOVED: setConfirmedCustomer(true) - this was the lockout mechanism
     if (isCustomerComplete) {
-      setConfirmedCustomer(true);
-      setCurrentStep('payment');
-      console.log('✅ Customer confirmed, moving to payment step');
-    } else {
-      console.warn('⚠️ Customer info incomplete, cannot confirm');
+      console.log('✅ Customer info complete (inputs remain editable)');
     }
   };
 
@@ -265,16 +260,13 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     navigate(`/order-complete?payment_intent=${paymentIntentId}`);
   };
 
-  // Auto-progression logic
+  // REMOVE AUTO-PROGRESSION LOCKOUT LOGIC  
   useEffect(() => {
-    if (confirmedDateTime && !confirmedAddress && currentStep === 'datetime') {
-      setCurrentStep('address');
-    } else if (confirmedDateTime && confirmedAddress && !confirmedCustomer && currentStep === 'address') {
-      setCurrentStep('address'); // Stay on address until customer info is also confirmed
-    } else if (confirmedDateTime && confirmedAddress && confirmedCustomer && currentStep !== 'payment') {
-      setCurrentStep('payment');
-    }
-  }, [confirmedDateTime, confirmedAddress, confirmedCustomer, currentStep, setCurrentStep]);
+    console.log('🚫 Auto-progression lockout logic REMOVED');
+    console.log('✅ Users now control their own checkout flow without being locked out');
+    // REMOVED: All auto-progression that was locking users between steps
+    // Users can now freely edit any step at any time
+  }, []);
 
   // Notify parent of changes
   useEffect(() => {
@@ -315,11 +307,11 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         />
 
         {/* Progress Steps */}
-        <CheckoutSteps
+        <CheckoutSteps 
           currentStep={currentStep}
-          confirmedDateTime={confirmedDateTime}
-          confirmedAddress={confirmedAddress}
-          confirmedCustomer={confirmedCustomer}
+          confirmedDateTime={false} // FORCE ALWAYS EDITABLE
+          confirmedAddress={false}  // FORCE ALWAYS EDITABLE
+          confirmedCustomer={false} // FORCE ALWAYS EDITABLE
         />
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">
@@ -327,57 +319,41 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           {/* Left Column - Checkout Steps (Wider on Large Screens) */}
           <div className="xl:col-span-3 space-y-4 checkout-form">
             
-            {/* Date & Time Step */}
-            <ImprovedDateTimeStep
-              deliveryInfo={deliveryInfo}
-              onDeliveryInfoChange={onDeliveryInfoChange}
-              onConfirm={handleDateTimeConfirm}
-              onEdit={() => setConfirmedDateTime(false)}
-              isConfirmed={false}
+            {/* UNIVERSAL EDITABLE STEPS - NEVER LOCKED */}
+            <div className="space-y-6">
+              {/* Date & Time Step - ALWAYS EDITABLE & VISIBLE */}
+              <ImprovedDateTimeStep
+                deliveryInfo={deliveryInfo}
+                onDeliveryInfoChange={onDeliveryInfoChange}
+                onConfirm={handleDateTimeConfirm}
+                isConfirmed={false} // FORCE ALWAYS EDITABLE
+              />
+
+              {/* Address Step - ALWAYS EDITABLE & VISIBLE */}
+              <AddressStep
+                addressInfo={addressInfo}
+                setAddressInfo={setAddressInfo}
+                onConfirm={handleAddressConfirm}
+                isConfirmed={false} // FORCE ALWAYS EDITABLE
+              />
+
+              {/* Customer Info Step - ALWAYS EDITABLE & VISIBLE */}
+              <CustomerInfoStep
+                customerInfo={customerInfo}
+                setCustomerInfo={setCustomerInfo}
+                onConfirm={handleCustomerConfirm}
+                isConfirmed={false} // FORCE ALWAYS EDITABLE
+              />
+            </div>
+
+            {/* UNIVERSAL PROMO CODE - ALWAYS ACCESSIBLE */}
+            <PromoCodeInput 
+              onDiscountApplied={handlePromoApplied}
+              appliedDiscount={appliedDiscount}
+              cartSubtotal={cartSubtotal}
             />
 
-            {/* Address & Customer Info Step */}
-            {(confirmedDateTime || currentStep === 'address') && (
-              <>
-                <AddressStep
-                  addressInfo={addressInfo}
-                  setAddressInfo={setAddressInfo}
-                  onConfirm={handleAddressConfirm}
-                  onEdit={() => {
-                    setConfirmedAddress(false);
-                    setConfirmedCustomer(false);
-                  }}
-                  isConfirmed={false}
-                />
-                
-                {/* Customer Info - shown inline with address */}
-                {!confirmedCustomer && (
-                  <CustomerInfoStep
-                    customerInfo={customerInfo}
-                    setCustomerInfo={setCustomerInfo}
-                    onConfirm={handleCustomerConfirm}
-                    onEdit={() => {
-                      setConfirmedCustomer(false);
-                    }}
-                    isConfirmed={false}
-                  />
-                )}
-              </>
-            )}
-
-            {/* Promo Code Section - Move Above Payment */}
-            {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
-              <div className="space-y-4">
-                 <PromoCodeInput 
-                   onDiscountApplied={handlePromoApplied}
-                   appliedDiscount={appliedDiscount}
-                   cartSubtotal={cartSubtotal}
-                 />
-              </div>
-            )}
-
-            {/* Payment Step - Now Last */}
-            {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
+            {/* UNIVERSAL PAYMENT SECTION - ALWAYS ACCESSIBLE */}
             <StripePaymentWrapper
               cartItems={cartItems}
               subtotal={discountedSubtotal}
@@ -395,7 +371,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 if (onTipChange) onTipChange(amount);
               }}
             />
-            )}
           </div>
 
           {/* Right Column - Always Show Product List & Safeguards */}
@@ -425,45 +400,40 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           </div>
         </div>
         
-        {/* Completion Message */}
-        {currentStep !== 'payment' && (
-          <div className="text-center text-muted-foreground mt-6">
-            <p className="text-sm">Complete all steps to proceed with payment</p>
-          </div>
-        )}
+        {/* Completion Message - Always Show */}
+        <div className="text-center text-muted-foreground mt-6">
+          <p className="text-sm">✅ All checkout fields are always editable - no lockouts!</p>
+        </div>
         
       </div>
 
-      {/* Safe Mobile Checkout Button - Positioned above browser bottom menu */}
-      {currentStep === 'payment' && (
-        <>
-          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-            {/* Add safe area for browser bottom navigation */}
-            <div 
-              className="bg-background border-t p-4" 
-              style={{ 
-                paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-                bottom: 'env(safe-area-inset-bottom, 0px)'
-              }}
-            >
-              <Button 
-                onClick={() => {
-                  // Find and click the payment form submit button
-                  const form = document.querySelector('form');
-                  if (form) {
-                    // Create a submit event to trigger the form submission
-                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-                    form.dispatchEvent(submitEvent);
-                  }
-                }}
-                className="w-full h-12 text-base font-semibold"
-                size="lg"
-              >
-                Pay ${finalTotal.toFixed(2)}
-              </Button>
-            </div>
-          </div>
-          
+      {/* UNIVERSAL Mobile Checkout Button - ALWAYS AVAILABLE */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        {/* Add safe area for browser bottom navigation */}
+        <div 
+          className="bg-background border-t p-4" 
+          style={{ 
+            paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+            bottom: 'env(safe-area-inset-bottom, 0px)'
+          }}
+        >
+          <Button 
+            onClick={() => {
+              // Find and click the payment form submit button
+              const form = document.querySelector('form');
+              if (form) {
+                // Create a submit event to trigger the form submission
+                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                form.dispatchEvent(submitEvent);
+              }
+            }}
+            className="w-full h-12 text-base font-semibold"
+            size="lg"
+          >
+            Pay ${finalTotal.toFixed(2)}
+          </Button>
+        </div>
+      </div>
           {/* Global styles for mobile browser UI handling */}
           <style dangerouslySetInnerHTML={{
             __html: `
@@ -484,11 +454,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               }
             `
           }} />
-        </>
-      )}
       
-      {/* Add bottom padding for mobile when sticky button is shown */}
-      <div className={`${currentStep === 'payment' ? 'checkout-safe-area lg:pb-0' : ''}`} />
+      {/* Add bottom padding for mobile - ALWAYS ACTIVE */}
+      <div className="checkout-safe-area lg:pb-0" />
     </div>
   );
 };

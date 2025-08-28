@@ -15,47 +15,34 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
   const { customerInfo, addressInfo, setAddressInfo, setCustomerInfo } = useCustomerInfo();
   const { saveCheckoutState, getCheckoutState } = useCheckoutPersistence();
   
-  // Step management with auto-progression - load from storage
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>(() => {
-    const saved = getCheckoutState();
-    return saved?.currentStep || 'datetime';
-  });
+  // Step management - ALWAYS start at datetime step, NEVER auto-confirm
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>('datetime');
   
-  const [confirmedDateTime, setConfirmedDateTime] = useState(() => {
-    const saved = getCheckoutState();
-    return saved?.confirmedDateTime || false;
-  });
+  // REMOVED: All confirmation state - this was causing the lockout
+  // confirmedDateTime, confirmedAddress, confirmedCustomer states REMOVED
+  // These states were preventing users from editing their information
   
-  const [confirmedAddress, setConfirmedAddress] = useState(() => {
-    const saved = getCheckoutState();
-    return saved?.confirmedAddress || false;
-  });
+  const [confirmedDateTime] = useState(false); // Always false - never lock
+  const [confirmedAddress] = useState(false);  // Always false - never lock  
+  const [confirmedCustomer] = useState(false); // Always false - never lock
   
-  const [confirmedCustomer, setConfirmedCustomer] = useState(() => {
-    const saved = getCheckoutState();
-    return saved?.confirmedCustomer || false;
-  });
+  // Provide setters that accept parameters but do nothing (for compatibility)
+  const setConfirmedDateTime = (_value?: boolean) => { 
+    console.log('🔓 DateTime confirmation disabled - inputs stay editable'); 
+  };
+  const setConfirmedAddress = (_value?: boolean) => { 
+    console.log('🔓 Address confirmation disabled - inputs stay editable'); 
+  };
+  const setConfirmedCustomer = (_value?: boolean) => { 
+    console.log('🔓 Customer confirmation disabled - inputs stay editable'); 
+  };
 
-  // Auto-advance to next step when previous step is confirmed - with safeguards
+  // REMOVED: Auto-advance lockout logic - users control their own flow
   useEffect(() => {
-    console.log('🔄 Step progression check:', { 
-      confirmedDateTime, 
-      confirmedAddress, 
-      confirmedCustomer,
-      currentStep,
-      shouldGoToAddress: confirmedDateTime && !confirmedAddress && currentStep === 'datetime',
-      shouldGoToPayment: confirmedDateTime && confirmedAddress && confirmedCustomer && currentStep !== 'payment'
-    });
-    
-    // Only auto-advance if user has manually confirmed previous steps
-    if (confirmedDateTime && !confirmedAddress && currentStep === 'datetime') {
-      console.log('✅ Moving to address step');
-      setCurrentStep('address');
-    } else if (confirmedDateTime && confirmedAddress && confirmedCustomer && currentStep !== 'payment') {
-      console.log('✅ Moving to payment step');
-      setCurrentStep('payment');
-    }
-  }, [confirmedDateTime, confirmedAddress, confirmedCustomer, currentStep]);
+    console.log('🚫 Auto-advance lockout system DISABLED');
+    console.log('✅ Users can now freely navigate between steps without being locked out');
+    // REMOVED: All auto-progression logic that was locking users between steps
+  }, []);
   
   // Change tracking for "add to order" flow
   const [originalOrderInfo, setOriginalOrderInfo] = useState<any>(null);
@@ -123,18 +110,17 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     }
   }, [addressInfo, deliveryInfo.date, deliveryInfo.timeSlot, originalOrderInfo, isAddingToOrder]);
 
-  // Save checkout state whenever key values change
+  // Save checkout state - REMOVED confirmation states
   useEffect(() => {
     saveCheckoutState({
       currentStep,
-      confirmedDateTime,
-      confirmedAddress,
-      confirmedCustomer,
+      // REMOVED: confirmedDateTime, confirmedAddress, confirmedCustomer
+      // These confirmation states were causing the lockout issue
       deliveryInfo,
       customerInfo,
       addressInfo
     });
-  }, [currentStep, confirmedDateTime, confirmedAddress, confirmedCustomer, deliveryInfo, customerInfo, addressInfo]);
+  }, [currentStep, deliveryInfo, customerInfo, addressInfo, saveCheckoutState]);
 
   // Validation helpers
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;

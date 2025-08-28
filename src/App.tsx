@@ -15,6 +15,7 @@ import { useMobileBrowserChrome } from '@/hooks/useMobileBrowserChrome';
 import { DynamicRouteHandler } from '@/components/routing/DynamicRouteHandler';
 import { CheckoutInputOptimizer } from '@/components/checkout/CheckoutInputOptimizer';
 import { MobileInputFix } from '@/components/checkout/MobileInputFix';
+import { CheckoutVerificationTool } from '@/components/checkout/CheckoutVerificationTool';
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -75,6 +76,7 @@ const App = () => {
                 {/* UNIVERSAL INPUT OPTIMIZERS - ACTIVE ON ALL PAGES & DEVICES */}
                 <CheckoutInputOptimizer />
                 <MobileInputFix />
+                <CheckoutVerificationTool />
                 <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
