@@ -36,7 +36,7 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
   };
 
   const handleAdminLogin = () => {
-    navigate('/admin/dashboard');
+    navigate('/admin');
   };
 
   return (
