@@ -6,6 +6,8 @@ import { DynamicRouteHandler } from "@/components/routing/DynamicRouteHandler";
 import CustomAppView from "@/pages/CustomAppView";
 import Checkout from "@/pages/Checkout";
 import OrderComplete from "@/pages/OrderComplete";
+import AdminDashboard from "@/pages/AdminDashboard";
+import RequireAdmin from "@/components/admin/RequireAdmin";
 
 const App = () => {
   console.log('🚀 APP STARTING WITH PROPER ROUTING');
@@ -26,6 +28,10 @@ const App = () => {
             
             {/* Order Complete */}
             <Route path="/order-complete" element={<OrderComplete />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+            <Route path="/affiliate/admin-login" element={<DynamicRouteHandler />} />
             
             {/* Catch-all for cover pages and 404 */}
             <Route path="*" element={<DynamicRouteHandler />} />
