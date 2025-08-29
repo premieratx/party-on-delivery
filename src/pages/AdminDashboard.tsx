@@ -40,6 +40,7 @@ import { formatCurrency } from '@/utils/currency';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
 import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegrationTest';
+import { AbandonedOrdersManager } from '@/components/admin/AbandonedOrdersManager';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -206,12 +207,13 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
             <TabsTrigger value="covers">Cover Pages</TabsTrigger>
             <TabsTrigger value="delivery">Delivery Apps</TabsTrigger>
             <TabsTrigger value="checkout">Post-Checkout</TabsTrigger>
+            <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="tests">Integration Tests</TabsTrigger>
           </TabsList>
@@ -349,6 +351,13 @@ export default function AdminDashboard() {
               <HomepageAppSwitcher />
               <HomepageTestComponent />
             </div>
+          </TabsContent>
+
+          <TabsContent value="abandoned" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Abandoned Orders</h2>
+            </div>
+            <AbandonedOrdersManager />
           </TabsContent>
 
           <TabsContent value="tests" className="space-y-6">
