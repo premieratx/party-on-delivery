@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminState } from '@/hooks/useAdminState';
+import { useAdminDashboard } from '@/hooks/useDashboardData';
 import { 
   Users, 
   Package, 
@@ -43,14 +44,17 @@ import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegr
 import { AbandonedOrdersManager } from '@/components/admin/AbandonedOrdersManager';
 
 export default function AdminDashboard() {
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [totalCustomers, setTotalCustomers] = useState(0);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [abandonedOrders, setAbandonedOrders] = useState([]);
-  const [affiliates, setAffiliates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use the dashboard hook for data loading
+  const { data: dashboardData, loading, error, refresh } = useAdminDashboard();
+  
+  // Derived state from dashboard data
+  const totalRevenue = dashboardData?.totalRevenue || 0;
+  const totalOrders = dashboardData?.totalOrders || 0;
+  const totalCustomers = dashboardData?.customers?.length || 0;
+  const totalProducts = 1052;
+  const recentOrders = dashboardData?.orders || [];
+  const affiliates = dashboardData?.affiliateReferrals || [];
+  const abandonedOrders = [];
   const navigate = useNavigate();
   const { toast } = useToast();
   const { activeTab, updateActiveTab } = useAdminState('overview');
@@ -58,75 +62,16 @@ export default function AdminDashboard() {
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
-  // Prevent dashboard reload on tab switching - load data only ONCE with keep-warm
+  // Show error toast if dashboard loading fails
   useEffect(() => {
-    console.log('🚀 AdminDashboard: Component mounted, loading data...');
-    
-    // Load data immediately without keep-warm delays
-    loadDashboardData();
-  }, []); // Empty dependency array to prevent re-runs
-
-  // Enhanced load dashboard data with timeout and fallback
-  const loadDashboardData = async () => {
-    try {
-      console.log('🔄 Loading admin dashboard data...');
-      setLoading(true);
-
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Dashboard load timeout')), 10000)
-      );
-
-      const dataPromise = supabase.functions.invoke('get-dashboard-data', {
-        body: {
-          type: 'admin'
-        }
-      });
-
-      const { data: dashboardData, error: dashboardError } = await Promise.race([
-        dataPromise,
-        timeoutPromise
-      ]) as any;
-
-      if (dashboardError) {
-        console.error('Dashboard function error:', dashboardError);
-        throw dashboardError;
-      }
-
-      // Use the returned dashboard data from edge function
-      console.log('📊 Dashboard data loaded:', dashboardData);
-
-      const data = dashboardData?.data || dashboardData;
-      setTotalRevenue(data?.totalRevenue || 0);
-      setTotalOrders(data?.totalOrders || data?.ordersCount || 0);
-      setTotalCustomers(data?.totalCustomers || 0);
-      setTotalProducts(1052);
-      setRecentOrders(data?.orders || []);
-      setAffiliates(data?.affiliates || []);
-      setAbandonedOrders([]);
-
-    } catch (error) {
-      console.error('❌ Error loading dashboard data:', error);
-      
-      // Use fallback data if database queries fail
-      setTotalRevenue(0);
-      setTotalOrders(0);
-      setTotalCustomers(0);
-      setTotalProducts(1052);
-      setRecentOrders([]);
-      setAffiliates([]);
-      setAbandonedOrders([]);
-      
+    if (error) {
       toast({
-        title: "Dashboard Loaded",
-        description: "Dashboard loaded with fallback data due to connection issues.",
-        variant: "default"
+        title: "Dashboard Error",
+        description: error,
+        variant: "destructive"
       });
-    } finally {
-      setLoading(false);
-      console.log('✅ Dashboard loading completed');
     }
-  };
+  }, [error, toast]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -390,7 +335,7 @@ export default function AdminDashboard() {
           onOpenChange={setShowDeliveryCreator}
           onSaved={() => {
             setShowDeliveryCreator(false);
-            loadDashboardData(); // Refresh data after creation
+            refresh(); // Refresh data after creation
           }}
         />
       )}
@@ -401,7 +346,7 @@ export default function AdminDashboard() {
           onOpenChange={setShowPostCheckoutCreator}
           onSaved={() => {
             setShowPostCheckoutCreator(false);
-            loadDashboardData(); // Refresh data after creation
+            refresh(); // Refresh data after creation
           }}
         />
       )}
