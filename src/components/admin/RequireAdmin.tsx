@@ -155,23 +155,24 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      if (event === 'SIGNED_OUT' || !session) {
+      console.log('🔍 Auth state change:', { event, hasSession: !!session, allowed, adminContextSet });
+      
+      // Only handle explicit sign out, not token refreshes or other events
+      if (event === 'SIGNED_OUT') {
+        console.log('🚪 User explicitly signed out, clearing admin session');
         AdminSessionManager.clearAdminSession();
         setAdminContextSet(false);
         setAllowed(false);
-        stopAdminHealthMonitoring(); // Stop monitoring on logout
-        
-        // SECURITY: Force clear Supabase session to ensure fresh Google auth
-        console.log('🔐 SECURITY: Clearing all auth state for fresh login');
-        await supabase.auth.signOut({ scope: 'global' });
-        
+        stopAdminHealthMonitoring();
         navigate('/affiliate/admin-login', { replace: true });
-      } else if (event === 'SIGNED_IN' && !adminContextSet) {
-        // Only re-check on new sign-in, not on existing sessions
+      } else if (event === 'SIGNED_IN' && session && !adminContextSet) {
+        // Only re-check on new sign-in when we don't have admin context set
+        console.log('✅ New sign-in detected, verifying admin status');
         setTimeout(() => {
           check();
         }, 100);
       }
+      // Ignore TOKEN_REFRESHED and other events to prevent auth loops
     });
 
     // Initial check when component mounts
