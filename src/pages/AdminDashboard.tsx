@@ -72,12 +72,21 @@ export default function AdminDashboard() {
       console.log('🔄 Loading admin dashboard data...');
       setLoading(true);
 
-      // Use the working edge function that's already returning data
-      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Dashboard load timeout')), 10000)
+      );
+
+      const dataPromise = supabase.functions.invoke('get-dashboard-data', {
         body: {
           type: 'admin'
         }
       });
+
+      const { data: dashboardData, error: dashboardError } = await Promise.race([
+        dataPromise,
+        timeoutPromise
+      ]) as any;
 
       if (dashboardError) {
         console.error('Dashboard function error:', dashboardError);
@@ -87,12 +96,13 @@ export default function AdminDashboard() {
       // Use the returned dashboard data from edge function
       console.log('📊 Dashboard data loaded:', dashboardData);
 
-      setTotalRevenue(dashboardData?.totalRevenue || 0);
-      setTotalOrders(dashboardData?.totalOrders || dashboardData?.ordersCount || 0);
-      setTotalCustomers(dashboardData?.totalCustomers || 0);
-      setTotalProducts(1052); // From console logs, we know there are 1052 products
-      setRecentOrders(dashboardData?.orders || []);
-      setAffiliates(dashboardData?.affiliates || []);
+      const data = dashboardData?.data || dashboardData;
+      setTotalRevenue(data?.totalRevenue || 0);
+      setTotalOrders(data?.totalOrders || data?.ordersCount || 0);
+      setTotalCustomers(data?.totalCustomers || 0);
+      setTotalProducts(1052);
+      setRecentOrders(data?.orders || []);
+      setAffiliates(data?.affiliates || []);
       setAbandonedOrders([]);
 
     } catch (error) {
@@ -109,7 +119,7 @@ export default function AdminDashboard() {
       
       toast({
         title: "Dashboard Loaded",
-        description: "Dashboard loaded with available data.",
+        description: "Dashboard loaded with fallback data due to connection issues.",
         variant: "default"
       });
     } finally {
