@@ -50,16 +50,16 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
           return;
         }
 
-        // CRITICAL: verify-admin-google does verification AND sets RLS context
+        // CRITICAL: verify-admin does verification AND sets RLS context
         console.log('🔐 SECURITY: Verifying admin and setting RLS context for:', session.user.email);
-        const { data, error } = await supabase.functions.invoke('verify-admin-google', {
+        const { data, error } = await supabase.functions.invoke('verify-admin', {
           body: { email: session.user.email }
         });
         
         console.log('🔍 SECURITY: Admin verification response:', { data, error });
         
         if (error) {
-          console.error('🚨 SECURITY: verify-admin-google error:', error);
+          console.error('🚨 SECURITY: verify-admin error:', error);
           toast({
             title: "Security Error",
             description: "Failed to establish secure admin context. Please try again.",
@@ -121,7 +121,7 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
           const setContextForCached = async () => {
             try {
               console.log('🔐 SECURITY: Setting admin context for cached session (REQUIRED FOR RLS)');
-              const { data, error } = await supabase.functions.invoke('verify-admin-google', {
+              const { data, error } = await supabase.functions.invoke('verify-admin', {
                 body: { email: cachedSession.email }
               });
               
