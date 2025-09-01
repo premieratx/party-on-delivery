@@ -44,6 +44,7 @@ import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegr
 import { AbandonedOrdersManager } from '@/components/admin/AbandonedOrdersManager';
 import { ShopifyForceSync } from '@/components/admin/ShopifyForceSync';
 import { DeliveryFeeSummary } from '@/components/admin/DeliveryFeeSummary';
+import { PromoCodeManager } from '@/components/admin/PromoCodeManager';
 
 export default function AdminDashboard() {
   // Use the dashboard hook for data loading
@@ -305,6 +306,7 @@ export default function AdminDashboard() {
             <div className="grid gap-6">
               <ShopifyForceSync />
               <DeliveryFeeSummary />
+              <PromoCodeManager />
               {/* Customer Flow Manager removed - standalone architecture */}
               <HomepageDiagnosticTool />
               <HomepageAppSwitcher />
