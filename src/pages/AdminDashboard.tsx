@@ -43,6 +43,7 @@ import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
 import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegrationTest';
 import { AbandonedOrdersManager } from '@/components/admin/AbandonedOrdersManager';
 import { ShopifyForceSync } from '@/components/admin/ShopifyForceSync';
+import { DeliveryFeeSummary } from '@/components/admin/DeliveryFeeSummary';
 
 export default function AdminDashboard() {
   // Use the dashboard hook for data loading
@@ -303,6 +304,7 @@ export default function AdminDashboard() {
           <TabsContent value="settings" className="space-y-6">
             <div className="grid gap-6">
               <ShopifyForceSync />
+              <DeliveryFeeSummary />
               {/* Customer Flow Manager removed - standalone architecture */}
               <HomepageDiagnosticTool />
               <HomepageAppSwitcher />
