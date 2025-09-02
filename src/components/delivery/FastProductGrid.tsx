@@ -58,7 +58,7 @@ export const FastProductGrid: React.FC<FastProductGridProps> = ({
   // Perform search when query changes
   React.useEffect(() => {
     if (searchQuery?.trim()) {
-      searchProducts(searchQuery, { limit: 100 });
+      searchProducts(searchQuery, { limit: 500 });
     }
   }, [searchQuery, searchProducts]);
 

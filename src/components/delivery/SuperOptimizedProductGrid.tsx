@@ -83,7 +83,7 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
       <div className="text-center py-8">
         <p className="text-muted-foreground mb-4">Failed to load products</p>
         <button 
-          onClick={searchProducts ? () => searchProducts('', { limit: 100 }) : undefined}
+          onClick={searchProducts ? () => searchProducts('', { limit: 500 }) : undefined}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           Try Again

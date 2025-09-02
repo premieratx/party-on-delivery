@@ -285,7 +285,7 @@ export default function OptimizedProductSearch() {
         
         try {
           const result = await ultraFastSearch.searchProducts(q, {
-            limit: 200,
+            limit: 500,
             useCache: true // Aggressive caching for repeat searches
           });
           

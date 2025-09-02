@@ -108,7 +108,7 @@ export const ProductSearch = () => {
 
       // 2) Optimized edge function
       const { data: optimizedData } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
-        body: { lightweight: true, includeImages: true, limit: 200 }
+        body: { lightweight: true, includeImages: true, limit: 500 }
       });
 
       if (optimizedData?.success && optimizedData?.products?.length > 0) {

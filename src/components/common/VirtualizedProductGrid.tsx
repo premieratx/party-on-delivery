@@ -62,7 +62,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   // Real-time search with instant results
   React.useEffect(() => {
     if (searchQuery.trim()) {
-      searchProducts(searchQuery, { limit: 100 }).then(setSearchResults);
+      searchProducts(searchQuery, { limit: 500 }).then(setSearchResults);
     } else {
       setSearchResults([]);
     }
