@@ -195,15 +195,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const isSearchActive = searchQuery.trim().length > 0;
 
 
-  // ENHANCED: Aggressive preloading + existing systems (additive only)
+  // SMART LOADING: Only preload the active tab, others load on-demand
   useEffect(() => {
-    // Keep existing warmup
-    // Remove ultraFastSearch warmup - using optimizedUltraFastSearch only
-    
-    // SIMPLIFIED: Remove aggressive preloading to prevent system overload
-    // Products will load on-demand when tabs are clicked
-    console.log('📊 App initialized with tabs:', tabs.map(tab => tab.title));
-  }, [tabs, preloadMultipleCollections, deliveryOptimizer]);
+    const activeTab = tabs[selectedCategory];
+    if (activeTab?.handle && !currentTabProducts?.length) {
+      console.log(`🎯 SMART PRELOAD: Loading only active tab "${activeTab.title}"`);
+      // The useOptimizedProductLoader will handle loading the current collection
+    }
+  }, [selectedCategory, tabs, currentTabProducts]);
 
 
   // Listen for collection updates and refresh
@@ -485,8 +484,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         tabs={tabs}
         selectedCategory={selectedCategory}
         onTabSelect={(index) => {
-          const currentTab = collectionsConfig?.tabs?.[index];
-          // Remove excessive tab switching logs - works silently
+          const selectedTab = tabs[index];
+          console.log(`🎯 TAB SWITCH: "${selectedTab?.title}" - Products will load on-demand`);
           setSelectedCategory(index);
           clearUniversalSearch();
         }}

@@ -59,11 +59,13 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     const requestKey = `${collection_handle}-${use_type}`;
     lastRequestRef.current = requestKey;
 
+    console.log(`🎯 SMART LOAD: Starting load for "${collection_handle}"`);
+
     // Try cache first (unless forcing refresh)
     if (!force_refresh) {
       const cached = getFromCache(collection_handle);
       if (cached) {
-        console.log(`📦 Using cached products for ${collection_handle}: ${cached.length} items`);
+        console.log(`⚡ INSTANT: Using cached products for ${collection_handle}: ${cached.length} items`);
         setProducts(cached);
         setLoading(false);
         setCached(true);
