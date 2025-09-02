@@ -32,11 +32,13 @@ export const useProductPreloader = () => {
     setCache({ ...globalProductCache });
 
     try {
-      // Use instant cache for fast loading
-      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
+      // Skip instant cache and use working get-unified-products directly
+      const { data, error } = await supabase.functions.invoke('get-unified-products', {
         body: {
           collection_handle: collectionHandle,
-          force_refresh: false
+          use_type: 'delivery',
+          lightweight: true,
+          preserve_order: true
         }
       });
 
@@ -54,43 +56,15 @@ export const useProductPreloader = () => {
 
       return products;
     } catch (error) {
-      console.error(`❌ INSTANT FAILED for ${collectionHandle}:`, error);
+      console.error(`❌ Product loading failed for ${collectionHandle}:`, error);
       
-      // Fallback to original function
-      try {
-        const { data, error: fallbackError } = await supabase.functions.invoke('get-unified-products', {
-          body: {
-            collection_handle: collectionHandle,
-            use_type: 'delivery',
-            lightweight: true,
-            preserve_order: true
-          }
-        });
-
-        if (fallbackError) throw fallbackError;
-
-        const products = data?.products || [];
-        
-        // Update cache - silent success
-        globalProductCache[collectionHandle] = {
-          products,
-          lastUpdated: Date.now(),
-          loading: false
-        };
+      // Mark as not loading
+      if (globalProductCache[collectionHandle]) {
+        globalProductCache[collectionHandle].loading = false;
         setCache({ ...globalProductCache });
-
-        return products;
-      } catch (fallbackError) {
-        console.error(`❌ Complete failure for ${collectionHandle}:`, fallbackError);
-        
-        // Mark as not loading
-        if (globalProductCache[collectionHandle]) {
-          globalProductCache[collectionHandle].loading = false;
-          setCache({ ...globalProductCache });
-        }
-        
-        throw fallbackError;
       }
+      
+      throw error;
     }
   }, []);
 
