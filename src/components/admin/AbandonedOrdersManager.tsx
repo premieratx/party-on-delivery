@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/utils/currency';
@@ -37,6 +38,7 @@ export const AbandonedOrdersManager: React.FC = () => {
   const [abandonedOrders, setAbandonedOrders] = useState<AbandonedOrder[]>([]);
   const [isTrackingEnabled, setIsTrackingEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const loadAbandonedOrders = async () => {
@@ -178,6 +180,66 @@ export const AbandonedOrdersManager: React.FC = () => {
     await loadAbandonedOrders();
   };
 
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    const newSelected = new Set(selectedOrders);
+    if (checked) {
+      newSelected.add(orderId);
+    } else {
+      newSelected.delete(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrders(new Set(abandonedOrders.map(order => order.id)));
+    } else {
+      setSelectedOrders(new Set());
+    }
+  };
+
+  const deleteBulkOrders = async () => {
+    if (selectedOrders.size === 0) {
+      toast({
+        title: "No Orders Selected",
+        description: "Please select orders to delete.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const orderIds = Array.from(selectedOrders);
+      const { error } = await supabase
+        .from('abandoned_orders')
+        .delete()
+        .in('id', orderIds);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setAbandonedOrders(prev => prev.filter(order => !selectedOrders.has(order.id)));
+      setSelectedOrders(new Set());
+      
+      toast({
+        title: "Orders Deleted",
+        description: `Successfully deleted ${orderIds.length} abandoned orders.`,
+      });
+    } catch (error: any) {
+      console.error('Error deleting bulk orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete selected orders.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -224,6 +286,12 @@ export const AbandonedOrdersManager: React.FC = () => {
             <Button onClick={clearOldOrders} variant="outline" size="sm">
               Clean All Orders
             </Button>
+            {selectedOrders.size > 0 && (
+              <Button onClick={deleteBulkOrders} variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Selected ({selectedOrders.size})
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -231,8 +299,17 @@ export const AbandonedOrdersManager: React.FC = () => {
       {/* Orders List */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Recent Abandoned Orders ({abandonedOrders.length})
+          <CardTitle className="flex items-center justify-between">
+            <span>Recent Abandoned Orders ({abandonedOrders.length})</span>
+            {abandonedOrders.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedOrders.size === abandonedOrders.length && abandonedOrders.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <Label className="text-sm">Select All</Label>
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -245,21 +322,28 @@ export const AbandonedOrdersManager: React.FC = () => {
               {abandonedOrders.map((order) => (
                 <div key={order.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="font-medium">{order.customer_name || 'Anonymous'}</div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        {order.customer_email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {order.customer_email}
-                          </span>
-                        )}
-                        {order.customer_phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {order.customer_phone}
-                          </span>
-                        )}
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selectedOrders.has(order.id)}
+                        onCheckedChange={(checked) => handleSelectOrder(order.id, checked as boolean)}
+                        className="mt-1"
+                      />
+                      <div className="space-y-1">
+                        <div className="font-medium">{order.customer_name || 'Anonymous'}</div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {order.customer_email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {order.customer_email}
+                            </span>
+                          )}
+                          {order.customer_phone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {order.customer_phone}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right space-y-2">

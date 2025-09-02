@@ -42,6 +42,7 @@ import { CANONICAL_DOMAIN } from '@/utils/links';
 import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
 import { DeliveryAppIntegrationTest } from '@/components/admin/DeliveryAppIntegrationTest';
 import { AbandonedOrdersManager } from '@/components/admin/AbandonedOrdersManager';
+import { GoogleSheetsManager } from '@/components/admin/GoogleSheetsManager';
 import { ShopifyForceSync } from '@/components/admin/ShopifyForceSync';
 import { DeliveryFeeSummary } from '@/components/admin/DeliveryFeeSummary';
 import { PromoCodeManager } from '@/components/admin/PromoCodeManager';
@@ -165,15 +166,16 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
             <TabsTrigger value="covers">Cover Pages</TabsTrigger>
             <TabsTrigger value="delivery">Delivery Apps</TabsTrigger>
             <TabsTrigger value="checkout">Post-Checkout</TabsTrigger>
             <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="tests">Integration Tests</TabsTrigger>
+            <TabsTrigger value="sheets">Google Sheets</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="tests">Integration Tests</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -319,6 +321,13 @@ export default function AdminDashboard() {
               <h2 className="text-2xl font-bold">Abandoned Orders</h2>
             </div>
             <AbandonedOrdersManager />
+          </TabsContent>
+
+          <TabsContent value="sheets" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Google Sheets Integration</h2>
+            </div>
+            <GoogleSheetsManager />
           </TabsContent>
 
           <TabsContent value="tests" className="space-y-6">
