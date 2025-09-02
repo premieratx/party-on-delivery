@@ -1817,6 +1817,7 @@ export type Database = {
           collections_config: Json
           created_at: string
           custom_post_checkout_config: Json | null
+          free_delivery_enabled: boolean | null
           hero_config: Json | null
           id: string
           is_active: boolean
@@ -1825,6 +1826,8 @@ export type Database = {
           logo_width: number | null
           main_app_config: Json | null
           post_checkout_config: Json | null
+          prefill_address_enabled: boolean | null
+          prefill_delivery_address: Json | null
           short_path: string | null
           sort_order: number | null
           start_screen_config: Json | null
@@ -1840,6 +1843,7 @@ export type Database = {
           collections_config?: Json
           created_at?: string
           custom_post_checkout_config?: Json | null
+          free_delivery_enabled?: boolean | null
           hero_config?: Json | null
           id?: string
           is_active?: boolean
@@ -1848,6 +1852,8 @@ export type Database = {
           logo_width?: number | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
+          prefill_address_enabled?: boolean | null
+          prefill_delivery_address?: Json | null
           short_path?: string | null
           sort_order?: number | null
           start_screen_config?: Json | null
@@ -1863,6 +1869,7 @@ export type Database = {
           collections_config?: Json
           created_at?: string
           custom_post_checkout_config?: Json | null
+          free_delivery_enabled?: boolean | null
           hero_config?: Json | null
           id?: string
           is_active?: boolean
@@ -1871,6 +1878,8 @@ export type Database = {
           logo_width?: number | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
+          prefill_address_enabled?: boolean | null
+          prefill_delivery_address?: Json | null
           short_path?: string | null
           sort_order?: number | null
           start_screen_config?: Json | null

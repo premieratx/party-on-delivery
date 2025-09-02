@@ -72,6 +72,9 @@ interface DeliveryApp {
   hero_config?: any;
   custom_post_checkout_config?: any;
   sort_order: number;
+  prefill_delivery_address?: any;
+  prefill_address_enabled?: boolean;
+  free_delivery_enabled?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -358,6 +361,16 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                   <Badge variant={app.is_active ? 'default' : 'secondary'}>
                     {app.is_active ? 'Active' : 'Inactive'}
                   </Badge>
+                  {app.prefill_address_enabled && (
+                    <Badge variant="outline" className="text-xs">
+                      📍 Pre-fill Address
+                    </Badge>
+                  )}
+                  {app.free_delivery_enabled && (
+                    <Badge variant="outline" className="text-xs text-green-600">
+                      🚚 Free Delivery
+                    </Badge>
+                  )}
                 </div>
                 {app.description && (
                   <p className="text-sm text-muted-foreground mb-1">Description: {app.description}</p>

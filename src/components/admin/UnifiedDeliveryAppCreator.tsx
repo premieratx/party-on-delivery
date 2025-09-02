@@ -56,6 +56,9 @@ interface DeliveryAppConfig {
   theme: 'original' | 'gold' | 'platinum';
   is_active: boolean;
   is_homepage: boolean;
+  prefill_delivery_address?: any;
+  prefill_address_enabled?: boolean;
+  free_delivery_enabled?: boolean;
 }
 
 interface UnifiedDeliveryAppCreatorProps {
@@ -280,6 +283,16 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [isHomepage, setIsHomepage] = useState(initial?.is_homepage ?? false);
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+  
+  // NEW: Delivery settings state
+  const [prefillAddressEnabled, setPrefillAddressEnabled] = useState(initial?.prefill_address_enabled ?? false);
+  const [freeDeliveryEnabled, setFreeDeliveryEnabled] = useState(initial?.free_delivery_enabled ?? false);
+  const [prefillAddress, setPrefillAddress] = useState({
+    street: initial?.prefill_delivery_address?.street || '',
+    city: initial?.prefill_delivery_address?.city || '',
+    state: initial?.prefill_delivery_address?.state || '',
+    zip: initial?.prefill_delivery_address?.zip || '',
+  });
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -324,6 +337,18 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       if (initial.collections_config?.tabs) {
         console.log('📑 Loading tabs:', initial.collections_config.tabs);
         setTabs(initial.collections_config.tabs);
+      }
+      
+      // Load delivery settings
+      setPrefillAddressEnabled(initial.prefill_address_enabled ?? false);
+      setFreeDeliveryEnabled(initial.free_delivery_enabled ?? false);
+      if (initial.prefill_delivery_address) {
+        setPrefillAddress({
+          street: initial.prefill_delivery_address.street || '',
+          city: initial.prefill_delivery_address.city || '',
+          state: initial.prefill_delivery_address.state || '',
+          zip: initial.prefill_delivery_address.zip || '',
+        });
       }
     } else {
       console.log('🆕 No initial data - creating new delivery app');
@@ -551,6 +576,10 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         theme: theme,
         is_active: isActive,
         is_homepage: isHomepage,
+        // NEW: Add delivery settings
+        prefill_address_enabled: prefillAddressEnabled,
+        free_delivery_enabled: freeDeliveryEnabled,
+        prefill_delivery_address: prefillAddressEnabled ? prefillAddress : null,
         updated_at: new Date().toISOString()
       };
 
@@ -1036,6 +1065,99 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                         <Label htmlFor="is-homepage" className="text-sm">Homepage</Label>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* NEW: Delivery Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Delivery Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Free Delivery Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="free-delivery"
+                          checked={freeDeliveryEnabled}
+                          onCheckedChange={setFreeDeliveryEnabled}
+                        />
+                        <Label htmlFor="free-delivery" className="text-sm">
+                          Free Delivery (Pre-applied at checkout)
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* Pre-fill Address Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="prefill-address"
+                          checked={prefillAddressEnabled}
+                          onCheckedChange={setPrefillAddressEnabled}
+                        />
+                        <Label htmlFor="prefill-address" className="text-sm">
+                          Pre-fill Delivery Address
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* Address Fields (shown when pre-fill is enabled) */}
+                    {prefillAddressEnabled && (
+                      <div className="mt-4 space-y-3 p-4 border rounded-lg bg-muted/20">
+                        <Label className="text-sm font-medium">Default Delivery Address</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="col-span-2">
+                            <Label htmlFor="prefill-street">Street Address</Label>
+                            <Input
+                              id="prefill-street"
+                              value={prefillAddress.street}
+                              onChange={(e) => setPrefillAddress({
+                                ...prefillAddress,
+                                street: e.target.value
+                              })}
+                              placeholder="123 Main Street"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="prefill-city">City</Label>
+                            <Input
+                              id="prefill-city"
+                              value={prefillAddress.city}
+                              onChange={(e) => setPrefillAddress({
+                                ...prefillAddress,
+                                city: e.target.value
+                              })}
+                              placeholder="Austin"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="prefill-state">State</Label>
+                            <Input
+                              id="prefill-state"
+                              value={prefillAddress.state}
+                              onChange={(e) => setPrefillAddress({
+                                ...prefillAddress,
+                                state: e.target.value
+                              })}
+                              placeholder="TX"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="prefill-zip">ZIP Code</Label>
+                            <Input
+                              id="prefill-zip"
+                              value={prefillAddress.zip}
+                              onChange={(e) => setPrefillAddress({
+                                ...prefillAddress,
+                                zip: e.target.value
+                              })}
+                              placeholder="78701"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
