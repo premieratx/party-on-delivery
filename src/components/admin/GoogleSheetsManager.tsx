@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AutoSyncTester } from './AutoSyncTester';
 import { 
   FileSpreadsheet, 
   Upload, 
@@ -146,6 +147,9 @@ export const GoogleSheetsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Auto-Sync Tester */}
+      <AutoSyncTester />
+
       {/* Configuration */}
       <Card>
         <CardHeader>
