@@ -55,7 +55,7 @@ class UltraFastSearchClient {
     fromCache: boolean;
   }> {
     const startTime = performance.now();
-    const { category, limit = 50, useCache = true } = options;
+    const { category, limit = 2000, useCache = true } = options;
     
     // Create cache key
     const cacheKey = `${query}_${category || 'all'}_${limit}`;

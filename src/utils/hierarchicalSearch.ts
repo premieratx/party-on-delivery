@@ -115,7 +115,7 @@ class HierarchicalSearchClient {
 
   async searchProducts(options: HierarchicalSearchOptions): Promise<SearchResult> {
     const startTime = performance.now();
-    const { category = 'all', subcategory = 'all', limit = 50, query } = options;
+    const { category = 'all', subcategory = 'all', limit = 2000, query } = options;
     
     const cacheKey = `${query || 'browse'}_${category}_${subcategory}_${limit}`;
     

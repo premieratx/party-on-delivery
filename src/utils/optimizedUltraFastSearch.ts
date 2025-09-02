@@ -36,7 +36,7 @@ class OptimizedUltraFastSearchClient {
   }> {
     return PerformanceMonitor.measureAsync('instant-search', async () => {
       const startTime = performance.now();
-      const { category, limit = 50 } = options;
+      const { category, limit = 2000 } = options;
       
       // Create cache key
       const cacheKey = `${query}_${category || 'all'}_${limit}`;
@@ -145,7 +145,7 @@ class OptimizedUltraFastSearchClient {
   /**
    * Perform instant local search with hierarchical scoring
    */
-  private performLocalSearch(query: string, category?: string, limit = 50): {
+  private performLocalSearch(query: string, category?: string, limit = 2000): {
     products: any[];
     totalFound: number;
   } {

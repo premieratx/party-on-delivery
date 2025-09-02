@@ -68,7 +68,7 @@ export const UltraFastMobileSearch: React.FC<UltraFastMobileSearchProps> = ({
       console.log(`🚀 ULTRA-FAST MOBILE SEARCH: "${searchQuery}"`);
       
       const searchResult = await ultraFastSearch.searchProducts(searchQuery, {
-        limit: isMobile ? 50 : 100, // More results to ensure all products show
+        limit: isMobile ? 2000 : 2000, // Show all products in search
         useCache: true
       });
 
