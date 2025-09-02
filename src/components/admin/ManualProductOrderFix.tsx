@@ -12,17 +12,19 @@ export const ManualProductOrderFix: React.FC = () => {
   const manualFixOrdering = async () => {
     setIsLoading(true);
     try {
+      console.log('🚨 Emergency reload triggered - calling immediate-sync');
       const { data, error } = await supabase.functions.invoke('immediate-sync');
       
       if (error) {
+        console.error('❌ Immediate sync error:', error);
         throw error;
       }
       
-      console.log('✅ EMERGENCY SYNC COMPLETE:', data);
+      console.log('✅ IMMEDIATE SYNC COMPLETE:', data);
       
       toast({
-        title: "Emergency Product Reload Complete",
-        description: `Products reloaded: ${data?.productsFound || 0}. Please refresh the page.`,
+        title: "Products Reloaded Successfully",
+        description: `${data?.products_synced || 0} products loaded. Refreshing page...`,
       });
       
       // Force page refresh to see the products
