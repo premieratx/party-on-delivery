@@ -40,21 +40,41 @@ export const AbandonedOrdersManager: React.FC = () => {
 
   const loadAbandonedOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('abandoned_orders')
-        .select('*')
-        .order('abandoned_at', { ascending: false })
-        .limit(50);
+      // Use the get-dashboard-data edge function which has proper admin authentication
+      const { data, error } = await supabase.functions.invoke('get-dashboard-data', {
+        body: {
+          type: 'admin',
+          includeAbandonedOrders: true
+        }
+      });
 
       if (error) throw error;
-      setAbandonedOrders((data || []) as AbandonedOrder[]);
+
+      if (data?.success && data?.data?.abandonedOrders) {
+        setAbandonedOrders(data.data.abandonedOrders as AbandonedOrder[]);
+      } else {
+        // Fallback: try direct query with proper error handling
+        const { data: directData, error: directError } = await supabase
+          .from('abandoned_orders')
+          .select('*')
+          .order('abandoned_at', { ascending: false })
+          .limit(50);
+
+        if (directError) {
+          console.error('Direct query failed:', directError);
+          setAbandonedOrders([]);
+        } else {
+          setAbandonedOrders((directData || []) as AbandonedOrder[]);
+        }
+      }
     } catch (error: any) {
       console.error('Error loading abandoned orders:', error);
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Failed to load abandoned orders.",
         variant: "destructive",
       });
+      setAbandonedOrders([]);
     } finally {
       setLoading(false);
     }
@@ -86,23 +106,26 @@ export const AbandonedOrdersManager: React.FC = () => {
 
   const clearOldOrders = async () => {
     try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { error } = await supabase
-        .from('abandoned_orders')
-        .delete()
-        .lt('abandoned_at', thirtyDaysAgo.toISOString());
+      // Use the admin-cleanup edge function which has proper admin authentication
+      const { data, error } = await supabase.functions.invoke('admin-cleanup', {
+        body: {
+          action: 'clear_abandoned'
+        }
+      });
 
       if (error) throw error;
 
-      await loadAbandonedOrders();
-      
-      toast({
-        title: "Orders Cleaned",
-        description: "Removed abandoned orders older than 30 days.",
-      });
+      if (data?.success) {
+        await loadAbandonedOrders();
+        toast({
+          title: "Orders Cleaned",
+          description: "Removed abandoned orders older than 30 days.",
+        });
+      } else {
+        throw new Error(data?.error || 'Failed to clean orders');
+      }
     } catch (error: any) {
+      console.error('Error cleaning orders:', error);
       toast({
         title: "Error",
         description: "Failed to clean old orders.",

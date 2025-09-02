@@ -20,7 +20,7 @@ serve(async (req) => {
     logStep("Dashboard data request started");
 
     // Handle both query params (GET) and body params (POST)
-    let dashboardType, userEmail, affiliateCode, loadAssignments = false;
+    let dashboardType, userEmail, affiliateCode, loadAssignments = false, includeAbandonedOrders = false;
     
     if (req.method === 'POST') {
       try {
@@ -29,6 +29,7 @@ serve(async (req) => {
         userEmail = body.email;
         affiliateCode = body.affiliateCode;
         loadAssignments = body.loadAssignments || false;
+        includeAbandonedOrders = body.includeAbandonedOrders || false;
       } catch (error) {
         // If no valid JSON body, treat as GET request
         const url = new URL(req.url);
@@ -36,6 +37,7 @@ serve(async (req) => {
         userEmail = url.searchParams.get('email');
         affiliateCode = url.searchParams.get('affiliateCode');
         loadAssignments = url.searchParams.get('loadAssignments') === 'true';
+        includeAbandonedOrders = url.searchParams.get('includeAbandonedOrders') === 'true';
       }
     } else {
       const url = new URL(req.url);
@@ -43,6 +45,7 @@ serve(async (req) => {
       userEmail = url.searchParams.get('email');
       affiliateCode = url.searchParams.get('affiliateCode');
       loadAssignments = url.searchParams.get('loadAssignments') === 'true';
+      includeAbandonedOrders = url.searchParams.get('includeAbandonedOrders') === 'true';
     }
 
     // Initialize Supabase with service role for full access
@@ -55,7 +58,7 @@ serve(async (req) => {
     let dashboardData: any = {};
 
     if (dashboardType === 'admin') {
-      dashboardData = await getAdminDashboardData(supabase, loadAssignments);
+      dashboardData = await getAdminDashboardData(supabase, loadAssignments, includeAbandonedOrders);
     } else if (dashboardType === 'customer') {
       if (!userEmail) throw new Error("Customer email required for customer dashboard");
       dashboardData = await getCustomerDashboardData(supabase, userEmail);
@@ -104,8 +107,8 @@ serve(async (req) => {
   }
 });
 
-async function getAdminDashboardData(supabase: any, loadAssignments: boolean = false) {
-  logStep("Fetching admin dashboard data", { loadAssignments });
+async function getAdminDashboardData(supabase: any, loadAssignments: boolean = false, includeAbandonedOrders: boolean = false) {
+  logStep("Fetching admin dashboard data", { loadAssignments, includeAbandonedOrders });
 
   try {
     // Simplified query to avoid complex joins that might fail
@@ -138,6 +141,22 @@ async function getAdminDashboardData(supabase: any, loadAssignments: boolean = f
 
     if (affiliatesError) {
       logStep("Affiliates query error", affiliatesError);
+    }
+
+    // Fetch abandoned orders if requested
+    let abandonedOrders = [];
+    if (includeAbandonedOrders) {
+      const { data: abandonedData, error: abandonedError } = await supabase
+        .from('abandoned_orders')
+        .select('*')
+        .order('abandoned_at', { ascending: false })
+        .limit(50);
+
+      if (abandonedError) {
+        logStep("Abandoned orders query error", abandonedError);
+      } else {
+        abandonedOrders = abandonedData || [];
+      }
     }
 
     // Calculate totals safely
@@ -181,7 +200,7 @@ async function getAdminDashboardData(supabase: any, loadAssignments: boolean = f
       }
     }
 
-    return {
+    const response: any = {
       orders: safeOrders,
       customers: safeCustomers,
       affiliates: safeAffiliates,
@@ -194,6 +213,13 @@ async function getAdminDashboardData(supabase: any, loadAssignments: boolean = f
       pendingCommissions,
       recentActivity: []
     };
+
+    // Add abandoned orders if requested
+    if (includeAbandonedOrders) {
+      response.abandonedOrders = abandonedOrders;
+    }
+
+    return response;
 
   } catch (error: any) {
     logStep("Error in getAdminDashboardData", error);
