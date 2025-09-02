@@ -91,7 +91,18 @@ Deno.serve(async (req) => {
     
     console.log(`📋 Found ${orderedProducts.length} products in Shopify collection ${collection_handle}`)
 
+    // First, reset all products in this collection to have no sort order for this collection
+    const { error: resetError } = await supabase
+      .from('shopify_products_cache')
+      .update({ sort_order: 0 })
+      .contains('collection_handles', [collection_handle])
+    
+    if (resetError) {
+      console.error(`❌ Failed to reset sort orders for collection ${collection_handle}:`, resetError)
+    }
+
     // Update our cached products to include sort_order based on Shopify position
+    let updatedCount = 0
     for (let i = 0; i < orderedProducts.length; i++) {
       const shopifyProduct = orderedProducts[i]
       const sortOrder = i + 1 // 1-based ordering
@@ -109,8 +120,11 @@ Deno.serve(async (req) => {
         console.error(`❌ Failed to update sort order for product ${shopifyProduct.id}:`, updateError)
       } else {
         console.log(`✅ Updated sort order for "${shopifyProduct.title}": ${sortOrder}`)
+        updatedCount++
       }
     }
+    
+    console.log(`📊 Updated sort order for ${updatedCount}/${orderedProducts.length} products in ${collection_handle}`)
 
     console.log(`✅ Successfully updated Shopify collection order for ${collection_handle}`)
 
