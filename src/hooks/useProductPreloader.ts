@@ -32,11 +32,13 @@ export const useProductPreloader = () => {
     setCache({ ...globalProductCache });
 
     try {
-      // Use instant-product-cache with proper Shopify ordering
-      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
+      // Use working optimized-product-loader with proper Shopify ordering
+      const { data, error } = await supabase.functions.invoke('optimized-product-loader', {
         body: {
           collection_handle: collectionHandle,
-          force_refresh: false
+          use_type: 'delivery',
+          lightweight: true,
+          preserve_order: true
         }
       });
 
