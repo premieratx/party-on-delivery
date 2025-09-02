@@ -398,43 +398,7 @@ export const CombinedSearchTabs = ({
       {/* MOBILE Layout - Always show tabs, conditionally show search */}
       <div className="block md:hidden">
         
-        {/* Search Bar Section - Only when search is active/expanded */}
-        {showSearch && (isSearchExpanded || isSearchActive) && (
-          <div className="container mx-auto px-2 py-2 bg-background/95 backdrop-blur-sm border-b">
-            <div className="flex items-center justify-center">
-              {isMobile ? (
-                <UltraFastMobileSearch
-                  onProductSelect={(product) => {
-                    console.log('Ultra-fast mobile search selected:', product);
-                    // Update search query to show results
-                    onSearchChange(product.title);
-                    onSearchSubmit();
-                  }}
-                  placeholder="🚀 Ultra-fast search..."
-                  autoFocus={isSearchExpanded}
-                  onSearchStart={() => console.log('🔍 Ultra-fast mobile search started')}
-                  onSearchEnd={() => console.log('✅ Ultra-fast mobile search complete')}
-                  className="flex-1 max-w-md mobile-search-input"
-                />
-              ) : (
-                <AdvancedSearchBar
-                  value={searchQuery}
-                  onChange={(newValue) => {
-                    onSearchChange(newValue);
-                    // Real-time search - trigger immediately for faster results
-                    if (newValue.trim()) {
-                      onSearchSubmit();
-                    }
-                  }}
-                  onSubmit={onSearchSubmit}
-                  placeholder="Search products..."
-                  className="flex-1 max-w-md mobile-search-input"
-                  autoFocus={isSearchExpanded}
-                />
-              )}
-            </div>
-          </div>
-        )}
+        {/* Top search bar hidden - using only bottom search bar in cart/checkout row */}
 
         {/* Tabs Section with improved responsive design */}
         <div className="container mx-auto px-2 py-1.5 bg-background border-b">
