@@ -7,31 +7,46 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   TestTube, 
   CheckCircle2, 
-  AlertCircle,
   Play,
   RefreshCw
 } from 'lucide-react';
 
 export const AutoSyncTester: React.FC = () => {
-  const [isTesting, setIsTesting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
   const { toast } = useToast();
 
-  const testAutoSync = async () => {
-    setIsTesting(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
+  // Ensure admin authentication for all operations
+  const ensureAdminAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Not authenticated - please sign in');
+    }
+    
+    // Verify admin status
+    const { data: adminData } = await supabase.functions.invoke('verify-admin-google', {
+      body: { email: session.user.email }
+    });
+    
+    if (!adminData?.isAdmin) {
+      throw new Error('Admin access required');
+    }
+    
+    return session;
+  };
 
-      // Test completed orders sync
+  // Combined function for testing Google Sheets sync
+  const testGoogleSheetsSync = async () => {
+    setIsLoading(true);
+    try {
+      const session = await ensureAdminAuth();
+
+      // Test both completed and abandoned orders sync
       const { data: completedData, error: completedError } = await supabase.functions.invoke('auto-sync-completed-orders', {
         body: { action: 'sync_completed' },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      // Test abandoned orders sync  
       const { data: abandonedData, error: abandonedError } = await supabase.functions.invoke('auto-sync-abandoned-orders', {
         body: { action: 'sync_abandoned' },
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -47,73 +62,34 @@ export const AutoSyncTester: React.FC = () => {
 
       if (completedData?.success && abandonedData?.success) {
         toast({
-          title: "Auto-Sync Test Successful",
+          title: "Google Sheets Sync Test Successful",
           description: `Synced ${completedData.synced} completed and ${abandonedData.synced} abandoned orders`,
         });
       } else {
         toast({
-          title: "Auto-Sync Test Issues",
+          title: "Sync Test Issues",
           description: "Check test results for details",
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error('Error testing auto-sync:', error);
+      console.error('Error testing sync:', error);
       toast({
         title: "Test Error",
-        description: error.message || "Failed to test auto-sync",
+        description: error.message || "Failed to test sync",
         variant: "destructive",
       });
     } finally {
-      setIsTesting(false);
+      setIsLoading(false);
     }
   };
 
-  const testAbandonedOrderLogic = async () => {
+  // Sync real orders to Google Sheets
+  const syncRealOrders = async () => {
+    setIsLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
+      const session = await ensureAdminAuth();
 
-      // Test abandoned order tracking
-      const { data, error } = await supabase.functions.invoke('enhanced-abandoned-order-tracking', {
-        body: {
-          action: 'track_abandoned',
-          sessionId: 'test_session_' + Date.now(),
-          customerEmail: 'test@example.com',
-          customerName: 'Test Customer',
-          cartItems: [{ title: 'Test Product', quantity: 1, price: 25.99 }],
-          subtotal: 25.99,
-          totalAmount: 30.99
-        },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Abandoned Order Logic Test",
-        description: data.success ? "Test successful" : "Test failed",
-        variant: data.success ? "default" : "destructive",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Test Error",
-        description: error.message || "Failed to test abandoned order logic",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const syncExistingData = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      // Sync one real order from each category
       const { data, error } = await supabase.functions.invoke('sync-real-orders-test', {
         body: {},
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -123,30 +99,31 @@ export const AutoSyncTester: React.FC = () => {
 
       toast({
         title: "Real Orders Synced",
-        description: `Synced ${data.synced.completed} completed order and ${data.synced.abandoned} abandoned order to Google Sheets`,
+        description: `Synced ${data.synced.completed} completed and ${data.synced.abandoned} abandoned orders to Google Sheets`,
       });
     } catch (error: any) {
+      console.error('Error syncing real orders:', error);
       toast({
         title: "Sync Error",
-        description: error.message || "Failed to sync sample data",
+        description: error.message || "Failed to sync orders",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Force Shopify product sync with proper ordering
   const forceShopifySync = async () => {
+    setIsLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
+      const session = await ensureAdminAuth();
 
       toast({
         title: "Starting Shopify Sync",
-        description: "Forcing a complete sync with proper collection ordering...",
+        description: "Forcing complete sync with proper collection ordering...",
       });
 
-      // Force refresh Shopify products with proper ordering
       const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
         body: { forceRefresh: true },
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -156,14 +133,17 @@ export const AutoSyncTester: React.FC = () => {
 
       toast({
         title: "Shopify Sync Complete",
-        description: `Synced ${data.products_synced} products and ${data.collections_synced} collections with proper ordering from Shopify`,
+        description: `Synced ${data.products_synced} products and ${data.collections_synced} collections with proper ordering`,
       });
     } catch (error: any) {
+      console.error('Error syncing Shopify:', error);
       toast({
         title: "Sync Error",
         description: error.message || "Failed to sync Shopify products",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -178,38 +158,31 @@ export const AutoSyncTester: React.FC = () => {
       <CardContent className="space-y-4">
         <div className="flex gap-3 flex-wrap">
           <Button 
-            onClick={testAutoSync}
-            disabled={isTesting}
+            onClick={testGoogleSheetsSync}
+            disabled={isLoading}
             className="flex items-center gap-2"
           >
-            {isTesting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             Test Google Sheets Sync
           </Button>
           
           <Button 
-            onClick={testAbandonedOrderLogic}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <AlertCircle className="h-4 w-4" />
-            Test Abandoned Logic
-          </Button>
-          
-          <Button 
-            onClick={syncExistingData}
+            onClick={syncRealOrders}
+            disabled={isLoading}
             variant="secondary"
             className="flex items-center gap-2"
           >
-            <CheckCircle2 className="h-4 w-4" />
-            Sync 1 Real Order Each
+            {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            Sync Real Orders to Sheets
           </Button>
           
           <Button 
             onClick={forceShopifySync}
+            disabled={isLoading}
             variant="destructive"
             className="flex items-center gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
+            {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             Force Sync Shopify Products
           </Button>
         </div>
