@@ -763,7 +763,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         />
       )}
 
-      {/* SIMPLIFIED: Basic performance monitoring removed to prevent system overload */}
+      {/* CLEANUP COMPLETE: All performance monitoring removed to prevent system overload */}
     </div>
   );
 };
