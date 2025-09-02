@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProductPreloader } from './useProductPreloader';
+import { ultraFastSmartCache } from '@/utils/ultraFastSmartCache';
 
 interface Product {
   id: string;
@@ -61,11 +62,39 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
 
     console.log(`🎯 SMART LOAD: Starting load for "${collection_handle}"`);
 
-    // Try cache first (unless forcing refresh)
+    // Try ultra-fast smart cache first (unless forcing refresh)
     if (!force_refresh) {
+      try {
+        const smartCached = await ultraFastSmartCache.getProductsInstant(collection_handle);
+        if (smartCached && smartCached.length > 0) {
+          console.log(`⚡ ULTRA-INSTANT: Using smart cache for ${collection_handle}: ${smartCached.length} items`);
+          // Convert CachedProduct to Product format
+          const convertedProducts: Product[] = smartCached.map(cached => ({
+            id: cached.id,
+            title: cached.title,
+            price: cached.price.toString(),
+            image: cached.image,
+            category: cached.category,
+            vendor: cached.vendor,
+            description: cached.description,
+            variants: cached.variants,
+            collection_handles: cached.collection_handles,
+            product_type: cached.product_type,
+            search_category: cached.search_category
+          }));
+          setProducts(convertedProducts);
+          setLoading(false);
+          setCached(true);
+          return;
+        }
+      } catch (error) {
+        console.log('Smart cache failed, trying preloader cache...');
+      }
+      
+      // Fallback to preloader cache
       const cached = getFromCache(collection_handle);
       if (cached) {
-        console.log(`⚡ INSTANT: Using cached products for ${collection_handle}: ${cached.length} items`);
+        console.log(`⚡ INSTANT: Using preloader cache for ${collection_handle}: ${cached.length} items`);
         setProducts(cached);
         setLoading(false);
         setCached(true);

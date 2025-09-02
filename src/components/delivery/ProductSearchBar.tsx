@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
+import { ultraFastSmartCache } from '@/utils/ultraFastSmartCache';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -88,13 +88,13 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
   const loadAllProducts = async () => {
     try {
-      console.log('🔍 ProductSearchBar: ULTRA-AGGRESSIVE cache warming...');
+      console.log('🔥 ProductSearchBar: ULTRA-FAST cache warming...');
       
-      // SIMPLIFIED: Use only optimized search system
-      await optimizedUltraFastSearch.searchProductsInstant('', { limit: 2000 });
+      // Use ultra-fast smart cache for sub-200ms loading
+      await ultraFastSmartCache.getProductsInstant();
       
-      console.log('✅ ULTRA-AGGRESSIVE: Search cache ready for sub-0.2s results');
-      setAllProducts([]); // Not needed since search is handled by optimized cache
+      console.log('✅ ULTRA-FAST: Search cache ready for sub-0.2s results');
+      setAllProducts([]); // Not needed since search is handled by smart cache
     } catch (error) {
       console.error('Error warming search cache:', error);
       setAllProducts([]);
@@ -118,10 +118,10 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     
     const performSearch = async () => {
       try {
-        // Use optimized ultra-fast search for instant results
-        const result = await optimizedUltraFastSearch.searchProductsInstant(q, { limit: 20 });
+        // Use ultra-fast smart cache for instant comprehensive search
+        const result = await ultraFastSmartCache.searchProductsInstant(q, { limit: 50 });
         
-        console.log(`🔍 ProductSearchBar INSTANT: Found ${result.products.length} products for "${q}" in ${result.loadTime}`);
+        console.log(`🔍 ProductSearchBar ULTRA-FAST: Found ${result.products.length}/${result.totalFound} products for "${q}" in ${result.loadTime}`);
         setSearchResults(result.products);
         setShowResults(!!showDropdownResults);
         onResultsChange?.(result.products, q);
