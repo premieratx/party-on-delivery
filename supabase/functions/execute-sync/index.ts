@@ -206,14 +206,14 @@ Deno.serve(async (req) => {
         title: product.title,
         handle: product.handle,
         vendor: product.vendor,
-        product_type: product.product_type,
-        price: product.price,
+        product_type: product.productType || product.product_type,
+        price: parseFloat(product.price) || 0,
         image: product.image,
         category: product.category,
-        collection_handles: product.collection_handles,
-        variants: product.variants,
+        collection_handles: product.collections?.map(c => c.handle) || [],
+        variants: product.variants || [],
         description: product.description,
-        sort_order: product.sort_order,
+        sort_order: 0,
         data: product
       }))
       
