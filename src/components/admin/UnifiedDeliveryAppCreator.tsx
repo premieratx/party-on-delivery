@@ -298,7 +298,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   // Load initial configuration when editing an existing app or when initial data changes
   useEffect(() => {
-    console.log('🔄 DeliveryApp useEffect triggered with initial:', initial);
+    console.log('🔄 DeliveryApp useEffect triggered with initial:', initial, 'open:', open);
     if (initial) {
       console.log('📥 Loading existing delivery app configuration...');
       console.log('📊 Initial main_app_config:', initial.main_app_config);
@@ -339,9 +339,16 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         setTabs(initial.collections_config.tabs);
       }
       
-      // Load delivery settings
+      // Load delivery settings with debug logging
+      console.log('🚚 Loading delivery settings from initial:', {
+        prefill_address_enabled: initial.prefill_address_enabled,
+        free_delivery_enabled: initial.free_delivery_enabled,
+        prefill_delivery_address: initial.prefill_delivery_address
+      });
+      
       setPrefillAddressEnabled(initial.prefill_address_enabled ?? false);
       setFreeDeliveryEnabled(initial.free_delivery_enabled ?? false);
+      
       if (initial.prefill_delivery_address) {
         setPrefillAddress({
           street: initial.prefill_delivery_address.street || '',
@@ -349,11 +356,19 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           state: initial.prefill_delivery_address.state || '',
           zip: initial.prefill_delivery_address.zip || '',
         });
+      } else {
+        // Reset address when no prefill data
+        setPrefillAddress({
+          street: '',
+          city: '',
+          state: '',
+          zip: ''
+        });
       }
     } else {
       console.log('🆕 No initial data - creating new delivery app');
     }
-  }, [initial]);
+  }, [initial, open]); // Include 'open' to ensure refresh when dialog opens
 
   // Monitor open state to load collections
   useEffect(() => {

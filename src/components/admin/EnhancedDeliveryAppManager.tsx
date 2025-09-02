@@ -180,6 +180,11 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
   const handleEdit = (app: DeliveryApp) => {
     console.log('🔄 Editing delivery app:', app);
+    console.log('🚚 Delivery settings to include:', {
+      prefill_address_enabled: app.prefill_address_enabled,
+      free_delivery_enabled: app.free_delivery_enabled,
+      prefill_delivery_address: app.prefill_delivery_address
+    });
     // Convert DeliveryApp to DeliveryAppConfig format for the editor
     // Use the actual saved configuration data instead of hardcoded values
     const deliveryAppConfig = {
@@ -216,7 +221,11 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       },
       theme: (app.theme as 'original' | 'gold' | 'platinum') || 'gold',
       is_homepage: app.is_homepage || false,
-      is_active: app.is_active
+      is_active: app.is_active,
+      // Include delivery settings
+      prefill_address_enabled: app.prefill_address_enabled || false,
+      free_delivery_enabled: app.free_delivery_enabled || false,
+      prefill_delivery_address: app.prefill_delivery_address || null
     };
     
     console.log('📝 Passing config to editor:', deliveryAppConfig);
@@ -281,7 +290,11 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
           logo_url: app.logo_url,
           collections_config: app.collections_config,
           custom_branding: app.custom_branding,
-          is_active: false
+          is_active: false,
+          // Include delivery settings in duplicate
+          prefill_address_enabled: app.prefill_address_enabled || false,
+          free_delivery_enabled: app.free_delivery_enabled || false,
+          prefill_delivery_address: app.prefill_delivery_address || null
         }]);
 
       if (error) throw error;
