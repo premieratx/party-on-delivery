@@ -212,8 +212,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // FIXED: Stable product filtering to prevent React error #310
   const displayProducts = useMemo(() => {
+    console.log('🔍 Filtering products for collection:', currentCollectionHandle);
+    console.log('📦 Raw products available:', currentTabProducts?.length || 0);
+    
     // Always return stable empty array if no data
     if (!currentCollectionHandle || !currentTabProducts?.length) {
+      console.log('❌ No collection handle or products available');
       return [];
     }
     
@@ -232,28 +236,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       };
     }).filter(Boolean);
     
-    // Safe filtering with guaranteed stable returns
-    const filteredProducts = stableProducts.filter(product => {
-      // Robust collection handle parsing
-      let handles: string[] = [];
-      try {
-        const collectionData: any = product.collection_handles;
-        if (Array.isArray(collectionData)) {
-          handles = collectionData;
-        } else if (typeof collectionData === 'string' && collectionData) {
-          const parsed = JSON.parse(collectionData);
-          handles = Array.isArray(parsed) ? parsed : [];
-        }
-      } catch (error) {
-        console.warn('Failed to parse collection handles for product:', product.id, error);
-        handles = [];
-      }
-      
-      return Array.isArray(handles) && handles.includes(currentCollectionHandle);
-    });
+    console.log('✅ Stable products created:', stableProducts.length);
     
-    // Return stable slice
-    return filteredProducts.slice(0, maxProducts);
+    // For delivery collections, products should already be filtered by the hook
+    // Just return the stable products without additional filtering
+    const result = stableProducts.slice(0, maxProducts);
+    console.log('🎯 Final products to display:', result.length);
+    
+    return result;
   }, [currentTabProducts, currentCollectionHandle, maxProducts]);
 
   const currentTab = tabs[selectedCategory];
