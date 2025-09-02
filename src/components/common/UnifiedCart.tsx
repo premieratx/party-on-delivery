@@ -45,38 +45,61 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // BULLETPROOF: Always scroll cart to top when opened - Complete scroll isolation
+  // BULLETPROOF: Always scroll cart to top when opened + prevent page scroll
   useEffect(() => {
-    if (isOpen && scrollContainerRef.current) {
-      console.log('🛒 Cart opened, forcing scroll to top');
+    if (isOpen) {
+      // Lock page scroll when cart is open
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.bottom = '0';
       
-      // Multiple aggressive scroll resets to handle all edge cases
-      const container = scrollContainerRef.current;
-      
-      // Immediate reset
-      container.scrollTop = 0;
-      container.scrollTo({ top: 0, behavior: 'instant' });
-      
-      // Force focus to ensure container has proper scroll context
-      container.focus({ preventScroll: true });
-      
-      // Additional resets with increasing delays
-      const resetScrolling = () => {
-        if (container) {
-          container.scrollTop = 0;
-          container.scrollTo({ top: 0, behavior: 'instant' });
-        }
-      };
-      
-      requestAnimationFrame(resetScrolling);
-      setTimeout(resetScrolling, 0);
-      setTimeout(resetScrolling, 10);
-      setTimeout(resetScrolling, 50);
-      setTimeout(resetScrolling, 100);
-      setTimeout(resetScrolling, 200);
-      
-      console.log('🛒 Cart scroll position reset complete');
+      if (scrollContainerRef.current) {
+        console.log('🛒 Cart opened, forcing scroll to top');
+        
+        const container = scrollContainerRef.current;
+        container.scrollTop = 0;
+        container.scrollTo({ top: 0, behavior: 'instant' });
+        
+        // Multiple resets to ensure it works
+        const resetScrolling = () => {
+          if (container) {
+            container.scrollTop = 0;
+            container.scrollTo({ top: 0, behavior: 'instant' });
+          }
+        };
+        
+        requestAnimationFrame(resetScrolling);
+        setTimeout(resetScrolling, 0);
+        setTimeout(resetScrolling, 10);
+        setTimeout(resetScrolling, 50);
+        setTimeout(resetScrolling, 100);
+        
+        console.log('🛒 Cart scroll position reset complete');
+      }
+    } else {
+      // Restore page scroll when cart is closed
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.bottom = '';
     }
+    
+    // Cleanup function to restore scroll on component unmount
+    return () => {
+      if (isOpen) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.bottom = '';
+      }
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
