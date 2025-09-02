@@ -211,20 +211,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  // Auto-sync collection orders when needed
-  useEffect(() => {
-    const shouldSyncOrders = currentTabProducts?.length > 0 && 
-                            currentCollectionHandle && 
-                            !localStorage.getItem('orders-synced-' + currentCollectionHandle);
-    
-    if (shouldSyncOrders) {
-      console.log('🔄 Auto-syncing collection order for:', currentCollectionHandle);
-      syncCollectionOrders().then(() => {
-        localStorage.setItem('orders-synced-' + currentCollectionHandle, 'true');
-        refreshProducts();
-      });
-    }
-  }, [currentTabProducts, currentCollectionHandle, refreshProducts]);
 
   // FIXED: Stable product filtering to prevent React error #310
   const displayProducts = useMemo(() => {
