@@ -227,6 +227,9 @@ async function fetchAllProductsWithCollections(): Promise<ShopifyProduct[]> {
 }
 
 async function buildAllCollections(products: ShopifyProduct[]) {
+  const SHOPIFY_STORE = Deno.env.get('SHOPIFY_STORE_URL')?.replace(/https?:\/\//, '') || ''
+  const SHOPIFY_ACCESS_TOKEN = Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN')
+  
   const collectionsMap = new Map()
   
   // Build all collections that have products
@@ -244,29 +247,123 @@ async function buildAllCollections(products: ShopifyProduct[]) {
     }
   }
   
-  // Convert to array and add product counts
-  const allCollections = Array.from(collectionsMap.values()).map(collection => ({
-    shopify_collection_id: collection.id,
-    handle: collection.handle,
-    title: collection.title,
-    description: '',
-    products_count: collection.products.length,
-    data: {
-      handle: collection.handle,
-      title: collection.title,
-      products: collection.products.map(p => ({
-        id: p.id,
-        title: p.title,
-        price: parseFloat(p.variants[0]?.price || '0'),
-        image: p.images[0]?.url || '/placeholder.svg'
-      }))
-    },
-    updated_at: new Date().toISOString()
-  }))
+  // Fetch proper ordering from Shopify collections with sortKey: COLLECTION_DEFAULT
+  const collectionsWithOrder = []
   
-  console.log(`📦 Built ${allCollections.length} collections from products`)
+  for (const [handle, collectionData] of collectionsMap) {
+    try {
+      console.log(`🔄 Fetching ordered products for collection: ${handle}`)
+      
+      const orderQuery = `
+        query getCollectionByHandle($handle: String!) {
+          collectionByHandle(handle: $handle) {
+            id
+            handle
+            title
+            description
+            products(first: 250, sortKey: COLLECTION_DEFAULT) {
+              edges {
+                node {
+                  id
+                  title
+                  handle
+                  images(first: 1) {
+                    edges {
+                      node {
+                        url
+                      }
+                    }
+                  }
+                  variants(first: 1) {
+                    edges {
+                      node {
+                        price
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `
+      
+      const orderResponse = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/graphql.json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
+        },
+        body: JSON.stringify({ 
+          query: orderQuery, 
+          variables: { handle } 
+        }),
+      })
+      
+      if (orderResponse.ok) {
+        const orderData = await orderResponse.json()
+        const orderedCollection = orderData.data?.collectionByHandle
+        
+        if (orderedCollection) {
+          // Map products with their Shopify collection order (sort_order)
+          const orderedProducts = orderedCollection.products.edges.map((edge: any, index: number) => {
+            const productId = edge.node.id
+            const shopifyProduct = products.find(p => p.id === productId)
+            
+            return {
+              ...edge.node,
+              sort_order: index + 1, // 1-based ordering from Shopify
+              price: parseFloat(edge.node.variants.edges[0]?.node?.price || '0'),
+              image: edge.node.images.edges[0]?.node?.url || '/placeholder.svg',
+              shopify_product: shopifyProduct // Keep full product data
+            }
+          })
+          
+          collectionsWithOrder.push({
+            shopify_collection_id: orderedCollection.id,
+            handle: orderedCollection.handle,
+            title: orderedCollection.title,
+            description: orderedCollection.description || '',
+            products_count: orderedProducts.length,
+            data: {
+              handle: orderedCollection.handle,
+              title: orderedCollection.title,
+              products: orderedProducts
+            },
+            updated_at: new Date().toISOString()
+          })
+          
+          console.log(`✅ Collection ${handle}: ${orderedProducts.length} products ordered`)
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error fetching order for collection ${handle}:`, error)
+      // Fallback to unordered collection
+      collectionsWithOrder.push({
+        shopify_collection_id: collectionData.id,
+        handle: collectionData.handle,
+        title: collectionData.title,
+        description: '',
+        products_count: collectionData.products.length,
+        data: {
+          handle: collectionData.handle,
+          title: collectionData.title,
+          products: collectionData.products.map((p: any, index: number) => ({
+            id: p.id,
+            title: p.title,
+            price: parseFloat(p.variants[0]?.price || '0'),
+            image: p.images[0]?.url || '/placeholder.svg',
+            sort_order: index + 1 // Fallback ordering
+          }))
+        },
+        updated_at: new Date().toISOString()
+      })
+    }
+  }
   
-  return allCollections
+  console.log(`📦 Built ${collectionsWithOrder.length} collections with proper ordering`)
+  
+  return collectionsWithOrder
 }
 
 async function updateCaches(
@@ -295,24 +392,38 @@ async function updateCaches(
   for (let i = 0; i < products.length; i += batchSize) {
     const batch = products.slice(i, i + batchSize)
     
-    const cacheItems = batch.map(product => ({
-      shopify_product_id: product.id,
-      title: product.title,
-      handle: product.handle,
-      price: parseFloat(product.variants[0]?.price || '0'),
-      image: product.images[0]?.url || '/placeholder.svg',
-      category: getProductCategory(product),
-      category_title: formatCategoryTitle(getProductCategory(product)),
-      vendor: product.vendor,
-      description: product.description,
-      product_type: product.productType,
-      search_category: normalizeProductType(product.productType),
-      tags: product.tags,
-      variants: product.variants,
-      collection_handles: product.collections?.map(c => c.handle) || [],
-      data: product,
-      updated_at: new Date().toISOString()
-    }))
+    const cacheItems = batch.map(product => {
+      // Find sort_order for this product across all collections
+      let sort_order = 0
+      for (const collection of collections) {
+        const collectionProducts = collection.data.products || []
+        const productInCollection = collectionProducts.find((p: any) => p.id === product.id)
+        if (productInCollection && productInCollection.sort_order) {
+          sort_order = productInCollection.sort_order
+          break // Use the first found sort order
+        }
+      }
+      
+      return {
+        shopify_product_id: product.id,
+        title: product.title,
+        handle: product.handle,
+        price: parseFloat(product.variants[0]?.price || '0'),
+        image: product.images[0]?.url || '/placeholder.svg',
+        category: getProductCategory(product),
+        category_title: formatCategoryTitle(getProductCategory(product)),
+        vendor: product.vendor,
+        description: product.description,
+        product_type: product.productType,
+        search_category: normalizeProductType(product.productType),
+        tags: product.tags,
+        variants: product.variants,
+        collection_handles: product.collections?.map(c => c.handle) || [],
+        sort_order: sort_order, // CRITICAL: Preserve Shopify collection order
+        data: product,
+        updated_at: new Date().toISOString()
+      }
+    })
 
     const { error: insertError } = await supabase
       .from('shopify_products_cache')

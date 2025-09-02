@@ -134,6 +134,39 @@ export const AutoSyncTester: React.FC = () => {
     }
   };
 
+  const forceShopifySync = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      toast({
+        title: "Starting Shopify Sync",
+        description: "Forcing a complete sync with proper collection ordering...",
+      });
+
+      // Force refresh Shopify products with proper ordering
+      const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
+        body: { forceRefresh: true },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Shopify Sync Complete",
+        description: `Synced ${data.products_synced} products and ${data.collections_synced} collections with proper ordering from Shopify`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Sync Error",
+        description: error.message || "Failed to sync Shopify products",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -143,7 +176,7 @@ export const AutoSyncTester: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <Button 
             onClick={testAutoSync}
             disabled={isTesting}
@@ -169,6 +202,15 @@ export const AutoSyncTester: React.FC = () => {
           >
             <CheckCircle2 className="h-4 w-4" />
             Sync 1 Real Order Each
+          </Button>
+          
+          <Button 
+            onClick={forceShopifySync}
+            variant="destructive"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Force Sync Shopify Products
           </Button>
         </div>
 
@@ -219,11 +261,12 @@ export const AutoSyncTester: React.FC = () => {
         )}
 
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <div className="font-medium mb-2">🔄 Current Auto-Sync Status:</div>
+          <div className="font-medium mb-2">🔄 Current Status:</div>
           <div className="space-y-1 text-muted-foreground">
             <div>• Completed orders: Real-time sync ✅</div>
             <div>• Abandoned orders: Hourly sync ✅</div>
             <div>• Deduplication: Active ✅</div>
+            <div>• Product ordering: Shopify collection order preserved ✅</div>
             <div>• Google Sheet: 1P9Us5B6NMLE1I-e8XZWa9ZzgN5OAO7S9CI9DhnEtl5U</div>
           </div>
         </div>
