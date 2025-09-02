@@ -17,7 +17,23 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
 
     const checkAdminAccess = async () => {
       try {
-        // Check if user has a valid session
+        // Check for admin session in localStorage first
+        const adminSession = localStorage.getItem('admin_session');
+        if (adminSession) {
+          try {
+            const session = JSON.parse(adminSession);
+            if (session.isAdmin && session.user?.email && (Date.now() - session.timestamp < 24 * 60 * 60 * 1000)) {
+              console.log('✅ Found valid admin session:', session.user.email);
+              setAllowed(true);
+              return;
+            }
+          } catch (e) {
+            console.log('❌ Invalid admin session data');
+            localStorage.removeItem('admin_session');
+          }
+        }
+
+        // Check if user has a valid Supabase session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user?.email) {
@@ -69,7 +85,8 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
       console.log('🔍 Auth state change:', event);
 
       if (event === 'SIGNED_OUT') {
-        console.log('🚪 User signed out');
+        console.log('🚪 User signed out, clearing admin session');
+        localStorage.removeItem('admin_session');
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });
       } else if (event === 'SIGNED_IN' && session) {

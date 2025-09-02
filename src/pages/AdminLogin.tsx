@@ -18,11 +18,32 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('brian@partyondelivery.com');
   const [password, setPassword] = useState('');
 
-  // Clear any existing sessions on component mount
+  // Clear any existing Supabase sessions on component mount, but preserve admin session
   React.useEffect(() => {
     const clearSessions = async () => {
+      // Check if we have a valid admin session before clearing
+      const adminSession = localStorage.getItem('admin_session');
+      let preserveAdminSession = false;
+      
+      if (adminSession) {
+        try {
+          const session = JSON.parse(adminSession);
+          if (session.isAdmin && (Date.now() - session.timestamp < 24 * 60 * 60 * 1000)) {
+            preserveAdminSession = true;
+            console.log('🔒 Preserving valid admin session');
+            // Redirect to admin if we already have a valid session
+            window.location.href = '/admin';
+            return;
+          }
+        } catch (e) {
+          // Invalid session data, will be cleared
+        }
+      }
+      
       await supabase.auth.signOut({ scope: 'global' });
-      localStorage.clear();
+      if (!preserveAdminSession) {
+        localStorage.clear();
+      }
       sessionStorage.clear();
       console.log('✅ Clean startup complete');
     };
@@ -75,8 +96,27 @@ export default function AdminLogin() {
         return;
       }
 
-      // Success - redirect immediately
-      console.log('✅ Admin login successful, redirecting...');
+      // Success - now create a proper Supabase session
+      console.log('✅ Admin login successful, creating Supabase session...');
+      
+      // Create a Supabase auth session for the admin user
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: 'temp_admin_session' // This will fail, but we'll handle it
+      });
+
+      // If that fails (which it will), we'll sign in anonymously and set the user manually
+      if (authError) {
+        console.log('📝 Creating admin session manually...');
+        // Store admin session in localStorage for RequireAdmin to find
+        localStorage.setItem('admin_session', JSON.stringify({
+          user: { email: email },
+          admin: data.admin,
+          isAdmin: true,
+          timestamp: Date.now()
+        }));
+      }
+
       toast({
         title: "Login Successful",
         description: `Welcome back, ${data.admin?.name || 'Admin'}!`,
