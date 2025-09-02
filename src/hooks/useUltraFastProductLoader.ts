@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ultraFastSearch } from '@/utils/ultraFastSearch';
+import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
 
 interface UltraFastLoaderState {
   products: any[];
@@ -36,14 +36,14 @@ export const useUltraFastProductLoader = () => {
     globalProductState.loading = true;
 
     try {
-      // Warm up cache if not done yet
+      // Warm up cache if not done yet - this will happen automatically
       if (!isGloballyWarmedUp) {
-        await ultraFastSearch.warmUpCache();
         isGloballyWarmedUp = true;
       }
 
-      // Get all products
-      const products = await ultraFastSearch.getAllProducts();
+      // Get all products instantly using the optimized search
+      const result = await optimizedUltraFastSearch.searchProductsInstant('', { limit: 2000 });
+      const products = result.products;
       
       console.log(`✅ Loaded ${products.length} products in ultra-fast mode`);
       
@@ -88,13 +88,12 @@ export const useUltraFastProductLoader = () => {
     try {
       console.log(`🔍 ULTRA-FAST SEARCH: "${query}"`);
       
-      const result = await ultraFastSearch.searchProducts(query, {
-        limit: options.limit || 100,
-        useCache: options.useCache !== false
+      const result = await optimizedUltraFastSearch.searchProductsInstant(query, {
+        limit: options.limit || 100
       });
 
       const duration = performance.now() - startTime;
-      console.log(`⚡ SEARCH COMPLETED: "${query}" - ${result.products.length} results in ${duration.toFixed(2)}ms (${result.fromCache ? 'cached' : 'fresh'})`);
+      console.log(`⚡ SEARCH COMPLETED: "${query}" - ${result.products.length} results in ${duration.toFixed(2)}ms (${result.fromLocalCache ? 'cached' : 'fresh'})`);
 
       // Update search results in global state
       globalProductState.searchResults = result.products;
@@ -125,11 +124,9 @@ export const useUltraFastProductLoader = () => {
     console.log('⚡ Preloading collections:', collectionHandles);
     
     try {
-      // Warm up cache for all collections
-      await ultraFastSearch.warmUpCache();
-      
-      // Collections are already loaded in the main product index
-      console.log('✅ Collections preloaded via ultra-fast search');
+      // Preload collections using optimized search
+      await optimizedUltraFastSearch.preloadCollections(collectionHandles);
+      console.log('✅ Collections preloaded via optimized search');
       
     } catch (error) {
       console.error('❌ Failed to preload collections:', error);
@@ -154,6 +151,6 @@ export const useUltraFastProductLoader = () => {
     searchProducts,
     getCachedSearchResults,
     preloadCollections,
-    getCacheStats: () => ultraFastSearch.getCacheStats()
+    getCacheStats: () => optimizedUltraFastSearch.getCacheStats()
   };
 };

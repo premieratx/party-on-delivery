@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { SearchOptimizer } from '@/utils/searchOptimizer';
+import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -88,38 +88,21 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
   const loadAllProducts = async () => {
     try {
-      console.log('🔍 ProductSearchBar: Loading ALL products from catalog for search...');
+      console.log('🔍 ProductSearchBar: Pre-warming optimized search cache...');
       
-      // Use get-unified-products to get the complete catalog (not delivery-app specific)
-      const { data, error } = await supabase.functions.invoke('get-unified-products', {
-        body: { 
-          use_type: 'search', // Use search mode to get all products
-          lightweight: false, // Get full product data for search
-          force_refresh: false,
-          limit: null // Remove any limits to get all 1068+ products
-        }
-      });
-
-      if (error) {
-        console.error('Error loading products for search:', error);
-        return;
-      }
-
-      if (data?.products) {
-        console.log(`🔍 Loaded ${data.products.length} products from full catalog for search`);
-        setAllProducts(data.products);
-      } else {
-        console.warn('No products returned from unified products');
-        setAllProducts([]);
-      }
+      // Pre-warm the optimized search cache - this loads all products instantly
+      await optimizedUltraFastSearch.searchProductsInstant('', { limit: 2000 });
+      
+      console.log('✅ Optimized search cache is ready for instant results');
+      setAllProducts([]); // Not needed since search is handled by optimized cache
     } catch (error) {
-      console.error('Error loading products for search:', error);
+      console.error('Error warming search cache:', error);
       setAllProducts([]);
     }
   };
 
 
-  // Real-time hierarchical search with SearchOptimizer
+  // Real-time optimized search
   useEffect(() => {
     const q = searchQuery.trim();
     if (!q) {
@@ -133,25 +116,28 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     setIsLoading(true);
     onSearchingChange?.(true);
     
-    try {
-      // Use SearchOptimizer for hierarchical search: Product Name > Collection > Category > Product Type
-      const searchIndex = SearchOptimizer.buildSearchIndex(allProducts, 'product-search-bar');
-      const results = SearchOptimizer.searchProductsWithHierarchy(q, searchIndex, 20);
-      
-      console.log(`🔍 ProductSearchBar HIERARCHICAL: Found ${results.length} products for "${q}" (Name > Collection > Category > Type)`);
-      setSearchResults(results);
-      setShowResults(!!showDropdownResults);
-      onResultsChange?.(results, q);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-      setShowResults(false);
-      onResultsChange?.([], q);
-    } finally {
-      setIsLoading(false);
-      onSearchingChange?.(false);
-    }
-  }, [searchQuery, allProducts, showDropdownResults, onResultsChange, onSearchingChange]);
+    const performSearch = async () => {
+      try {
+        // Use optimized ultra-fast search for instant results
+        const result = await optimizedUltraFastSearch.searchProductsInstant(q, { limit: 20 });
+        
+        console.log(`🔍 ProductSearchBar INSTANT: Found ${result.products.length} products for "${q}" in ${result.loadTime}`);
+        setSearchResults(result.products);
+        setShowResults(!!showDropdownResults);
+        onResultsChange?.(result.products, q);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+        setShowResults(false);
+        onResultsChange?.([], q);
+      } finally {
+        setIsLoading(false);
+        onSearchingChange?.(false);
+      }
+    };
+
+    performSearch();
+  }, [searchQuery, showDropdownResults, onResultsChange, onSearchingChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -191,14 +177,14 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             autoCorrect="off"
             spellCheck="false"
             inputMode="search"
-            className={`pl-10 pr-10 h-12 text-[16px] border-2 border-primary/20 focus:border-primary transition-colors touch-manipulation ${inputClassName || ''}`}
+            className={`pl-10 ${isLoading ? 'pr-14' : 'pr-10'} h-12 text-[16px] border-2 border-primary/20 focus:border-primary transition-colors touch-manipulation ${inputClassName || ''}`}
             style={{ 
               fontSize: '16px', // Prevent iOS zoom
               WebkitAppearance: 'none',
               appearance: 'none'
             }}
           />
-        {searchQuery && (
+        {!isLoading && searchQuery && (
           <Button
             type="button"
             variant="ghost"

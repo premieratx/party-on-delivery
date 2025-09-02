@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ultraFastSearch } from '@/utils/ultraFastSearch';
+import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
 
 interface UseRealTimeSearchOptions {
   debounceMs?: number;
@@ -24,8 +24,7 @@ export function useRealTimeSearch(options: UseRealTimeSearchOptions = {}) {
     setIsSearching(true);
     try {
       console.log('🔍 Real-time search for:', query);
-      await ultraFastSearch.warmUpCache();
-      const response = await ultraFastSearch.searchProducts(query, { limit: maxResults });
+      const response = await optimizedUltraFastSearch.searchProductsInstant(query, { limit: maxResults });
       console.log('✅ Search results:', response.products.length);
       setSearchResults(response.products);
       setHasResults(response.products.length > 0);
