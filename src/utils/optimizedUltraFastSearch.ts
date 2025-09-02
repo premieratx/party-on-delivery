@@ -86,12 +86,15 @@ class OptimizedUltraFastSearchClient {
    * Pre-load all products into local index for instant searching
    */
   private async warmUpLocalIndex(): Promise<void> {
-    // Always refresh to ensure we have all 1067+ products
-    console.log('🔥 Force warming up local product index for all products...');
+    if (this.isIndexWarmedUp && Date.now() - this.lastCacheSync < this.CACHE_TTL) {
+      return;
+    }
+
+    console.log('🔥 Warming up local product index...');
     const startTime = performance.now();
 
     try {
-      // Use instant-product-cache for ALL products - ensure we get the full 1067+ catalog
+      // Use instant-product-cache for fastest loading - get ALL products
       const { data, error } = await supabase.functions.invoke('instant-product-cache', {
         body: { collection_handle: 'all', force_refresh: true }
       });
@@ -258,8 +261,7 @@ class OptimizedUltraFastSearchClient {
     this.localProductIndex.clear();
     this.searchCache.clear();
     this.isIndexWarmedUp = false;
-    this.lastCacheSync = 0; // Reset sync time to force fresh load
-    console.log('🧹 All search caches cleared - will reload ALL products on next search');
+    console.log('🧹 All search caches cleared');
   }
 
   /**
