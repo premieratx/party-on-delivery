@@ -26,11 +26,11 @@ export const AdminAuthFix = () => {
       }
     };
 
-    // Set context on mount and periodically refresh
+    // Set context on mount - DISABLED PERIODIC REFRESH TO PREVENT PAGE RELOADING
     setAdminContext();
-    const interval = setInterval(setAdminContext, 5 * 60 * 1000); // Every 5 minutes
+    // const interval = setInterval(setAdminContext, 5 * 60 * 1000); // Every 5 minutes - DISABLED
 
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval); // DISABLED
   }, []);
 
   return null; // This component doesn't render anything

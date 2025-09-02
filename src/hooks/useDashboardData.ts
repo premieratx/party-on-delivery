@@ -88,8 +88,8 @@ export function useDashboardData(options: UseDashboardDataOptions) {
   };
 }
 
-// Helper hooks for specific dashboard types
-export function useAdminDashboard(refreshInterval = 30000) {
+// Helper hooks for specific dashboard types - DISABLED AUTO-REFRESH FOR ADMIN
+export function useAdminDashboard(refreshInterval = 0) {
   return useDashboardData({ type: 'admin', refreshInterval });
 }
 

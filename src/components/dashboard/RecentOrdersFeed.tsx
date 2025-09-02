@@ -69,23 +69,24 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
   title = "Recent Orders",
   maxHeight = "400px",
   showCustomerInfo = true,
-  refreshInterval = 30000,
+  refreshInterval = 0, // DISABLED AUTO-REFRESH
   onRefresh
 }) => {
   const [openOrders, setOpenOrders] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Auto-refresh functionality
+  // Auto-refresh functionality - DISABLED TO PREVENT PAGE RELOADING
   useEffect(() => {
-    if (refreshInterval && onRefresh) {
-      const interval = setInterval(() => {
-        setIsRefreshing(true);
-        onRefresh();
-        setTimeout(() => setIsRefreshing(false), 1000);
-      }, refreshInterval);
-      
-      return () => clearInterval(interval);
-    }
+    // Commenting out auto-refresh to prevent constant page reloading
+    // if (refreshInterval && onRefresh && refreshInterval > 0) {
+    //   const interval = setInterval(() => {
+    //     setIsRefreshing(true);
+    //     onRefresh();
+    //     setTimeout(() => setIsRefreshing(false), 1000);
+    //   }, refreshInterval);
+    //   
+    //   return () => clearInterval(interval);
+    // }
   }, [refreshInterval, onRefresh]);
 
   const toggleOrder = (orderId: string) => {

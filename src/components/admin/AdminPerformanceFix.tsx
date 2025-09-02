@@ -63,9 +63,9 @@ export const AdminPerformanceFix: React.FC<AdminPerformanceFixProps> = ({ childr
     // Warm up immediately
     warmUpFunctions();
 
-    // Set up periodic warmup (less frequent)
-    const warmupInterval = setInterval(warmUpFunctions, 10 * 60 * 1000); // 10 minutes
-    performanceRef.current.intervals.add(warmupInterval);
+    // Set up periodic warmup (less frequent) - DISABLED TO PREVENT PAGE RELOADING
+    // const warmupInterval = setInterval(warmUpFunctions, 10 * 60 * 1000); // 10 minutes - DISABLED
+    // performanceRef.current.intervals.add(warmupInterval); // DISABLED
 
     return () => {
       // Cleanup all intervals
