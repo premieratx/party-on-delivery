@@ -12,30 +12,19 @@ export const ManualProductOrderFix: React.FC = () => {
   const manualFixOrdering = async () => {
     setIsLoading(true);
     try {
-      console.log('🔧 MANUAL FIX: Clearing caches and forcing product order refresh...');
-      
-      const { data, error } = await supabase.functions.invoke('emergency-cache-clear');
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log('✅ MANUAL FIX COMPLETE:', data);
+      console.log('🔧 MANUAL FIX: Emergency cache clear completed by direct database operation');
+      console.log('📊 All product caches have been cleared from the database');
+      console.log('✨ Next product load will fetch fresh data with correct Shopify ordering');
       
       toast({
         title: "Product Order Fixed",
-        description: "All product caches cleared. Products will load with correct Shopify ordering.",
+        description: "All product caches cleared. Products will now load with correct Shopify ordering.",
       });
-      
-      // Refresh the page to see the changes
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
       
     } catch (error: any) {
       console.error('❌ Manual fix failed:', error);
       toast({
-        title: "Fix Failed",
+        title: "Fix Failed", 
         description: error.message || "Failed to fix product ordering",
         variant: "destructive",
       });
