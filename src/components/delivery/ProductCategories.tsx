@@ -28,6 +28,7 @@ import { useRealTimeSearch } from '@/hooks/useRealTimeSearch';
 import { useImmediateKeyboardHiding } from '@/hooks/useImmediateKeyboardHiding';
 import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
+import { syncCollectionOrders } from '@/utils/syncCollectionOrders';
 
 interface ProductCategoriesProps {
   appName?: string;
@@ -209,6 +210,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       refreshProducts();
     }
   }, [forceRefresh, refreshProducts]);
+
+  // Auto-sync collection orders when needed
+  useEffect(() => {
+    const shouldSyncOrders = currentTabProducts?.length > 0 && 
+                            currentCollectionHandle && 
+                            !localStorage.getItem('orders-synced-' + currentCollectionHandle);
+    
+    if (shouldSyncOrders) {
+      console.log('🔄 Auto-syncing collection order for:', currentCollectionHandle);
+      syncCollectionOrders().then(() => {
+        localStorage.setItem('orders-synced-' + currentCollectionHandle, 'true');
+        refreshProducts();
+      });
+    }
+  }, [currentTabProducts, currentCollectionHandle, refreshProducts]);
 
   // FIXED: Stable product filtering to prevent React error #310
   const displayProducts = useMemo(() => {
