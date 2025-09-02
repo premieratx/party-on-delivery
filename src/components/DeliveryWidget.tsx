@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import ProductCategories from './delivery/ProductCategories';
-import { DeliveryCart } from './delivery/DeliveryCart';
+// DeliveryCart removed - using UnifiedCart from GlobalCartProvider instead
 import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 
@@ -57,7 +57,7 @@ export const DeliveryWidget: React.FC = () => {
     address: '',
     instructions: ''
   });
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  // Cart state removed - using GlobalCartProvider instead
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
   const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
@@ -203,8 +203,7 @@ export const DeliveryWidget: React.FC = () => {
         return;
       }
       
-      // Close cart if open
-      setIsCartOpen(false);
+      // Cart is managed by GlobalCartProvider - no need to close manually
       
       // Enhanced referrer tracking for proper "Back to Cart" functionality
       const currentUrl = window.location.pathname + window.location.search;
@@ -253,23 +252,7 @@ export const DeliveryWidget: React.FC = () => {
 
       {/* Checkout step removed - now navigates to main checkout page */}
 
-      {/* Slide-out Cart */}
-      <DeliveryCart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveFromCart}
-        totalPrice={getTotalPrice()}
-        onCheckout={handleCheckout}
-        deliveryInfo={deliveryInfo}
-        isAddingToOrder={isAddingToOrder}
-        useSameAddress={useSameAddress}
-        hasChanges={hasChanges}
-        appliedDiscount={appliedDiscount}
-        tipAmount={tipAmount}
-        onEmptyCart={handleEmptyCart}
-      />
+      {/* Cart is now handled by GlobalCartProvider - UnifiedCart renders globally */}
       {/* Bottom navigation removed - all functions available in top menu */}
     </div>
   );
