@@ -2,15 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { StandaloneCoverPage } from '@/components/cover-pages/StandaloneCoverPage';
+import AdminLogin from '@/pages/AdminLogin';
 
 export const DynamicRouteHandler: React.FC = () => {
   const location = useLocation();
-  const [routeType, setRouteType] = useState<'cover' | 'notfound'>('notfound');
+  const [routeType, setRouteType] = useState<'cover' | 'admin-login' | 'notfound'>('notfound');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const determineRouteType = async () => {
       const pathname = location.pathname.slice(1); // Remove leading slash
+
+      // Handle admin login route
+      if (pathname === 'affiliate/admin-login') {
+        setRouteType('admin-login');
+        setLoading(false);
+        return;
+      }
 
       // Skip root path - it should never reach this handler
       if (!pathname || pathname === '') {
@@ -54,6 +62,10 @@ export const DynamicRouteHandler: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (routeType === 'admin-login') {
+    return <AdminLogin />;
   }
 
   if (routeType === 'cover') {
