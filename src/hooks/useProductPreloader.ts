@@ -32,13 +32,11 @@ export const useProductPreloader = () => {
     setCache({ ...globalProductCache });
 
     try {
-      // Skip instant cache and use working get-unified-products directly
-      const { data, error } = await supabase.functions.invoke('get-unified-products', {
+      // Use instant-product-cache with proper Shopify ordering
+      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
         body: {
           collection_handle: collectionHandle,
-          use_type: 'delivery',
-          lightweight: true,
-          preserve_order: true
+          force_refresh: false
         }
       });
 

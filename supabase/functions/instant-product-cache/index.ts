@@ -54,9 +54,9 @@ Deno.serve(async (req) => {
       .order('updated_at', { ascending: false }) // Secondary sort by update time
       .order('id', { ascending: true }) // Tertiary sort for consistency
 
-    // Filter by collection if specified
+    // Filter by collection if specified - FIXED array syntax
     if (collection_handle && collection_handle !== 'all') {
-      query = query.filter('collection_handles', 'cs', `{${collection_handle}}`)
+      query = query.contains('collection_handles', [collection_handle])
     }
 
     const { data: products, error } = await query
