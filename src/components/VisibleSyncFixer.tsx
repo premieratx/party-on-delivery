@@ -19,22 +19,12 @@ export const VisibleSyncFixer = () => {
         setStep(2);
         setStatus('🔄 Step 2: Fetching products from Shopify...');
         
-        // Trigger fetch
-        const fetchResult = await supabase.functions.invoke('fetch-shopify-products', {
-          body: { force: true }
+        // Use unified sync instead
+        const syncResult = await supabase.functions.invoke('unified-shopify-sync', {
+          body: { forceRefresh: true }
         });
         
-        console.log('Fetch result:', fetchResult);
-        
-        setStep(3);
-        setStatus('🔄 Step 3: Processing and storing products...');
-        
-        // Trigger sync
-        const syncResult = await supabase.functions.invoke('execute-sync', {
-          body: { force: true }
-        });
-        
-        console.log('Sync result:', syncResult);
+        console.log('Unified sync result:', syncResult);
         
         setStep(4);
         setStatus('🔄 Step 4: Checking results...');
