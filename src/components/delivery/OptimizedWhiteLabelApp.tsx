@@ -457,7 +457,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
               }))}
               category="search"
               onProductClick={(product) => setSelectedProduct(product)}
-              maxProducts={50}
+              maxProducts={1000}
               className="px-4"
             />
           </div>

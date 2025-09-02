@@ -204,7 +204,7 @@ class OptimizedShopifyClient {
       const { data, error } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
         body: { 
           collectionHandle,
-          limit: 50 // Reasonable limit per collection
+          limit: 1000 // Allow all products per collection
         }
       });
 

@@ -87,7 +87,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   externalSearchQuery = '',
   customSiteSlug,
   showSearch = true,
-  maxProducts = 50,
+  maxProducts = 1000,
   forceRefresh = false
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);

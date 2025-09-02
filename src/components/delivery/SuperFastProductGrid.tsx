@@ -144,7 +144,7 @@ export const SuperFastProductGrid: React.FC<SuperFastProductGridProps> = memo(({
   searchQuery,
   onProductClick,
   className = '',
-  maxProducts = 50
+  maxProducts = 1000
 }) => {
   const { cartItems, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const [visibleCount, setVisibleCount] = useState(20);
