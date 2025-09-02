@@ -119,7 +119,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     const performSearch = async () => {
       try {
         // Use optimized ultra-fast search for instant results
-        const result = await optimizedUltraFastSearch.searchProductsInstant(q, { limit: 20 });
+        const result = await optimizedUltraFastSearch.searchProductsInstant(q, { limit: 100 });
         
         console.log(`🔍 ProductSearchBar INSTANT: Found ${result.products.length} products for "${q}" in ${result.loadTime}`);
         setSearchResults(result.products);

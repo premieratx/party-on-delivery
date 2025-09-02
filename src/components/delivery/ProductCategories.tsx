@@ -15,6 +15,7 @@ import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
+import { ClearSearchCacheButton } from '@/components/admin/ClearSearchCacheButton';
 import { parseProductTitle } from '@/utils/productUtils';
 import { SwipeUpNavigation } from '@/components/common/SwipeUpNavigation';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
@@ -724,7 +725,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {/* What's the Occasion? - HIDDEN as requested */}
 
         {/* Admin Dashboard Link */}
-        <div className="mt-8 text-center pb-20 lg:pb-8">
+        <div className="mt-8 text-center pb-20 lg:pb-8 space-y-2">
           <Button 
             onClick={() => navigate('/admin')}
             variant="outline"
@@ -735,6 +736,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Clear Search Cache Button - Only show for debugging */}
+      <ClearSearchCacheButton />
 
       {/* Product Lightbox - Only for cocktail collections */}
       {selectedProduct && selectedProduct.collection_handles?.some(handle => 
