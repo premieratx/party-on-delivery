@@ -15,11 +15,11 @@ export const ClearSearchCacheButton = () => {
       // Clear all search caches
       optimizedUltraFastSearch.clearAllCaches();
       
-      // Force refresh to reload ALL 1067+ products
+      // Force refresh to reload ALL products with comprehensive collection matching
       await optimizedUltraFastSearch.refreshIndexBackground();
       
       const stats = optimizedUltraFastSearch.getCacheStats();
-      console.log('✅ Search cache cleared and reloaded:', stats);
+      console.log('✅ Search cache cleared and reloaded with comprehensive collection matching:', stats);
       
       toast.success(`Search cache cleared! Reloaded ${stats.localIndexSize} products for instant search.`);
       

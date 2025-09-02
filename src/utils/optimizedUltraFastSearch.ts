@@ -270,6 +270,9 @@ class OptimizedUltraFastSearchClient {
     this.isIndexWarmedUp = false;
     this.lastCacheSync = 0; // Reset sync time to force fresh load
     console.log('🧹 All search caches cleared - will reload ALL products on next search');
+    
+    // Also clear the edge function cache by calling it with force_refresh
+    this.warmUpLocalIndex().catch(console.error);
   }
 
   /**

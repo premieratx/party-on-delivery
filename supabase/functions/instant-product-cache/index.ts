@@ -55,9 +55,54 @@ Deno.serve(async (req) => {
       .order('id', { ascending: true }) // Tertiary sort for consistency
       .limit(2000) // EXPLICIT HIGH LIMIT to ensure we get ALL products (1067+)
 
-    // Filter by collection if specified
+    // Filter by collection if specified - COMPREHENSIVE MATCHING
     if (collection_handle && collection_handle !== 'all') {
-      query = query.contains('collection_handles', [collection_handle])
+      // Build comprehensive OR query to catch all products in this collection
+      const collectionFilters = [];
+      
+      // Direct collection_handles array contains match
+      collectionFilters.push(`collection_handles.cs.{${collection_handle}}`);
+      collectionFilters.push(`collection_handles.cs.${collection_handle}`);
+      
+      // JSON data contains the collection handle
+      collectionFilters.push(`data->>'collection_handles'.ilike.%${collection_handle}%`);
+      
+      // Smart category-based matching for common collections
+      switch(collection_handle) {
+        case 'spirits':
+          collectionFilters.push(`product_type.ilike.%spirit%`);
+          collectionFilters.push(`category.ilike.%spirit%`);
+          collectionFilters.push(`title.ilike.%vodka%`);
+          collectionFilters.push(`title.ilike.%whiskey%`);
+          collectionFilters.push(`title.ilike.%tequila%`);
+          collectionFilters.push(`title.ilike.%rum%`);
+          collectionFilters.push(`title.ilike.%gin%`);
+          collectionFilters.push(`title.ilike.%bourbon%`);
+          break;
+        case 'tailgate-beer':
+          collectionFilters.push(`product_type.ilike.%beer%`);
+          collectionFilters.push(`category.ilike.%beer%`);
+          break;
+        case 'wine-champagne-bnb-wedding':
+          collectionFilters.push(`product_type.ilike.%wine%`);
+          collectionFilters.push(`product_type.ilike.%champagne%`);
+          collectionFilters.push(`category.ilike.%wine%`);
+          break;
+        case 'seltzer-collection':
+          collectionFilters.push(`product_type.ilike.%seltzer%`);
+          collectionFilters.push(`title.ilike.%seltzer%`);
+          break;
+        case 'cocktail-kits':
+          collectionFilters.push(`product_type.ilike.%cocktail%`);
+          collectionFilters.push(`title.ilike.%cocktail%`);
+          break;
+        case 'mixers-non-alcoholic':
+          collectionFilters.push(`product_type.ilike.%mixer%`);
+          collectionFilters.push(`category.ilike.%mixer%`);
+          break;
+      }
+      
+      query = query.or(collectionFilters.join(','));
     }
 
     const { data: products, error } = await query
