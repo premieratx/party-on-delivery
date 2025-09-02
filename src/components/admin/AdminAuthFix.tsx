@@ -11,18 +11,26 @@ export const AdminAuthFix = () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
+          console.log('🔑 Setting admin context for:', user.email);
+          
           // Verify admin status and set context
           const { data, error } = await supabase.functions.invoke('verify-admin-google', {
             body: { email: user.email }
           });
           
+          if (error) {
+            console.warn('⚠️ Admin verification failed:', error);
+            return;
+          }
+          
           if (data?.isAdmin) {
-            // Admin context is already set by the edge function
-            console.log('✅ Admin context maintained for:', user.email);
+            console.log('✅ Admin context verified and maintained for:', user.email);
+          } else {
+            console.log('❌ User is not an admin:', user.email);
           }
         }
       } catch (error) {
-        console.warn('Admin context setup failed:', error);
+        console.warn('⚠️ Admin context setup failed:', error);
       }
     };
 

@@ -17,7 +17,6 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AutoProductOrderFix />
         <GlobalCartProvider>
           <div className="min-h-screen">
             <Routes>

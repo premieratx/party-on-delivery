@@ -47,6 +47,7 @@ import { ShopifyForceSync } from '@/components/admin/ShopifyForceSync';
 import { DeliveryFeeSummary } from '@/components/admin/DeliveryFeeSummary';
 import { PromoCodeManager } from '@/components/admin/PromoCodeManager';
 import { TailgateBeerOrderChecker } from '@/components/admin/TailgateBeerOrderChecker';
+import { ManualProductOrderFix } from '@/components/admin/ManualProductOrderFix';
 
 export default function AdminDashboard() {
   // Use the dashboard hook for data loading
@@ -307,6 +308,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="settings" className="space-y-6">
             <div className="grid gap-6">
+              <ManualProductOrderFix />
               <TailgateBeerOrderChecker />
               <ShopifyForceSync />
               <DeliveryFeeSummary />
