@@ -145,7 +145,7 @@ const CustomAppView = () => {
       onOpenCart={handleOpenCart}
       onProceedToCheckout={handleCheckout}
       customSiteSlug={appConfig.app_slug}
-      maxProducts={50}
+      maxProducts={1000}
       forceRefresh={true}
       onCheckout={handleCheckout}
     />
