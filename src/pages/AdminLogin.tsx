@@ -189,7 +189,7 @@ export default function AdminLogin() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter admin password (admin123)"
+                    placeholder="Enter admin password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"

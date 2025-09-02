@@ -226,36 +226,38 @@ export const CombinedSearchTabs = ({
   const handleSearchIconClick = () => {
     console.log('🔍 Search icon clicked - expanding search bar and scrolling up');
     
-    // Scroll to top on mobile for better search experience
-    if (window.innerWidth <= 768) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    // First update state
+    // Prevent any potential race conditions by immediately setting state
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Focus the search input after a longer delay to ensure DOM is updated
-    setTimeout(() => {
-      // Try multiple selectors to find the search input
-      const input = searchInputRef.current || 
-                   document.querySelector('[data-mobile-search-handler] input[type="search"]') as HTMLInputElement ||
-                   document.querySelector('input[placeholder*="Search products"]') as HTMLInputElement ||
-                   document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+    // Enhanced mobile scroll and focus behavior
+    if (window.innerWidth <= 768) {
+      // Scroll to top immediately to ensure tabs are at the top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
-      if (input) {
-        console.log('🔍 Focusing search input:', input);
-        input.focus();
-        input.click(); // Ensure virtual keyboard appears on mobile
-        
-        // Force cursor to end of input
-        if (input.value) {
-          input.setSelectionRange(input.value.length, input.value.length);
-        }
-      } else {
-        console.warn('🔍 Search input not found for focus');
-      }
-    }, 300);
+      // Use requestAnimationFrame to ensure DOM updates before focusing
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const input = searchInputRef.current || 
+                       document.querySelector('[data-mobile-search-handler] input[type="search"]') as HTMLInputElement ||
+                       document.querySelector('input[placeholder*="Search products"]') as HTMLInputElement ||
+                       document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+          
+          if (input) {
+            console.log('🔍 Focusing search input:', input);
+            input.focus();
+            input.click();
+            
+            // Force cursor to end of input
+            if (input.value) {
+              input.setSelectionRange(input.value.length, input.value.length);
+            }
+          } else {
+            console.warn('🔍 Search input not found for focus');
+          }
+        }, 100);
+      });
+    }
   };
 
   // Listen for mobile search activation from SearchIcon component
@@ -304,9 +306,9 @@ export const CombinedSearchTabs = ({
   }, [onSearchActiveChange]);
 
   return (
-    <div className={`bg-background border-b transition-all duration-200 ${
-      isSticky || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
-    } ${condensed ? 'py-2' : 'py-3'}`}>
+    <div className={`bg-background border-b transition-all duration-200 sticky top-0 z-50 shadow-md ${
+      (isSearchExpanded || isSearchActive) && isMobile ? 'py-2' : 'py-3'
+    }`}>
       {/* Desktop Layout */}
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
@@ -400,14 +402,18 @@ export const CombinedSearchTabs = ({
         
         {/* Top search bar hidden - using only bottom search bar in cart/checkout row */}
 
-        {/* Tabs Section with improved responsive design */}
-        <div className="container mx-auto px-2 py-1.5 bg-background border-b">
+        {/* Tabs Section with improved responsive design and condensation when search active */}
+        <div className={`container mx-auto px-2 bg-background border-b transition-all duration-300 ${
+          (isSearchExpanded || isSearchActive) ? 'py-1' : 'py-1.5'
+        }`}>
           <div className="flex items-center">
-            {/* Enhanced Responsive Tabs - No icons, better text spacing */}
+            {/* Enhanced Responsive Tabs - No icons, better text spacing, condenses 25% when search active */}
             <div className="relative w-full overflow-hidden">
                 <div 
                 ref={tabsContainerRef}
-                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1"
+                className={`flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1 transition-all duration-300 ${
+                  (isSearchExpanded || isSearchActive) ? 'scale-y-75 origin-top' : ''
+                }`}
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch',
@@ -457,8 +463,10 @@ export const CombinedSearchTabs = ({
           </div>
         </div>
 
-        {/* Bottom Row - Search/Cart/Checkout Actions (Always visible) */}
-        <div className="container mx-auto px-4 py-2 bg-background border-b" data-mobile-search-handler>
+        {/* Bottom Row - Search/Cart/Checkout Actions (Always visible and sticky) */}
+        <div className={`container mx-auto px-4 bg-background transition-all duration-300 ${
+          (isSearchExpanded || isSearchActive) ? 'py-2 border-b-2 border-primary/20' : 'py-2 border-b'
+        }`} data-mobile-search-handler>
           <div className={`flex items-center justify-center gap-2 transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'animate-scale-in' : ''}`}>
             {/* Search Section - Expands when active */}
             {showSearch && (
@@ -482,6 +490,10 @@ export const CombinedSearchTabs = ({
                           if (e.target.value.trim()) {
                             setTimeout(() => onSearchSubmit(), 200);
                           }
+                        }}
+                        onFocus={() => {
+                          setIsSearchExpanded(true);
+                          onSearchActiveChange?.(true);
                         }}
                         onBlur={handleSearchBlur}
                         placeholder="Search products..."
@@ -529,7 +541,7 @@ export const CombinedSearchTabs = ({
               onClick={onOpenCart}
               className={`flex items-center justify-center border hover:bg-muted transition-all duration-300 ease-in-out relative ${
                 (isSearchExpanded || isSearchActive) 
-                  ? 'h-10 w-10 p-0 ml-2 rounded-full transform translate-x-1' 
+                  ? 'h-10 w-10 p-0 ml-2 rounded-full transform translate-x-2 scale-90' 
                   : 'h-10 px-4 gap-2 rounded-full'
               }`}
               title={`Cart ${cartItemCount > 0 ? `(${cartItemCount} items)` : ''}`}
@@ -556,7 +568,7 @@ export const CombinedSearchTabs = ({
               onClick={onCheckout}
               className={`flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 ease-in-out ${
                 (isSearchExpanded || isSearchActive) 
-                  ? 'h-10 w-10 p-0 ml-1 rounded-full transform translate-x-1' 
+                  ? 'h-10 w-10 p-0 ml-1 rounded-full transform translate-x-3 scale-90' 
                   : 'h-10 px-4 gap-2 rounded-full'
               }`}
               variant="default"
