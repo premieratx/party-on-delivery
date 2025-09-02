@@ -24,8 +24,6 @@ import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { ultraFastSearch } from '@/utils/ultraFastSearch';
 import { useImagePreloader } from '@/hooks/useImagePreloader';
 import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
-import { useUniversalSearch } from '@/hooks/useUniversalSearch';
-import { useAllProductsLoader } from '@/hooks/useAllProductsLoader';
 import { useImmediateKeyboardHiding } from '@/hooks/useImmediateKeyboardHiding';
 import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
@@ -147,26 +145,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     use_type: 'delivery'
   });
 
-  // Load ALL products for search (not just current collection)
-  const { allProducts } = useAllProductsLoader();
-
-  // Universal search hook - now searches ALL products, not just current collection
-  const {
-    searchResults: searchProducts,
-    isSearching,
-    updateSearchQuery,
-    clearSearch: clearUniversalSearch
-  } = useUniversalSearch(allProducts, {
-    debounceMs: 300,
-    maxResults: 50,
-    useUltraFast: true,
-    category: undefined // Remove category filter to search ALL products
-  });
+  // Search functionality removed - using UltraFastMobileSearch component instead
+  const searchProducts: any[] = [];
+  const isSearching = false;
+  const updateSearchQuery = () => {};
+  const clearUniversalSearch = () => {};
 
   // Sync search query with universal search
   useEffect(() => {
-    updateSearchQuery(searchQuery);
-  }, [searchQuery, updateSearchQuery]);
+    updateSearchQuery();
+  }, [searchQuery]);
 
   const isSearchActive = searchQuery.trim().length > 0;
 
@@ -506,7 +494,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         totalAmount={getTotalPrice()}
         onOpenCart={onOpenCart}
         onCheckout={onProceedToCheckout || onCheckout}
-        allProducts={allProducts}
       />
 
       {/* Products Grid */}

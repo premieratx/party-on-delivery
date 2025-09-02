@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, ArrowLeft, Loader2, Lock, Mail } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Loader2, Lock, Mail, RotateCcw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function AdminLogin() {
@@ -19,6 +19,8 @@ export default function AdminLogin() {
   const [hasProcessedCallback, setHasProcessedCallback] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   // Only clear sessions if NOT processing OAuth callback
   React.useEffect(() => {
@@ -125,7 +127,10 @@ export default function AdminLogin() {
         description: `Welcome back, ${data.admin?.name || 'Admin'}!`,
       });
       
-      navigate('/admin', { replace: true });
+      // Add a small delay to ensure toast is shown
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Authentication Error", 
@@ -167,6 +172,47 @@ export default function AdminLogin() {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast({
+        title: "Missing Email",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('request-admin-password-reset', {
+        body: { email: resetEmail }
+      });
+
+      if (error) {
+        toast({
+          title: "Reset Failed",
+          description: error.message || "Failed to send reset email.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Reset Email Sent",
+        description: "If your email exists in our system, you'll receive reset instructions.",
+      });
+      
+      setShowPasswordReset(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast({
+        title: "Reset Error",
+        description: `Failed to request password reset: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
@@ -184,7 +230,7 @@ export default function AdminLogin() {
           <Lock className="h-4 w-4" />
           <AlertDescription>
             <strong>Admin Access Required</strong><br />
-            Use your admin credentials or Google account to access the dashboard.
+            Use your admin credentials (brian@partyondelivery.com) or Google account to access the dashboard.
           </AlertDescription>
         </Alert>
 
@@ -250,6 +296,18 @@ export default function AdminLogin() {
                       'Sign In'
                     )}
                   </Button>
+                  
+                  <div className="text-center mt-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPasswordReset(true)}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      <RotateCcw className="mr-2 h-3 w-3" />
+                      Reset Password
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -303,6 +361,50 @@ export default function AdminLogin() {
           </Button>
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Reset Admin Password</CardTitle>
+              <CardDescription>
+                Enter your admin email to receive reset instructions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="resetEmail">Admin Email</Label>
+                  <Input
+                    id="resetEmail"
+                    type="email"
+                    placeholder="brian@partyondelivery.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1">
+                    Send Reset Link
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowPasswordReset(false);
+                      setResetEmail('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
