@@ -42,6 +42,52 @@ Deno.serve(async (req) => {
       // Don't throw immediately, try to recover
     } else {
       console.log('✅ Fetch completed:', syncData)
+      
+      // NOW STORE THE PRODUCTS IN THE CACHE!
+      if (syncData?.products && syncData.products.length > 0) {
+        console.log(`💾 Storing ${syncData.products.length} products in cache...`)
+        
+        // Transform products to cache format
+        const cacheProducts = syncData.products.map((product: any) => ({
+          shopify_product_id: product.id,
+          title: product.title,
+          handle: product.handle,
+          price: parseFloat(product.price || '0'),
+          image: product.image || '/placeholder.svg',
+          vendor: product.vendor || '',
+          description: product.description || '',
+          product_type: product.productType || '',
+          category: product.category || 'other',
+          category_title: product.category || 'Other',
+          search_category: product.productType || 'other',
+          tags: product.tags || [],
+          collection_handles: product.collections?.map((c: any) => c.handle) || [],
+          variants: product.variants || [],
+          data: product,
+          updated_at: new Date().toISOString()
+        }))
+        
+        // Insert in batches to avoid timeout
+        const batchSize = 50
+        let inserted = 0
+        
+        for (let i = 0; i < cacheProducts.length; i += batchSize) {
+          const batch = cacheProducts.slice(i, i + batchSize)
+          
+          const { error: insertError } = await supabase
+            .from('shopify_products_cache')
+            .insert(batch)
+          
+          if (insertError) {
+            console.error(`❌ Error inserting batch ${Math.floor(i / batchSize) + 1}:`, insertError)
+          } else {
+            inserted += batch.length
+            console.log(`✅ Inserted batch ${Math.floor(i / batchSize) + 1}: ${batch.length} products`)
+          }
+        }
+        
+        console.log(`💾 Successfully stored ${inserted}/${cacheProducts.length} products`)
+      }
     }
 
     // Wait a moment for data to settle

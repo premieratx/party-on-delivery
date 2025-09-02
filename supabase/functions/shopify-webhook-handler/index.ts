@@ -66,9 +66,9 @@ async function handleCollectionUpdate(supabase: any, collection: any) {
   await supabase.from('cache').delete().like('key', 'shopify%')
   await supabase.from('cache').delete().like('key', 'products%')
     
-  // Trigger unified sync to refresh everything
-  await supabase.functions.invoke('unified-shopify-sync', {
-    body: { forceRefresh: true, trigger: 'webhook' }
+  // Trigger emergency sync to refresh everything using proven working method
+  await supabase.functions.invoke('emergency-product-sync', {
+    body: { forceRefresh: true, clearCache: true, trigger: 'webhook' }
   })
 }
 
