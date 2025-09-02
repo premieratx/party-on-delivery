@@ -102,8 +102,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
-  // Pre-warm product search index
-  useProductPreloader();
+  const { preloadCollection, getFromCache, preloadMultipleCollections } = useProductPreloader();
   
   // Set up search variables
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
@@ -127,8 +126,8 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   useEffect(() => {
     const collectionHandles = tabs.map(tab => tab.handle);
     console.log('🚀 Enhanced: Preloading all collections:', collectionHandles);
-    // Collections will be preloaded via optimized search
-  }, [tabs]);
+    preloadMultipleCollections(collectionHandles);
+  }, [tabs, preloadMultipleCollections]);
 
   // Get current tab config
   const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
@@ -147,12 +146,25 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
     try {
       console.log(`⚡ Enhanced: Loading collection: ${currentCollectionHandle}`);
       
-      // Load products using instant cache
-      const { data } = await supabase.functions.invoke('instant-product-cache', {
-        body: { collection_handle: currentCollectionHandle }
-      });
-      
-      const products = data?.products || [];
+      // Try cache first for instant loading
+      const cached = getFromCache(currentCollectionHandle);
+      if (cached) {
+        console.log(`⚡ Enhanced: Cache hit for ${currentCollectionHandle}, ${cached.length} products`);
+        const filtered = cached.filter((product: any) => {
+          const handles = Array.isArray(product.collection_handles) 
+            ? product.collection_handles 
+            : typeof product.collection_handles === 'string' 
+              ? JSON.parse(product.collection_handles || '[]')
+              : [];
+          return handles.includes(currentCollectionHandle);
+        });
+        setDisplayProducts(filtered.slice(0, maxProducts));
+        setLoading(false);
+        return;
+      }
+
+      // Load from preloader/cache
+      const products = await preloadCollection(currentCollectionHandle);
       
       // Strict filtering for current collection only
       const filtered = products.filter((product: any) => {
@@ -174,7 +186,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
     } finally {
       setLoading(false);
     }
-  }, [currentCollectionHandle, maxProducts]);
+  }, [currentCollectionHandle, maxProducts, preloadCollection, getFromCache]);
 
   // Load products when tab changes
   useEffect(() => {
