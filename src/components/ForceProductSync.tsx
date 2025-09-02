@@ -12,7 +12,7 @@ export const ForceProductSync = () => {
     console.log('🔄 Force sync initiated...');
     
     try {
-      const { data, error } = await supabase.functions.invoke('force-product-sync', {
+      const { data, error } = await supabase.functions.invoke('fetch-shopify-products', {
         body: { force: true }
       });
 
