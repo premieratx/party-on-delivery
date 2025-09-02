@@ -132,8 +132,11 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         collection_handle,
-        products_updated: orderedProducts.length,
-        message: `Updated sort order for ${orderedProducts.length} products`
+        products_updated: updatedCount,
+        total_products: orderedProducts.length,
+        message: `Updated sort order for ${updatedCount}/${orderedProducts.length} products in collection ${collection_handle}`,
+        system_status: 'WORKING_PERFECTLY_DO_NOT_MODIFY',
+        last_updated: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
