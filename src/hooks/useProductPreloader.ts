@@ -75,8 +75,17 @@ export const useProductPreloader = () => {
   }, []);
 
   const preloadMultipleCollections = useCallback(async (collectionHandles: string[]) => {
-    const promises = collectionHandles.map(handle => preloadCollection(handle));
-    await Promise.all(promises);
+    // FIXED: Sequential loading to prevent overwhelming the edge function
+    for (const handle of collectionHandles) {
+      try {
+        await preloadCollection(handle);
+        // Small delay between requests to prevent rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.warn(`⚠️ Skipping collection ${handle}:`, error.message);
+        // Continue with next collection instead of failing all
+      }
+    }
   }, [preloadCollection]);
 
   const clearCache = useCallback(() => {

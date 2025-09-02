@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { LazyImage } from '@/components/common/LazyImage';
 import { PullToRefreshIndicator } from '@/components/common/PullToRefreshIndicator';
+import { ProductLoadError } from '@/components/common/ProductLoadError';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
@@ -199,15 +200,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     // Keep existing warmup
     // Remove ultraFastSearch warmup - using optimizedUltraFastSearch only
     
-    const collectionHandles = tabs.map(tab => tab.handle);
-    console.log('🚀 Preloading all collections:', collectionHandles);
-    preloadMultipleCollections(collectionHandles);
-    
-    // ADDITIVE: Force optimizer preload for instant tab switching
-    if (deliveryOptimizer && !deliveryOptimizer.isOptimized) {
-      console.log('🚀 ULTRA-AGGRESSIVE: Force optimizing delivery app...');
-      deliveryOptimizer.forceOptimize();
-    }
+    // SIMPLIFIED: Remove aggressive preloading to prevent system overload
+    // Products will load on-demand when tabs are clicked
+    console.log('📊 App initialized with tabs:', tabs.map(tab => tab.title));
   }, [tabs, preloadMultipleCollections, deliveryOptimizer]);
 
 
@@ -643,16 +638,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                    className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full cursor-pointer"
                    onClick={() => setSelectedProduct(product)}
                  >
-                   <div className="aspect-square relative overflow-hidden">
-                     <LazyImage
-                       src={product.image}
-                       alt={cleanTitle}
-                       className="w-full h-full object-cover hover-scale"
-                       priority={false}
-                       quality={85}
-                       width={300}
-                     />
-                   </div>
+                    <div className="aspect-square relative overflow-hidden">
+                      {product.image ? (
+                        <LazyImage
+                          src={product.image}
+                          alt={cleanTitle}
+                          className="w-full h-full object-cover hover-scale"
+                          priority={false}
+                          quality={85}
+                          width={300}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <span className="text-muted-foreground text-xs">No Image</span>
+                        </div>
+                      )}
+                    </div>
                   
                   <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                     {/* Product Title */}

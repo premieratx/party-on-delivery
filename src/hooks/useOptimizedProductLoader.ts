@@ -80,14 +80,29 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       // Clear products immediately to prevent mixing between collections
       setProducts([]);
       
-      const loadedProducts = await preloadCollection(collection_handle);
-      
-      // Check if this is still the latest request
-      if (lastRequestRef.current === requestKey) {
-        setProducts(loadedProducts);
-        setCollections([]); // Collections not needed for individual collection loading
-        setCached(false);
-        setRetryCount(0);
+      try {
+        const loadedProducts = await preloadCollection(collection_handle);
+        
+        // Check if this is still the latest request
+        if (lastRequestRef.current === requestKey) {
+          setProducts(loadedProducts || []);
+          setCollections([]); // Collections not needed for individual collection loading
+          setCached(false);
+          setRetryCount(0);
+        }
+      } catch (loadError) {
+        console.error(`❌ Failed to load collection ${collection_handle}:`, loadError);
+        
+        // Try to use any cached data as fallback
+        const fallbackCache = getFromCache(collection_handle);
+        if (fallbackCache && fallbackCache.length > 0) {
+          console.log(`🔄 Using fallback cache for ${collection_handle}`);
+          setProducts(fallbackCache);
+          setCached(true);
+        } else {
+          setError(`Unable to load products for ${collection_handle}. Please try again.`);
+          setProducts([]);
+        }
       }
     } catch (err) {
       if (lastRequestRef.current === requestKey) {
