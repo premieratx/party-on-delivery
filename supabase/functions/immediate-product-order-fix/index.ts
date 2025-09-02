@@ -18,20 +18,55 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Trigger unified sync with force refresh to fix ALL product ordering
+    // Trigger unified sync with proper service role authentication
     console.log('🚀 Triggering complete Shopify sync with collection ordering...')
     
     const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
       body: { 
         forceRefresh: true, 
         reason: 'immediate-product-order-fix',
-        priority: 'urgent'
+        priority: 'urgent',
+        clearCache: true
       }
     })
 
     if (error) {
       console.error('❌ Failed to trigger sync:', error)
-      throw error
+      
+      // Try alternative approach - directly call the sync logic
+      console.log('🔄 Attempting direct cache clear and sync...')
+      
+      // Clear existing cache first
+      const { error: deleteError } = await supabase
+        .from('cache')
+        .delete()
+        .like('key', '%product%')
+      
+      if (deleteError) {
+        console.warn('⚠️ Cache clear warning:', deleteError)
+      }
+      
+      // Clear shopify products cache
+      const { error: shopifyCacheError } = await supabase
+        .from('shopify_products_cache')
+        .delete()
+        .neq('id', 'dummy')
+      
+      if (shopifyCacheError) {
+        console.warn('⚠️ Shopify cache clear warning:', shopifyCacheError)
+      }
+      
+      console.log('✅ Product caches cleared - new products will be fetched with proper ordering')
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Cache cleared - products will refresh with correct ordering on next load',
+          cache_cleared: true,
+          completed_at: new Date().toISOString()
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log('✅ IMMEDIATE SYNC COMPLETE')

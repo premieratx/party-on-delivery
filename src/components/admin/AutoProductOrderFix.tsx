@@ -9,24 +9,24 @@ export const AutoProductOrderFix = () => {
   useEffect(() => {
     const fixProductOrdering = async () => {
       try {
-        console.log('⚡ IMMEDIATE FIX: Triggering product order sync...');
+        console.log('💥 EMERGENCY FIX: Clearing caches and forcing product order refresh...');
         
-        // Trigger immediate fix for all product ordering
-        const { data, error } = await supabase.functions.invoke('immediate-product-order-fix');
+        // Use emergency cache clear to fix ordering immediately
+        const { data, error } = await supabase.functions.invoke('emergency-cache-clear');
         
         if (error) {
-          console.warn('⚠️ Immediate fix failed:', error);
+          console.warn('⚠️ Emergency fix failed:', error);
           return;
         }
         
-        console.log('✅ IMMEDIATE FIX COMPLETE:', data);
-        console.log(`🎯 Fixed ordering for ${data.products_synced} products across ${data.collections_synced} collections`);
+        console.log('✅ EMERGENCY FIX COMPLETE:', data);
+        console.log('🎯 All product ordering has been reset - products will load with correct Shopify order');
       } catch (error) {
-        console.warn('⚠️ Product order fix error:', error);
+        console.warn('⚠️ Product order emergency fix error:', error);
       }
     };
 
-    // Fix all product ordering immediately on app load
+    // Apply emergency fix immediately on app load
     fixProductOrdering();
   }, []);
 
