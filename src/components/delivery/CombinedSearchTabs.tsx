@@ -225,27 +225,37 @@ export const CombinedSearchTabs = ({
 
   const handleSearchIconClick = () => {
     console.log('🔍 Search icon clicked - expanding search bar and scrolling up');
-    setIsSearchExpanded(true);
-    onSearchActiveChange?.(true);
     
     // Scroll to top on mobile for better search experience
     if (window.innerWidth <= 768) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
-    // Focus the search input immediately after state update
+    // First update state
+    setIsSearchExpanded(true);
+    onSearchActiveChange?.(true);
+    
+    // Focus the search input after a longer delay to ensure DOM is updated
     setTimeout(() => {
+      // Try multiple selectors to find the search input
       const input = searchInputRef.current || 
+                   document.querySelector('[data-mobile-search-handler] input[type="search"]') as HTMLInputElement ||
+                   document.querySelector('input[placeholder*="Search products"]') as HTMLInputElement ||
                    document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
       
       if (input) {
         console.log('🔍 Focusing search input:', input);
         input.focus();
         input.click(); // Ensure virtual keyboard appears on mobile
+        
+        // Force cursor to end of input
+        if (input.value) {
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
       } else {
-        console.warn('🔍 Search input not found');
+        console.warn('🔍 Search input not found for focus');
       }
-    }, 100);
+    }, 300);
   };
 
   // Listen for mobile search activation from SearchIcon component
@@ -498,7 +508,7 @@ export const CombinedSearchTabs = ({
                   <div className="flex items-center w-full animate-fade-in">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
+                      <input
                         ref={searchInputRef}
                         type="search"
                         value={searchQuery}
@@ -511,12 +521,11 @@ export const CombinedSearchTabs = ({
                         }}
                         onBlur={handleSearchBlur}
                         placeholder="Search products..."
-                        className="w-full pl-10 pr-4 h-10 text-base border-2 border-primary/30 focus:border-primary rounded-full bg-background/95 backdrop-blur-sm transition-all duration-200"
+                        className="flex h-10 w-full rounded-full border-2 border-primary/30 bg-background/95 backdrop-blur-sm pl-10 pr-4 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 touch-manipulation"
                         autoComplete="off"
                         autoCapitalize="off"
                         autoCorrect="off"
                         spellCheck="false"
-                        autoFocus={true}
                         style={{ 
                           fontSize: '16px', // Prevent iOS zoom
                           WebkitAppearance: 'none',
