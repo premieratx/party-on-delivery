@@ -14,7 +14,8 @@ import {
   MapPin, 
   Clock, 
   AlertTriangle,
-  RefreshCw 
+  RefreshCw,
+  Trash2 
 } from 'lucide-react';
 
 interface AbandonedOrder {
@@ -106,11 +107,18 @@ export const AbandonedOrdersManager: React.FC = () => {
 
   const clearOldOrders = async () => {
     try {
-      // Use the admin-cleanup edge function which has proper admin authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
       const { data, error } = await supabase.functions.invoke('admin-cleanup', {
         body: {
           action: 'clear_abandoned'
-        }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -119,7 +127,7 @@ export const AbandonedOrdersManager: React.FC = () => {
         await loadAbandonedOrders();
         toast({
           title: "Orders Cleaned",
-          description: "Removed abandoned orders older than 30 days.",
+          description: "All abandoned orders have been removed.",
         });
       } else {
         throw new Error(data?.error || 'Failed to clean orders');
@@ -132,6 +140,42 @@ export const AbandonedOrdersManager: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const deleteIndividualOrder = async (orderId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const { error } = await supabase
+        .from('abandoned_orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setAbandonedOrders(prev => prev.filter(order => order.id !== orderId));
+      
+      toast({
+        title: "Order Deleted",
+        description: "Abandoned order removed successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error deleting order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete order.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const refreshOrders = async () => {
+    setLoading(true);
+    await loadAbandonedOrders();
   };
 
   if (loading) {
@@ -173,12 +217,12 @@ export const AbandonedOrdersManager: React.FC = () => {
           </div>
           
           <div className="flex gap-2">
-            <Button onClick={loadAbandonedOrders} variant="outline" size="sm">
+            <Button onClick={refreshOrders} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
             <Button onClick={clearOldOrders} variant="outline" size="sm">
-              Clean Old Orders
+              Clean All Orders
             </Button>
           </div>
         </CardContent>
@@ -218,15 +262,25 @@ export const AbandonedOrdersManager: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-2">
                       <div className="font-bold text-lg">
                         {formatCurrency(order.total_amount || order.subtotal || 0)}
                       </div>
-                      {order.affiliate_code && (
-                        <Badge variant="secondary" className="text-xs">
-                          {order.affiliate_code}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {order.affiliate_code && (
+                          <Badge variant="secondary" className="text-xs">
+                            {order.affiliate_code}
+                          </Badge>
+                        )}
+                        <Button
+                          onClick={() => deleteIndividualOrder(order.id)}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
