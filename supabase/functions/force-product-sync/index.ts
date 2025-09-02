@@ -22,31 +22,144 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🧹 Clearing cache tables...');
+    console.log('🚀 Direct sync with storage...');
     
-    // Clear cache tables first
-    await supabase.from('cache').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-    console.log('🚀 Calling fetch-shopify-products...');
+    // Directly fetch and store products using our existing working fetch function
+    const SHOPIFY_STORE = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
+    const SHOPIFY_ACCESS_TOKEN = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
     
-    // Call the working fetch-shopify-products function
-    const { data: productsData, error: productsError } = await supabase.functions.invoke('fetch-shopify-products', {
-      body: { force: true }
-    });
-
-    if (productsError) {
-      console.error('❌ Products fetch failed:', productsError);
-      throw new Error(`Fetch failed: ${productsError.message}`);
+    if (!SHOPIFY_ACCESS_TOKEN) {
+      throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not set");
     }
-
-    console.log('✅ Products fetched successfully, count:', productsData?.count || 0);
     
-    // Store products in cache using service role permissions
-    if (productsData?.products && Array.isArray(productsData.products)) {
-      console.log(`💾 Storing ${productsData.products.length} products in cache...`);
+    // GraphQL query to fetch products
+    const query = `
+      query {
+        products(first: 250, query: "status:active") {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          edges {
+            node {
+              id
+              title
+              handle
+              description
+              productType
+              vendor
+              tags
+              collections(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                  }
+                }
+              }
+              images(first: 5) {
+                edges {
+                  node {
+                    url
+                    altText
+                  }
+                }
+              }
+              variants(first: 10) {
+                edges {
+                  node {
+                    id
+                    title
+                    price
+                    availableForSale
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    let allProducts = [];
+    let hasNextPage = true;
+    let cursor = null;
+    let pageCount = 0;
+    const maxPages = 10;
+    
+    while (hasNextPage && pageCount < maxPages) {
+      const paginatedQuery = cursor ? 
+        query.replace('first: 250, query: "status:active"', `first: 250, after: "${cursor}", query: "status:active"`) : 
+        query;
       
-      const productsToStore = productsData.products.map((product: any) => ({
+      const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/graphql.json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
+        },
+        body: JSON.stringify({ query: paginatedQuery }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Shopify API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.errors) {
+        console.error("GraphQL errors:", data.errors);
+        throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
+      }
+
+      if (!data.data?.products) {
+        break;
+      }
+
+      // Process products
+      const pageProducts = data.data.products.edges.map(({ node: product }: any) => {
+        const variant = product.variants.edges[0]?.node;
+        const image = product.images.edges[0]?.node;
+        
+        return {
+          id: product.id,
+          title: product.title,
+          handle: product.handle,
+          description: product.description || '',
+          price: variant ? variant.price : '0',
+          image: image?.url || '/placeholder.svg',
+          vendor: product.vendor || '',
+          productType: product.productType || '',
+          tags: product.tags || [],
+          collections: product.collections.edges.map(({ node }: any) => ({
+            id: node.id,
+            title: node.title,
+            handle: node.handle
+          })),
+          variants: product.variants.edges.map(({ node: v }: any) => ({
+            id: v.id,
+            title: v.title,
+            price: parseFloat(v.price),
+            available: v.availableForSale
+          }))
+        };
+      });
+
+      allProducts = allProducts.concat(pageProducts);
+      
+      hasNextPage = data.data.products.pageInfo.hasNextPage;
+      cursor = data.data.products.pageInfo.endCursor;
+      pageCount++;
+      
+      console.log(`Page ${pageCount} loaded ${pageProducts.length} products. Total: ${allProducts.length}`);
+    }
+    
+    console.log(`✅ Fetched ${allProducts.length} products, now storing...`);
+    
+    // Store products in cache
+    if (allProducts.length > 0) {
+      const productsToStore = allProducts.map((product: any) => ({
         id: product.id,
         title: product.title,
         handle: product.handle,
@@ -54,23 +167,26 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString()
       }));
       
+      // Clear existing cache first
+      await supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
       const { error: storeError } = await supabase
         .from('shopify_products_cache')
-        .upsert(productsToStore, { onConflict: 'id' });
+        .insert(productsToStore);
         
       if (storeError) {
         console.error('❌ Failed to store products:', storeError);
         throw new Error(`Storage failed: ${storeError.message}`);
       }
       
-      console.log(`✅ Successfully stored ${productsData.products.length} products in cache`);
+      console.log(`✅ Successfully stored ${allProducts.length} products in cache`);
     }
     
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Product sync completed successfully',
-        data: productsData,
+        count: allProducts.length,
         timestamp: new Date().toISOString()
       }),
       {
