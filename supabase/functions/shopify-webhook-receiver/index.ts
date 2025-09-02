@@ -408,29 +408,16 @@ async function handleProductUpdate(supabase: any, data: any) {
   console.log(`🔄 Product/collection/inventory updated: ${data.id}`);
   
   try {
-    // Invalidate all product-related caches
+    // Clear all product caches
     await Promise.all([
-      // Clear instant cache
-      supabase.from('cache').delete().eq('key', 'instant-product-cache'),
-      // Clear other product caches
-      supabase.from('cache').delete().ilike('key', '%product%'),
-      supabase.from('cache').delete().ilike('key', '%collection%'),
-      supabase.from('cache').delete().ilike('key', '%shopify%')
+      supabase.from('cache').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     ]);
     
-    // Trigger background cache refresh for instant loading
-    setTimeout(async () => {
-      try {
-        await supabase.functions.invoke('instant-product-cache', {
-          body: { forceRefresh: true }
-        });
-        console.log('✅ Background cache refresh triggered');
-      } catch (error) {
-        console.error('⚠️ Background cache refresh failed:', error);
-      }
-    }, 1000); // Small delay to ensure cache clearing is complete
+    // Trigger complete product sync using existing execute-sync function
+    await supabase.functions.invoke('execute-sync');
     
-    console.log(`✅ Product cache invalidated and refresh triggered`);
+    console.log(`✅ Complete product sync triggered from webhook`);
   } catch (error) {
     console.error(`❌ Error handling product update:`, error);
     throw error;
