@@ -19,7 +19,7 @@ const App = () => {
     <BrowserRouter>
       <AuthProvider>
         <GlobalCartProvider>
-          <VisibleSyncFixer />
+          
           <div className="min-h-screen">
             <Routes>
               {/* Homepage - redirect to delivery app */}
