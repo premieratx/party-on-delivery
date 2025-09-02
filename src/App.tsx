@@ -9,6 +9,7 @@ import Checkout from "@/pages/Checkout";
 import OrderComplete from "@/pages/OrderComplete";
 import AdminDashboard from "@/pages/AdminDashboard";
 import RequireAdmin from "@/components/admin/RequireAdmin";
+import { AutoProductOrderFix } from "@/components/admin/AutoProductOrderFix";
 
 const App = () => {
   console.log('🚀 APP STARTING WITH PROPER ROUTING');
@@ -16,6 +17,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <AutoProductOrderFix />
         <GlobalCartProvider>
           <div className="min-h-screen">
             <Routes>
