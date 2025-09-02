@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
     // Filter by collection if specified
     if (collection_handle && collection_handle !== 'all') {
-      query = query.contains('collection_handles', [collection_handle])
+      query = query.filter('collection_handles', 'cs', `{${collection_handle}}`)
     }
 
     const { data: products, error } = await query
