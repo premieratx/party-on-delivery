@@ -32,7 +32,20 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     return total + (safePrice * safeQuantity);
   }, 0);
   
-  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20; // Fixed: Use percentage calculation for orders over $200
+  // Check for delivery app free shipping settings
+  const getDeliveryFee = () => {
+    try {
+      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+      if (deliveryAppSettings.freeDeliveryEnabled) {
+        return 0;
+      }
+    } catch (error) {
+      console.warn('Failed to parse delivery app settings:', error);
+    }
+    return subtotal >= 200 ? subtotal * 0.1 : 20; // Standard delivery fee calculation
+  };
+  
+  const deliveryFee = getDeliveryFee();
   const salesTax = subtotal * 0.0825; // 8.25% sales tax
   const finalTotal = subtotal + deliveryFee + salesTax;
 
@@ -272,8 +285,8 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                   <span>${formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
-                  <span>${formatPrice(deliveryFee)}</span>
+                  <span>Delivery Fee {deliveryFee === 0 ? '(FREE)' : subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
+                  <span>{deliveryFee === 0 ? 'FREE' : `$${formatPrice(deliveryFee)}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Sales Tax (8.25%)</span>

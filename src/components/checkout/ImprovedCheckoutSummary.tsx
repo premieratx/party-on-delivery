@@ -36,7 +36,20 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
+  const finalDeliveryFee = (() => {
+    // Check for delivery app free shipping settings first
+    try {
+      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+      if (deliveryAppSettings.freeDeliveryEnabled) {
+        return 0;
+      }
+    } catch (error) {
+      console.warn('Failed to parse delivery app settings:', error);
+    }
+    
+    // Then check for promo code free shipping
+    return appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
+  })();
 
   // Enhanced product title cleaning for better display
   const cleanTitle = (title: string) => {
@@ -158,20 +171,55 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
               )}
             </span>
             <div className="text-right">
-              {appliedDiscount?.type === 'free_shipping' && deliveryFee > 0 && (
+              {(appliedDiscount?.type === 'free_shipping' || (() => {
+                try {
+                  const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+                  return deliveryAppSettings.freeDeliveryEnabled;
+                } catch (error) {
+                  return false;
+                }
+              })()) && deliveryFee > 0 && (
                 <div className="text-xs text-muted-foreground line-through">
                   ${deliveryFee.toFixed(2)}
                 </div>
               )}
               <span className={`font-medium ${finalDeliveryFee === 0 ? 'text-green-600' : ''}`}>
-                {finalDeliveryFee === 0 ? 'FREE' : `$${finalDeliveryFee.toFixed(2)}`}
+                {finalDeliveryFee === 0 ? (
+                  (() => {
+                    try {
+                      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+                      if (deliveryAppSettings.freeDeliveryEnabled) {
+                        return 'FREE (App)';
+                      } else if (appliedDiscount?.type === 'free_shipping') {
+                        return `FREE (${appliedDiscount.code})`;
+                      }
+                      return 'FREE';
+                    } catch (error) {
+                      return appliedDiscount?.type === 'free_shipping' ? `FREE (${appliedDiscount.code})` : 'FREE';
+                    }
+                  })()
+                ) : `$${finalDeliveryFee.toFixed(2)}`}
               </span>
             </div>
           </div>
           
-          {appliedDiscount?.type === 'free_shipping' && deliveryFee > 0 && (
+          {finalDeliveryFee === 0 && deliveryFee > 0 && (
             <div className="flex justify-between text-xs text-green-600">
-              <span>Free shipping savings</span>
+              <span>
+                {(() => {
+                  try {
+                    const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+                    if (deliveryAppSettings.freeDeliveryEnabled) {
+                      return 'Free delivery savings (App)';
+                    } else if (appliedDiscount?.type === 'free_shipping') {
+                      return `Free shipping savings (${appliedDiscount.code})`;
+                    }
+                    return 'Free delivery savings';
+                  } catch (error) {
+                    return appliedDiscount?.type === 'free_shipping' ? `Free shipping savings (${appliedDiscount.code})` : 'Free delivery savings';
+                  }
+                })()}
+              </span>
               <span>-${deliveryFee.toFixed(2)}</span>
             </div>
           )}
@@ -204,7 +252,43 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
         {(appliedDiscount || finalDeliveryFee === 0) && (
           <div className="text-center py-2 bg-green-50 rounded-lg border border-green-200">
             <span className="text-sm font-medium text-green-700">
-              🎉 You're saving money with this order!
+              🎉 {(() => {
+                try {
+                  const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+                  if (deliveryAppSettings.freeDeliveryEnabled && appliedDiscount?.type === 'percentage') {
+                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total! (${appliedDiscount.value}% off + Free delivery)`;
+                  } else if (deliveryAppSettings.freeDeliveryEnabled) {
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${deliverySavings.toFixed(2)} on delivery!`;
+                  } else if (appliedDiscount?.type === 'percentage' && finalDeliveryFee === 0) {
+                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total! (${appliedDiscount.value}% off + Free shipping)`;
+                  } else if (appliedDiscount?.type === 'percentage') {
+                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    return `Saving $${discountAmount.toFixed(2)} with promo ${appliedDiscount.code}!`;
+                  } else if (finalDeliveryFee === 0) {
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${deliverySavings.toFixed(2)} on delivery!`;
+                  }
+                  return 'You\'re saving money with this order!';
+                } catch (error) {
+                  if (appliedDiscount?.type === 'percentage' && finalDeliveryFee === 0) {
+                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total!`;
+                  } else if (appliedDiscount?.type === 'percentage') {
+                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    return `Saving $${discountAmount.toFixed(2)} with promo ${appliedDiscount.code}!`;
+                  } else if (finalDeliveryFee === 0) {
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${deliverySavings.toFixed(2)} on delivery!`;
+                  }
+                  return 'You\'re saving money with this order!';
+                }
+              })()}
             </span>
           </div>
         )}

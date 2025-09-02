@@ -84,6 +84,16 @@ export function useDeliverySettings() {
   const calculateDeliveryFee = (subtotal: number, promoCode?: string) => {
     const { delivery_fees, promo_codes } = settings;
     
+    // Check for delivery app free shipping settings first
+    try {
+      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+      if (deliveryAppSettings.freeDeliveryEnabled) {
+        return 0;
+      }
+    } catch (error) {
+      console.warn('Failed to parse delivery app settings:', error);
+    }
+    
     // Check for free shipping promo code
     if (promoCode && promo_codes[promoCode]?.type === 'free_shipping' && promo_codes[promoCode]?.active) {
       if (subtotal >= promo_codes[promoCode].minimum_order) {

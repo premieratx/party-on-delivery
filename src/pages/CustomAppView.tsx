@@ -68,6 +68,18 @@ const CustomAppView = () => {
         appSlug: appConfig?.app_slug || appSlug,
         appName: appConfig?.app_name || appSlug
       }));
+      
+      // Store delivery app specific settings for checkout
+      const deliveryAppSettings = {
+        freeDeliveryEnabled: appConfig?.free_delivery_enabled || false,
+        prefillAddressEnabled: appConfig?.prefill_address_enabled || false,
+        prefillAddress: appConfig?.prefill_delivery_address || null,
+        appSlug: appConfig?.app_slug || appSlug,
+        appName: appConfig?.app_name || appSlug
+      };
+      
+      sessionStorage.setItem('delivery-app-settings', JSON.stringify(deliveryAppSettings));
+      console.log('✅ Stored delivery app settings:', deliveryAppSettings);
       console.log('✅ Stored delivery app referrer:', currentUrl);
     } catch (error) {
       console.warn('❌ Failed to store delivery app referrer:', error);

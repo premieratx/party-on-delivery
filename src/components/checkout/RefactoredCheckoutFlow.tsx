@@ -66,6 +66,23 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   // LOAD SAVED DATA ON MOUNT - EVERYONE CAN SAVE AND LOAD
   useEffect(() => {
     try {
+      // Check for delivery app settings first (prefilled address and free shipping)
+      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+      console.log('🚚 Delivery app settings found:', deliveryAppSettings);
+      
+      // Apply prefilled address if enabled
+      if (deliveryAppSettings.prefillAddressEnabled && deliveryAppSettings.prefillAddress) {
+        const prefillAddress = deliveryAppSettings.prefillAddress;
+        console.log('📍 Applying prefilled address:', prefillAddress);
+        setAddressInfo({
+          street: prefillAddress.street || '',
+          city: prefillAddress.city || '',
+          state: prefillAddress.state || '',
+          zipCode: prefillAddress.zipCode || '',
+          instructions: prefillAddress.instructions || ''
+        });
+      }
+
       // Load saved customer info
       const savedCustomer = localStorage.getItem('partyondelivery_customer');
       if (savedCustomer) {
@@ -74,12 +91,14 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         console.log('✅ Loaded saved customer info:', parsedCustomer);
       }
 
-      // Load saved address info
-      const savedAddress = localStorage.getItem('partyondelivery_address');
-      if (savedAddress) {
-        const parsedAddress = JSON.parse(savedAddress);
-        setAddressInfo(parsedAddress);
-        console.log('✅ Loaded saved address info:', parsedAddress);
+      // Load saved address info (only if no prefilled address from delivery app)
+      if (!deliveryAppSettings.prefillAddressEnabled) {
+        const savedAddress = localStorage.getItem('partyondelivery_address');
+        if (savedAddress) {
+          const parsedAddress = JSON.parse(savedAddress);
+          setAddressInfo(parsedAddress);
+          console.log('✅ Loaded saved address info:', parsedAddress);
+        }
       }
 
       // Load saved delivery info
@@ -132,8 +151,27 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
   // Corrected delivery fee calculation per requirements
-  const deliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : 
-    (cartSubtotal >= 200 ? Math.round(cartSubtotal * 0.1 * 100) / 100 : 20);
+  const getDeliveryFeeFromSettings = () => {
+    // Check for delivery app free shipping settings first
+    try {
+      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+      if (deliveryAppSettings.freeDeliveryEnabled) {
+        return 0;
+      }
+    } catch (error) {
+      console.warn('Failed to parse delivery app settings:', error);
+    }
+    
+    // Check for applied discount free shipping
+    if (appliedDiscount?.type === 'free_shipping') {
+      return 0;
+    }
+    
+    // Standard delivery fee calculation
+    return cartSubtotal >= 200 ? Math.round(cartSubtotal * 0.1 * 100) / 100 : 20;
+  };
+  
+  const deliveryFee = getDeliveryFeeFromSettings();
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? cartSubtotal * (1 - appliedDiscount.value / 100)
