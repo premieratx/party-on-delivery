@@ -5,6 +5,7 @@ export interface DashboardData {
   orders: any[];
   customers: any[];
   affiliateReferrals: any[];
+  abandonedOrders?: any[];
   totalRevenue: number;
   totalOrders: number;
   pendingCommissions: number;
@@ -36,7 +37,8 @@ export function useDashboardData(options: UseDashboardDataOptions) {
         body: {
           type: options.type,
           email: options.email ?? null,
-          affiliateCode: options.affiliateCode ?? null
+          affiliateCode: options.affiliateCode ?? null,
+          includeAbandonedOrders: options.type === 'admin' // Always include abandoned orders for admin dashboard
         }
       });
 

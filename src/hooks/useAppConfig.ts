@@ -12,7 +12,7 @@ interface AppConfig {
 
 const DEFAULT_CONFIG: AppConfig = {
   googleMapsEnabled: false, // Disabled by default
-  abandonedOrderTrackingEnabled: false, // Disabled by default
+  abandonedOrderTrackingEnabled: true, // Enabled by default to track abandoned orders
   groupOrderingEnabled: false, // Disabled by default
   telegramBotEnabled: false, // Disabled by default
   aiBotAutomationsEnabled: false, // Disabled by default

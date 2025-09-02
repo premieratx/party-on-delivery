@@ -50,7 +50,7 @@ import { TailgateBeerOrderChecker } from '@/components/admin/TailgateBeerOrderCh
 import { ManualProductOrderFix } from '@/components/admin/ManualProductOrderFix';
 
 export default function AdminDashboard() {
-  // Use the dashboard hook for data loading
+  // Use the dashboard hook for data loading with abandoned orders enabled
   const { data: dashboardData, loading, error, refresh } = useAdminDashboard();
   
   // Derived state from dashboard data
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
   const totalProducts = 1052;
   const recentOrders = dashboardData?.orders || [];
   const affiliates = dashboardData?.affiliateReferrals || [];
-  const abandonedOrders = [];
+  const abandonedOrders = dashboardData?.abandonedOrders || [];
   const navigate = useNavigate();
   const { toast } = useToast();
   const { activeTab, updateActiveTab } = useAdminState('overview');
