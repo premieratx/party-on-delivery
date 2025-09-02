@@ -12,9 +12,7 @@ export const ManualProductOrderFix: React.FC = () => {
   const manualFixOrdering = async () => {
     setIsLoading(true);
     try {
-      console.log('🚨 EMERGENCY: Triggering immediate product reload...');
-      
-      const { data, error } = await supabase.functions.invoke('emergency-product-sync');
+      const { data, error } = await supabase.functions.invoke('immediate-sync');
       
       if (error) {
         throw error;
