@@ -28,7 +28,7 @@ interface SyncResult {
 }
 
 export const GoogleSheetsManager: React.FC = () => {
-  const [spreadsheetId, setSpreadsheetId] = useState('');
+  const [spreadsheetId, setSpreadsheetId] = useState('1P9Us5B6NMLE1I-e8XZWa9ZzgN5OAO7S9CI9DhnEtl5U');
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -100,6 +100,47 @@ export const GoogleSheetsManager: React.FC = () => {
     }
   };
 
+  const testAutoSync = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      // Test the auto-sync functions
+      const [completedResult, abandonedResult] = await Promise.all([
+        supabase.functions.invoke('auto-sync-completed-orders', {
+          body: { action: 'sync_completed' },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }),
+        supabase.functions.invoke('auto-sync-abandoned-orders', {
+          body: { action: 'sync_abandoned' },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+      ]);
+
+      if (completedResult.error || abandonedResult.error) {
+        throw new Error(completedResult.error?.message || abandonedResult.error?.message || 'Sync test failed');
+      }
+
+      setLastSync(new Date());
+      toast({
+        title: "Auto-Sync Test Complete",
+        description: `Synced ${completedResult.data?.synced || 0} completed orders and ${abandonedResult.data?.synced || 0} abandoned orders.`,
+      });
+    } catch (error: any) {
+      console.error('Error testing auto-sync:', error);
+      toast({
+        title: "Auto-Sync Test Error",
+        description: error.message || "Failed to test auto-sync functions.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Configuration */}
@@ -107,10 +148,18 @@ export const GoogleSheetsManager: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-green-600" />
-            Google Sheets Integration
+            Google Sheets Integration - AUTO-SYNC ENABLED
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm font-medium text-green-800">✅ Automated Sync Active</p>
+            <p className="text-sm text-green-600 mt-1">
+              • Completed orders sync in real-time when orders are marked as completed<br/>
+              • Abandoned orders sync automatically every hour<br/>
+              • Connected to your spreadsheet: {spreadsheetId}
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="spreadsheet-url">Google Sheets URL or ID</Label>
             <Input
@@ -143,7 +192,7 @@ export const GoogleSheetsManager: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <Button
               onClick={() => syncToSheets('abandoned')}
               disabled={!spreadsheetId || isSyncing}
@@ -151,7 +200,7 @@ export const GoogleSheetsManager: React.FC = () => {
               className="flex items-center gap-2"
             >
               <AlertCircle className="h-4 w-4" />
-              Sync Abandoned Orders
+              Manual Sync Abandoned
             </Button>
             
             <Button
@@ -161,16 +210,26 @@ export const GoogleSheetsManager: React.FC = () => {
               className="flex items-center gap-2"
             >
               <CheckCircle2 className="h-4 w-4" />
-              Sync Completed Orders
+              Manual Sync Completed
             </Button>
             
             <Button
               onClick={() => syncToSheets('both')}
               disabled={!spreadsheetId || isSyncing}
+              variant="outline"
               className="flex items-center gap-2"
             >
               <Upload className="h-4 w-4" />
-              Sync Both
+              Manual Sync Both
+            </Button>
+
+            <Button
+              onClick={testAutoSync}
+              disabled={!spreadsheetId || isSyncing}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Test Auto-Sync
             </Button>
           </div>
 
@@ -264,20 +323,32 @@ export const GoogleSheetsManager: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <div className="space-y-2">
-            <p className="font-medium">To use this integration:</p>
-            <ol className="list-decimal list-inside space-y-1 ml-4">
-              <li>Create a new Google Sheets document</li>
-              <li>Copy the spreadsheet URL or ID and paste it above</li>
-              <li>Make sure the spreadsheet is shared publicly (view access) or with the service account</li>
-              <li>Click any of the sync buttons to create tabs and sync data</li>
-            </ol>
+            <p className="font-medium text-green-700">🎉 Automation Setup Complete!</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="font-medium text-blue-800">⚡ Real-time Completed Orders</p>
+                <p className="text-blue-600 text-xs mt-1">
+                  Automatically syncs when orders are marked as "completed", "confirmed", or "delivered"
+                </p>
+              </div>
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <p className="font-medium text-orange-800">⏰ Hourly Abandoned Orders</p>
+                <p className="text-orange-600 text-xs mt-1">
+                  Runs every hour at minute 0 to capture all abandoned carts
+                </p>
+              </div>
+            </div>
           </div>
           <div className="p-3 bg-muted rounded-lg">
-            <p className="font-medium">Spreadsheet Structure:</p>
-            <ul className="list-disc list-inside space-y-1 mt-2">
-              <li><strong>Abandoned Orders</strong> tab: Customer info, cart details, abandonment time</li>
-              <li><strong>Completed Orders</strong> tab: Order details, customer info, delivery info</li>
-            </ul>
+            <p className="font-medium">Your Google Sheet:</p>
+            <a 
+              href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline text-xs"
+            >
+              Open Spreadsheet →
+            </a>
           </div>
         </CardContent>
       </Card>
