@@ -52,7 +52,11 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
   
   // AUTO-CLOSE FIELD STATE MANAGEMENT
-  const [tipAmount, setTipAmount] = useState(0);
+  const [tipAmount, setTipAmount] = useState(() => {
+    // Default to 10% tip
+    const defaultTip = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0) * 0.10;
+    return defaultTip;
+  });
   const [confirmedSteps, setConfirmedSteps] = useState({
     dateTime: false,
     address: false,
@@ -127,8 +131,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
-  // Simple delivery fee calculation
-  const deliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : 5.99;
+  // Corrected delivery fee calculation per requirements
+  const deliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : 
+    (cartSubtotal >= 200 ? Math.round(cartSubtotal * 0.1 * 100) / 100 : 20);
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? cartSubtotal * (1 - appliedDiscount.value / 100)
