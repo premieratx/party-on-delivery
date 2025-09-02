@@ -224,9 +224,14 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
-    console.log('🔍 Search icon clicked - expanding search bar');
+    console.log('🔍 Search icon clicked - expanding search bar and scrolling up');
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
+    
+    // Scroll to top on mobile for better search experience
+    if (window.innerWidth <= 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     
     // Focus the search input immediately after state update
     setTimeout(() => {
@@ -236,11 +241,7 @@ export const CombinedSearchTabs = ({
       if (input) {
         console.log('🔍 Focusing search input:', input);
         input.focus();
-        
-        // For mobile, ensure virtual keyboard appears
-        if (window.innerWidth <= 768) {
-          input.click();
-        }
+        input.click(); // Ensure virtual keyboard appears on mobile
       } else {
         console.warn('🔍 Search input not found');
       }
@@ -603,68 +604,6 @@ export const CombinedSearchTabs = ({
           </div>
         </div>
 
-        {/* Combined Row - Search Bar + Cart/Checkout (Mobile only) */}
-        {showSearch && isSearchExpanded && (
-          <div className="container mx-auto px-4 pb-3">
-            <div className="flex items-center gap-2">
-              {/* Expanded Search Bar */}
-              <div className="flex flex-1">
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search all products..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={() => {
-                    handleSearchFocus();
-                    activateSearch();
-                  }}
-                  onBlur={() => {
-                    handleSearchBlur();
-                    deactivateSearch();
-                  }}
-                  className="rounded-r-none text-sm"
-                  onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
-                  autoFocus
-                />
-                <Button 
-                  onClick={onSearchSubmit}
-                  className="rounded-l-none px-2"
-                  disabled={isSearching}
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              {/* Compact Cart Button */}
-              <Button
-                variant="outline"
-                onClick={onOpenCart}
-                className="flex items-center gap-1 h-9 px-2"
-                disabled={cartItemCount === 0}
-              >
-                <ShoppingCart className="w-4 h-4" />
-                {cartItemCount > 0 && (
-                  <span className="text-xs bg-primary text-primary-foreground rounded-full px-1 min-w-[1rem] h-4 flex items-center justify-center font-semibold">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Button>
-              
-              {/* Compact Checkout Button */}
-              <Button
-                onClick={onCheckout}
-                className="flex items-center gap-1 h-9 px-2 bg-primary hover:bg-primary/90"
-                disabled={cartItemCount === 0}
-              >
-                <Check className="w-4 h-4" />
-                {totalAmount > 0 && (
-                  <span className="text-xs font-bold">${formatPrice(safePrice(totalAmount))}</span>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
