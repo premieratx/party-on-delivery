@@ -32,8 +32,8 @@ export const useProductPreloader = () => {
     setCache({ ...globalProductCache });
 
     try {
-      // Use working optimized-product-loader with proper Shopify ordering
-      const { data, error } = await supabase.functions.invoke('optimized-product-loader', {
+      // Use the working get-unified-products function that loads products correctly
+      const { data, error } = await supabase.functions.invoke('get-unified-products', {
         body: {
           collection_handle: collectionHandle,
           use_type: 'delivery',
