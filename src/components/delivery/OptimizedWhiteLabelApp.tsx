@@ -484,8 +484,10 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
         onClose={() => setShowCart(false)}
       />
 
-      {/* Product Lightbox */}
-      {selectedProduct && (
+      {/* Product Lightbox - Only for cocktail collections */}
+      {selectedProduct && selectedProduct.collection_handles?.some(handle => 
+        handle.includes('cocktail') || handle.includes('party-pitcher')
+      ) && (
         <ProductLightbox
           product={selectedProduct}
           isOpen={!!selectedProduct}

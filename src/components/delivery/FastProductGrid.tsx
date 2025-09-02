@@ -43,8 +43,9 @@ export const FastProductGrid: React.FC<FastProductGridProps> = ({
       onAddToCart={handleAddToCart}
       cartItems={cartItems}
       onUpdateQuantity={handleUpdateQuantity}
-      containerHeight={window.innerHeight - 200} // Adjust based on header/footer
+      containerHeight={window.innerHeight - 200}
       className={className}
+      useUltraFastSearch={true}
     />
   );
 };

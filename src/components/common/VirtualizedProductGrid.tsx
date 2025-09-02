@@ -35,6 +35,7 @@ interface VirtualizedProductGridProps {
   containerHeight?: number;
   searchQuery?: string;
   className?: string;
+  useUltraFastSearch?: boolean;
 }
 
 export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
@@ -44,7 +45,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   onUpdateQuantity,
   containerHeight = 600,
   searchQuery = '',
-  className = ''
+  className = '',
+  useUltraFastSearch = false
 }) => {
   const [isGridReady, setIsGridReady] = useState(false);
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
