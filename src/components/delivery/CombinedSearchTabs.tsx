@@ -224,20 +224,26 @@ export const CombinedSearchTabs = ({
   };
 
   const handleSearchIconClick = () => {
-    console.log('🔍 Search icon clicked - expanding search bar and scrolling up');
+    console.log('🔍 Search icon clicked - expanding search bar and moving tabs to top');
     
     // Prevent any potential race conditions by immediately setting state
     setIsSearchExpanded(true);
     onSearchActiveChange?.(true);
     
-    // Enhanced mobile scroll and focus behavior
+    // Enhanced mobile behavior: move tabs to very top with search sticky below
     if (window.innerWidth <= 768) {
-      // Scroll to top immediately to ensure tabs are at the top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll to top with instant behavior to avoid visual glitches
+      window.scrollTo({ top: 0, behavior: 'instant' });
       
-      // Use requestAnimationFrame to ensure DOM updates before focusing
-      requestAnimationFrame(() => {
-        setTimeout(() => {
+      // Add a small delay to ensure sticky positioning is applied
+      setTimeout(() => {
+        // Ensure we're still at the top after sticky positioning
+        if (window.scrollY > 50) {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        
+        // Now focus the search input
+        requestAnimationFrame(() => {
           const input = searchInputRef.current || 
                        document.querySelector('[data-mobile-search-handler] input[type="search"]') as HTMLInputElement ||
                        document.querySelector('input[placeholder*="Search products"]') as HTMLInputElement ||
@@ -255,8 +261,8 @@ export const CombinedSearchTabs = ({
           } else {
             console.warn('🔍 Search input not found for focus');
           }
-        }, 100);
-      });
+        });
+      }, 50);
     }
   };
 
@@ -407,13 +413,11 @@ export const CombinedSearchTabs = ({
           (isSearchExpanded || isSearchActive) ? 'py-1' : 'py-1.5'
         }`}>
           <div className="flex items-center">
-            {/* Enhanced Responsive Tabs - No icons, better text spacing, condenses 25% when search active */}
+            {/* Enhanced Responsive Tabs - No icons, better text spacing, NO condensation */}
             <div className="relative w-full overflow-hidden">
                 <div 
                 ref={tabsContainerRef}
-                className={`flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1 transition-all duration-300 ${
-                  (isSearchExpanded || isSearchActive) ? 'scale-y-75 origin-top' : ''
-                }`}
+                className="flex gap-1 overflow-x-auto scrollbar-hide w-full pb-1 transition-all duration-300"
                 style={{ 
                   scrollSnapType: 'x mandatory',
                   WebkitOverflowScrolling: 'touch',

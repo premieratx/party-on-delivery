@@ -5,6 +5,7 @@ import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useGlobalCart } from '@/components/common/GlobalCartProvider';
+import { useTabScrollMemory } from '@/hooks/useTabScrollMemory';
 
 const CustomAppView = () => {
   const { appSlug } = useParams<{ appSlug: string }>();
@@ -14,6 +15,7 @@ const CustomAppView = () => {
   const [error, setError] = useState<string | null>(null);
   const { cartItems, addToCart, updateQuantity, getTotalItems } = useUnifiedCart();
   const { openCart } = useGlobalCart();
+  const { scrollToTop } = useTabScrollMemory();
 
   useEffect(() => {
     const loadDeliveryApp = async () => {
@@ -70,6 +72,9 @@ const CustomAppView = () => {
     } catch (error) {
       console.warn('❌ Failed to store delivery app referrer:', error);
     }
+    
+    // Ensure checkout opens at the very top
+    scrollToTop();
     
     console.log('🛒 Navigating to /checkout...');
     navigate('/checkout');
