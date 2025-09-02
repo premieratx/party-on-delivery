@@ -222,7 +222,7 @@ export const UltraFastMobileSearch: React.FC<UltraFastMobileSearchProps> = ({
       {showResults && results.length > 0 && (
         <div className={`${
           isMobile 
-            ? 'fixed inset-x-2 top-20 bottom-20 z-[9999] bg-background/95 backdrop-blur-md border border-border rounded-xl shadow-2xl' 
+            ? 'fixed inset-x-2 top-20 bottom-20 z-[99999] bg-background/95 backdrop-blur-md border border-border rounded-xl shadow-2xl' 
             : 'absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-xl z-50 max-h-96'
         } overflow-y-auto overscroll-contain`}>
           
@@ -305,7 +305,7 @@ export const UltraFastMobileSearch: React.FC<UltraFastMobileSearchProps> = ({
       {showResults && results.length === 0 && !isLoading && query.trim() && (
         <div className={`${
           isMobile 
-            ? 'fixed inset-x-2 top-20 z-[9999] bg-background border border-border rounded-lg shadow-xl' 
+            ? 'fixed inset-x-2 top-20 z-[99999] bg-background border border-border rounded-lg shadow-xl' 
             : 'absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-50'
         } p-6 text-center`}>
           <div className="text-muted-foreground">
