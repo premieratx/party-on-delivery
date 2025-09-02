@@ -79,6 +79,11 @@ const CustomAppView = () => {
       };
       
       sessionStorage.setItem('delivery-app-settings', JSON.stringify(deliveryAppSettings));
+      console.log('🚚 DELIVERY APP CONFIG DEBUG:', {
+        free_delivery_enabled: appConfig?.free_delivery_enabled,
+        prefill_address_enabled: appConfig?.prefill_address_enabled,
+        prefill_delivery_address: appConfig?.prefill_delivery_address
+      });
       console.log('✅ Stored delivery app settings:', deliveryAppSettings);
       console.log('✅ Stored delivery app referrer:', currentUrl);
     } catch (error) {
