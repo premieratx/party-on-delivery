@@ -1,124 +1,30 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
+import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
 
-interface ProductCache {
-  [collectionHandle: string]: {
-    products: any[];
-    lastUpdated: number;
-    loading: boolean;
-  }
-}
-
-// Global cache to share across components
-const globalProductCache: ProductCache = {};
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
+/**
+ * Hook to pre-warm the product search index on app startup
+ * Ensures instant search without delays
+ */
 export const useProductPreloader = () => {
-  const [cache, setCache] = useState<ProductCache>(globalProductCache);
-
-  const preloadCollection = useCallback(async (collectionHandle: string) => {
-    // Check if already cached and not expired
-    const existing = globalProductCache[collectionHandle];
-    if (existing && Date.now() - existing.lastUpdated < CACHE_DURATION) {
-      return existing.products;
-    }
-    
-    // Mark as loading
-    globalProductCache[collectionHandle] = {
-      products: existing?.products || [],
-      lastUpdated: existing?.lastUpdated || 0,
-      loading: true
-    };
-    setCache({ ...globalProductCache });
-
-    try {
-      // Use instant cache for fast loading
-      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
-        body: {
-          collection_handle: collectionHandle,
-          force_refresh: false
-        }
-      });
-
-      if (error) throw error;
-
-      const products = data?.products || [];
-      
-      // Update cache - silent success
-      globalProductCache[collectionHandle] = {
-        products,
-        lastUpdated: Date.now(),
-        loading: false
-      };
-      setCache({ ...globalProductCache });
-
-      return products;
-    } catch (error) {
-      console.error(`❌ INSTANT FAILED for ${collectionHandle}:`, error);
-      
-      // Fallback to original function
+  useEffect(() => {
+    const preloadProducts = async () => {
       try {
-        const { data, error: fallbackError } = await supabase.functions.invoke('get-unified-products', {
-          body: {
-            collection_handle: collectionHandle,
-            use_type: 'delivery',
-            lightweight: true,
-            preserve_order: true
-          }
-        });
-
-        if (fallbackError) throw fallbackError;
-
-        const products = data?.products || [];
+        console.log('🚀 Pre-warming product search index on app start...');
         
-        // Update cache - silent success
-        globalProductCache[collectionHandle] = {
-          products,
-          lastUpdated: Date.now(),
-          loading: false
-        };
-        setCache({ ...globalProductCache });
-
-        return products;
-      } catch (fallbackError) {
-        console.error(`❌ Complete failure for ${collectionHandle}:`, fallbackError);
+        // Trigger index warming - this will load all 1067+ products
+        await optimizedUltraFastSearch.searchProductsInstant('', { limit: 1 });
         
-        // Mark as not loading
-        if (globalProductCache[collectionHandle]) {
-          globalProductCache[collectionHandle].loading = false;
-          setCache({ ...globalProductCache });
-        }
-        
-        throw fallbackError;
+        console.log('✅ Product search index pre-warmed and ready for instant search');
+      } catch (error) {
+        console.error('❌ Failed to pre-warm product index:', error);
       }
-    }
+    };
+
+    // Small delay to let the app initialize first
+    const timer = setTimeout(preloadProducts, 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  const getFromCache = useCallback((collectionHandle: string) => {
-    const cached = globalProductCache[collectionHandle];
-    if (cached && !cached.loading && (Date.now() - cached.lastUpdated) < CACHE_DURATION) {
-      return cached.products;
-    }
-    return null;
-  }, []);
-
-  const preloadMultipleCollections = useCallback(async (collectionHandles: string[]) => {
-    const promises = collectionHandles.map(handle => preloadCollection(handle));
-    await Promise.all(promises);
-  }, [preloadCollection]);
-
-  const clearCache = useCallback(() => {
-    Object.keys(globalProductCache).forEach(key => {
-      delete globalProductCache[key];
-    });
-    setCache({});
-  }, []);
-
-  return {
-    cache,
-    preloadCollection,
-    getFromCache,
-    preloadMultipleCollections,
-    clearCache
-  };
+  // Return empty object to satisfy expectations
+  return {};
 };

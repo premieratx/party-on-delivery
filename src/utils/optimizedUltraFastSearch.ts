@@ -86,8 +86,13 @@ class OptimizedUltraFastSearchClient {
    * Pre-load all products into local index for instant searching
    */
   private async warmUpLocalIndex(): Promise<void> {
-    // Always refresh to ensure we have all 1067+ products
-    console.log('🔥 Force warming up local product index for all products...');
+    // Skip warming if already done recently
+    if (this.isIndexWarmedUp && Date.now() - this.lastCacheSync < this.CACHE_TTL) {
+      console.log('⚡ Index already warmed, skipping...');
+      return;
+    }
+
+    console.log('🔥 Warming up local product index for ALL 1067+ products...');
     const startTime = performance.now();
 
     try {
@@ -106,6 +111,11 @@ class OptimizedUltraFastSearchClient {
         
         const endTime = performance.now();
         console.log(`✅ Local index warmed with ${data.products.length} products in ${(endTime - startTime).toFixed(2)}ms`);
+        
+        // Verify we have all products
+        if (data.products.length < 1000) {
+          console.warn(`⚠️ Only loaded ${data.products.length} products, expected 1067+`);
+        }
       }
     } catch (error) {
       console.error('❌ Failed to warm up local index:', error);

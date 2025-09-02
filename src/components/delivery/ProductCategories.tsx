@@ -102,7 +102,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice, getTotalItems } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
-  const { preloadMultipleCollections } = useProductPreloader();
+  // Pre-warm product search index
+  useProductPreloader();
   const { triggerCartFeedback } = useHapticFeedback();
 
   // Use both keyboard hiding and unified scroll behavior
@@ -188,8 +189,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     const collectionHandles = tabs.map(tab => tab.handle);
     console.log('🚀 Preloading all collections:', collectionHandles);
-    preloadMultipleCollections(collectionHandles);
-  }, [tabs, preloadMultipleCollections]);
+    // Collection preloading handled by optimized search
+  }, [tabs]);
 
 
   // Listen for collection updates and refresh

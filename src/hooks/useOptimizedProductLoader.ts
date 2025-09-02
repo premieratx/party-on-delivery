@@ -41,7 +41,8 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
   const [cached, setCached] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const lastRequestRef = useRef<string>('');
-  const { getFromCache, preloadCollection } = useProductPreloader();
+  // Pre-warm product search index
+  useProductPreloader();
 
   const { 
     app_slug, 
@@ -59,17 +60,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     const requestKey = `${collection_handle}-${use_type}`;
     lastRequestRef.current = requestKey;
 
-    // Try cache first (unless forcing refresh)
-    if (!force_refresh) {
-      const cached = getFromCache(collection_handle);
-      if (cached) {
-        console.log(`📦 Using cached products for ${collection_handle}: ${cached.length} items`);
-        setProducts(cached);
-        setLoading(false);
-        setCached(true);
-        return;
-      }
-    }
+    // Skip cache check for now - use optimized search instead
 
     try {
       setLoading(true);
@@ -80,7 +71,12 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       // Clear products immediately to prevent mixing between collections
       setProducts([]);
       
-      const loadedProducts = await preloadCollection(collection_handle);
+      // Use optimized search to get collection products
+      const { data } = await supabase.functions.invoke('instant-product-cache', {
+        body: { collection_handle }
+      });
+      
+      const loadedProducts = data?.products || [];
       
       // Check if this is still the latest request
       if (lastRequestRef.current === requestKey) {
@@ -101,7 +97,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
         setLoading(false);
       }
     }
-  }, [collection_handle, getFromCache, preloadCollection, use_type]);
+  }, [collection_handle, use_type]);
 
   const refresh = useCallback(() => {
     setRetryCount(0);
