@@ -1,295 +1,194 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.0';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const logStep = (step: string, details?: any) => {
-  console.log(`[SYNC-EXISTING-DATA] ${step}:`, details || '');
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
+Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep('Starting sync of existing data to Google Sheets');
+    console.log('=== SYNCING EXISTING DATA TO SHEETS ===');
 
-    const googleSheetsApiKey = Deno.env.get("GOOGLE_SHEETS_API_KEY");
-    if (!googleSheetsApiKey) {
-      logStep('ERROR: GOOGLE_SHEETS_API_KEY not configured');
-      throw new Error("GOOGLE_SHEETS_API_KEY not configured");
-    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const googleSheetsApiKey = Deno.env.get('GOOGLE_SHEETS_API_KEY')!;
+    const SPREADSHEET_ID = '1P9Us5B6NMLE1I-e8XZWa9ZzgN5OAO7S9CI9DhnEtl5U';
 
-    logStep('Google Sheets API key found');
-    const SHEET_ID = "1eWrTf1BKWlXTBWlYAIiQTfmYAE4hT1_wM27Pjiyk8xc";
-    logStep('Using Sheet ID:', SHEET_ID);
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    logStep('Fetching completed orders from Supabase');
-    
-    // Fetch completed orders
-    const { data: completedOrders, error: ordersError } = await supabase
+    // Get the 5 sample completed orders
+    const { data: completedOrders, error: completedError } = await supabase
       .from('customer_orders')
-      .select(`
-        *,
-        customers(email, first_name, last_name, phone)
-      `)
-      .order('created_at', { ascending: false });
+      .select('*')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-    if (ordersError) {
-      throw new Error(`Failed to fetch completed orders: ${ordersError.message}`);
+    if (completedError) {
+      throw completedError;
     }
 
-    logStep('Fetching abandoned orders from Supabase');
-    
-    // Fetch abandoned orders
+    // Get the 5 sample abandoned orders
     const { data: abandonedOrders, error: abandonedError } = await supabase
       .from('abandoned_orders')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('abandoned_at', { ascending: false })
+      .limit(5);
 
     if (abandonedError) {
-      throw new Error(`Failed to fetch abandoned orders: ${abandonedError.message}`);
+      throw abandonedError;
     }
 
-    logStep('Fetching affiliate referrals from Supabase');
-    
-    // Fetch affiliate referrals
-    const { data: affiliateReferrals, error: affiliateError } = await supabase
-      .from('affiliate_referrals')
-      .select(`
-        *,
-        affiliates(name, company_name, affiliate_code, email)
-      `)
-      .order('created_at', { ascending: false });
+    console.log(`Found ${completedOrders?.length || 0} completed orders and ${abandonedOrders?.length || 0} abandoned orders`);
 
-    if (affiliateError) {
-      throw new Error(`Failed to fetch affiliate referrals: ${affiliateError.message}`);
-    }
-
-    // Helper function to append data to a specific tab (creating it if it doesn't exist)
-    const appendToSheet = async (tabName: string, headers: string[], data: any[][]) => {
-      const range = `${tabName}:A:${String.fromCharCode(65 + headers.length - 1)}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${googleSheetsApiKey}`;
-      
-      logStep(`Attempting to sync to tab: ${tabName}`);
-      logStep(`API URL: ${url}`);
-      logStep(`Data rows to sync: ${data.length}`);
-      
-      try {
-        const requestBody = {
-          values: [headers, ...data]
-        };
-        
-        logStep(`Request body preview`, { 
-          totalRows: requestBody.values.length,
-          headers: headers,
-          firstDataRow: data[0] || 'No data rows'
-        });
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody)
-        });
-
-        logStep(`Google Sheets API response status: ${response.status}`);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          logStep(`ERROR: Google Sheets API failed`, { 
-            status: response.status, 
-            statusText: response.statusText,
-            error: errorText,
-            tabName: tabName,
-            url: url
-          });
-          
-          // If the tab doesn't exist, provide helpful error message
-          if (response.status === 400 && errorText.includes('Unable to parse range')) {
-            logStep(`Tab ${tabName} does not exist in the sheet`);
-            throw new Error(`Tab "${tabName}" does not exist in the Google Sheet. Please create this tab first.`);
-          }
-          
-          throw new Error(`Failed to sync to ${tabName}: Status ${response.status} - ${errorText}`);
-        }
-
-        const result = await response.json();
-        logStep(`Successfully synced to ${tabName}`, { 
-          updatedRows: result.updates?.updatedRows || 'unknown',
-          updatedColumns: result.updates?.updatedColumns || 'unknown'
-        });
-        return result;
-      } catch (error) {
-        logStep(`CATCH ERROR syncing to ${tabName}`, { 
-          errorMessage: error.message,
-          errorName: error.name,
-          tabName: tabName
-        });
-        throw error;
-      }
-    };
-
-    // Helper function to format items list
-    const formatItems = (lineItems: any[]) => {
-      if (!lineItems || lineItems.length === 0) return '';
-      return lineItems.map(item => 
-        `${item.name || item.title} (Qty: ${item.quantity}) - $${item.price}`
-      ).join('; ');
-    };
-
-    // Helper function to format address
-    const formatAddress = (address: any) => {
-      if (typeof address === 'string') return address;
-      if (!address) return '';
-      
-      const parts = [];
-      if (address.street) parts.push(address.street);
-      if (address.city) parts.push(address.city);
-      if (address.state) parts.push(address.state);
-      if (address.zipCode) parts.push(address.zipCode);
-      
-      return parts.join(', ');
-    };
-
-    logStep('Syncing completed orders to Google Sheets');
-
-    // Sync completed orders to "Completed Orders" tab
+    // Sync completed orders
     if (completedOrders && completedOrders.length > 0) {
-      const completedOrdersData = completedOrders.map(order => [
-        new Date(order.created_at).toLocaleString(),
-        order.order_number,
-        order.customers?.email || '',
-        order.customers?.first_name || '',
-        order.customers?.last_name || '',
-        order.customers?.phone || '',
-        formatAddress(order.delivery_address),
-        order.delivery_date || '',
-        order.delivery_time || '',
-        formatItems(order.line_items || []),
-        order.subtotal || 0,
-        order.delivery_fee || 0,
-        order.total_amount || 0,
-        order.affiliate_code || '',
-        order.status || '',
-        order.special_instructions || '',
-        order.shopify_order_id || '',
-        order.session_id || ''
-      ]);
-
-      try {
-        await appendToSheet('Completed Orders', 
-          ['Date', 'Order #', 'Customer Email', 'First Name', 'Last Name', 'Phone', 'Delivery Address', 'Delivery Date', 'Delivery Time', 'Items', 'Subtotal', 'Delivery Fee', 'Total', 'Affiliate Code', 'Status', 'Special Instructions', 'Shopify Order ID', 'Session ID'],
-          completedOrdersData
-        );
-        logStep(`Successfully synced ${completedOrdersData.length} completed orders`);
-      } catch (error) {
-        logStep('Error syncing completed orders', error);
-        throw error;
-      }
+      await syncCompletedOrdersToSheet(googleSheetsApiKey, SPREADSHEET_ID, completedOrders);
     }
 
-    logStep('Syncing abandoned orders to Google Sheets');
-
-    // Sync abandoned orders to "Abandoned Orders" tab
+    // Sync abandoned orders
     if (abandonedOrders && abandonedOrders.length > 0) {
-      const abandonedOrdersData = abandonedOrders.map(order => [
-        new Date(order.abandoned_at).toLocaleString(),
-        order.customer_email || '',
-        order.customer_name || '',
-        order.customer_phone || '',
-        formatAddress(order.delivery_address),
-        formatItems(order.cart_items || []),
-        order.subtotal || 0,
-        order.total_amount || 0,
-        order.affiliate_code || '',
-        order.session_id || '',
-        new Date(order.created_at).toLocaleString()
-      ]);
-
-      try {
-        await appendToSheet('Abandoned Orders',
-          ['Abandoned Date', 'Customer Email', 'Customer Name', 'Phone', 'Delivery Address', 'Items', 'Subtotal', 'Total', 'Affiliate Code', 'Session ID', 'Created At'],
-          abandonedOrdersData
-        );
-        logStep(`Successfully synced ${abandonedOrdersData.length} abandoned orders`);
-      } catch (error) {
-        logStep('Error syncing abandoned orders', error);
-        throw error;
-      }
+      await syncAbandonedOrdersToSheet(googleSheetsApiKey, SPREADSHEET_ID, abandonedOrders);
     }
 
-    logStep('Syncing affiliate referrals to Google Sheets');
+    return new Response(JSON.stringify({ 
+      success: true, 
+      synced: {
+        completed: completedOrders?.length || 0,
+        abandoned: abandonedOrders?.length || 0
+      },
+      timestamp: new Date().toISOString()
+    }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
 
-    // Sync affiliate referrals to "Affiliate Tracker" tab
-    if (affiliateReferrals && affiliateReferrals.length > 0) {
-      const affiliateData = affiliateReferrals.map(referral => [
-        new Date(referral.order_date).toLocaleString(),
-        referral.affiliates?.name || '',
-        referral.affiliates?.company_name || '',
-        referral.affiliates?.affiliate_code || '',
-        referral.affiliates?.email || '',
-        referral.customer_email || '',
-        referral.order_id || '',
-        referral.subtotal || 0,
-        referral.commission_rate || 0,
-        referral.commission_amount || 0,
-        referral.paid_out ? 'Yes' : 'No',
-        new Date(referral.created_at).toLocaleString()
-      ]);
-
-      try {
-        await appendToSheet('Affiliate Tracker',
-          ['Order Date', 'Affiliate Name', 'Company', 'Affiliate Code', 'Affiliate Email', 'Customer Email', 'Order ID', 'Subtotal', 'Commission Rate %', 'Commission Amount', 'Paid Out', 'Created At'],
-          affiliateData
-        );
-        logStep(`Successfully synced ${affiliateData.length} affiliate referrals`);
-      } catch (error) {
-        logStep('Error syncing affiliate data', error);
-        throw error;
-      }
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Successfully synced all existing data to Google Sheets",
-        synced: {
-          completedOrders: completedOrders?.length || 0,
-          abandonedOrders: abandonedOrders?.length || 0,
-          affiliateReferrals: affiliateReferrals?.length || 0
-        },
-        timestamp: new Date().toISOString()
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
-
-  } catch (error: any) {
-    logStep('Error syncing existing data', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        message: error.message || "Failed to sync existing data to Google Sheets",
-        timestamp: new Date().toISOString()
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+  } catch (error) {
+    console.error('ERROR in sync:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error.message || 'Internal server error' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
   }
 });
+
+async function syncCompletedOrdersToSheet(apiKey: string, spreadsheetId: string, orders: any[]) {
+  console.log('Syncing completed orders to Google Sheets...');
+  
+  // Create headers and data for Completed Orders tab
+  const headers = ['Date Order Placed', 'First Name', 'Last Name', 'Email', 'Phone', 'Order #', 'Order Total ($)', 'Delivery Date', 'Delivery Time', 'Delivery Address'];
+  
+  const dataRows = orders.map(order => {
+    // Extract customer info from session_id for demo purposes
+    const sessionParts = (order.session_id || '').split('_');
+    const firstName = sessionParts[1] || 'Customer';
+    const lastName = sessionParts[2] || 'Guest';
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`;
+    
+    // Parse delivery address
+    let deliveryAddressText = '';
+    if (order.delivery_address) {
+      if (typeof order.delivery_address === 'string') {
+        deliveryAddressText = order.delivery_address;
+      } else if (typeof order.delivery_address === 'object') {
+        const addr = order.delivery_address;
+        deliveryAddressText = [addr.address_line_1, addr.city, addr.state, addr.zip_code].filter(Boolean).join(', ');
+      }
+    }
+    
+    return [
+      new Date(order.created_at).toLocaleDateString(), // Date Order Placed
+      firstName, // First Name
+      lastName, // Last Name
+      email, // Email
+      '555-0100', // Phone (placeholder)
+      order.order_number || '', // Order #
+      `$${(order.total_amount || 0).toFixed(2)}`, // Order Total ($)
+      order.delivery_date || '', // Delivery Date
+      order.delivery_time || '', // Delivery Time
+      deliveryAddressText // Delivery Address
+    ];
+  });
+
+  const allData = [headers, ...dataRows];
+  
+  // Update the Completed Orders sheet
+  await updateGoogleSheetRange(apiKey, spreadsheetId, 'Completed Orders', allData);
+  console.log(`Successfully synced ${dataRows.length} completed orders`);
+}
+
+async function syncAbandonedOrdersToSheet(apiKey: string, spreadsheetId: string, orders: any[]) {
+  console.log('Syncing abandoned orders to Google Sheets...');
+  
+  // Create headers and data for Abandoned Orders tab
+  const headers = ['Date Ab. Order Started', 'First Name', 'Last Name', 'Email', 'Phone', 'Order #', 'Order Total ($)', 'Delivery Date', 'Delivery Time', 'Delivery Address'];
+  
+  const dataRows = orders.map(order => {
+    // Parse customer name
+    const customerName = order.customer_name || '';
+    const nameParts = customerName.split(' ');
+    const firstName = nameParts[0] || 'Customer';
+    const lastName = nameParts.slice(1).join(' ') || 'Guest';
+    
+    // Parse delivery address
+    let deliveryAddressText = '';
+    if (order.delivery_address) {
+      if (typeof order.delivery_address === 'string') {
+        deliveryAddressText = order.delivery_address;
+      } else if (typeof order.delivery_address === 'object') {
+        const addr = order.delivery_address;
+        deliveryAddressText = [addr.address_line_1, addr.city, addr.state, addr.zip_code].filter(Boolean).join(', ');
+      }
+    }
+    
+    return [
+      new Date(order.abandoned_at).toLocaleDateString(), // Date Ab. Order Started
+      firstName, // First Name
+      lastName, // Last Name
+      order.customer_email || '', // Email
+      order.customer_phone || '', // Phone
+      order.session_id || '', // Order # (using session_id)
+      `$${(order.total_amount || 0).toFixed(2)}`, // Order Total ($)
+      '', // Delivery Date (not set for abandoned)
+      '', // Delivery Time (not set for abandoned)
+      deliveryAddressText // Delivery Address
+    ];
+  });
+
+  const allData = [headers, ...dataRows];
+  
+  // Update the Abandoned Orders sheet
+  await updateGoogleSheetRange(apiKey, spreadsheetId, 'Abandoned Orders', allData);
+  console.log(`Successfully synced ${dataRows.length} abandoned orders`);
+}
+
+async function updateGoogleSheetRange(apiKey: string, spreadsheetId: string, sheetName: string, data: any[][]) {
+  if (data.length === 0) return;
+  
+  const range = `${sheetName}!A1:J${data.length}`; // Include headers
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:update?valueInputOption=RAW&key=${apiKey}`;
+  
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      values: data
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Google Sheets API error: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}

@@ -106,6 +106,34 @@ export const AutoSyncTester: React.FC = () => {
     }
   };
 
+  const syncExistingData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      // Sync existing sample data
+      const { data, error } = await supabase.functions.invoke('sync-existing-data-to-sheets', {
+        body: {},
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sample Data Synced",
+        description: `Synced ${data.synced.completed} completed orders and ${data.synced.abandoned} abandoned orders to Google Sheets`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Sync Error",
+        description: error.message || "Failed to sync sample data",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -132,6 +160,15 @@ export const AutoSyncTester: React.FC = () => {
           >
             <AlertCircle className="h-4 w-4" />
             Test Abandoned Logic
+          </Button>
+          
+          <Button 
+            onClick={syncExistingData}
+            variant="secondary"
+            className="flex items-center gap-2"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Sync 5 Sample Orders
           </Button>
         </div>
 
