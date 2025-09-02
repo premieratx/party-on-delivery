@@ -12,7 +12,7 @@ export const ForceProductSync = () => {
     console.log('🔄 Force sync initiated...');
     
     try {
-      // Use emergency sync function instead of unified sync to avoid rate limiting
+      // First get all products using emergency sync
       const { data, error } = await supabase.functions.invoke('emergency-product-sync', {
         body: { forceRefresh: true, clearCache: true }
       });
@@ -23,10 +23,39 @@ export const ForceProductSync = () => {
         return;
       }
 
-      console.log('✅ Force sync completed:', data);
+      console.log('✅ Emergency sync completed:', data);
       
-      if (data.success) {
-        toast.success(`Products synced successfully! ${data.products_synced || 0} products loaded.`);
+      if (data.success && data.products_synced > 0) {
+        toast.success(`Products synced! Now fixing collection order...`);
+        
+        // Now fix the collection ordering for key collections
+        const keyCollections = [
+          'tailgate-beer', 
+          'seltzer-collection', 
+          'cocktail-kits', 
+          'spirits', 
+          'mixers-non-alcoholic'
+        ];
+        
+        console.log('🎯 Fixing collection order for key collections...');
+        
+        for (const collection of keyCollections) {
+          try {
+            const { data: orderData, error: orderError } = await supabase.functions.invoke('shopify-collection-order', {
+              body: { collection_handle: collection }
+            });
+            
+            if (orderError) {
+              console.warn(`⚠️ Failed to update order for ${collection}:`, orderError);
+            } else {
+              console.log(`✅ Updated order for ${collection}:`, orderData);
+            }
+          } catch (err) {
+            console.warn(`⚠️ Error updating ${collection}:`, err);
+          }
+        }
+        
+        toast.success(`Products synced with correct Shopify ordering! Refreshing...`);
         
         // Reload page to see fresh data
         setTimeout(() => {
