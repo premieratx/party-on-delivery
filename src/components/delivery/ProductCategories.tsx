@@ -82,7 +82,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   externalSearchQuery = '',
   customSiteSlug,
   showSearch = true,
-  maxProducts = 50,
+  maxProducts = 1000,
   forceRefresh = false,
   onCheckout
 }) => {
