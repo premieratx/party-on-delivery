@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AdminSessionManager } from '@/utils/sessionPersistence';
-import { startAdminHealthMonitoring, stopAdminHealthMonitoring } from '@/utils/adminHealthCheck';
 
 interface RequireAdminProps {
   children: React.ReactNode;
@@ -11,182 +9,86 @@ interface RequireAdminProps {
 
 const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
   const [allowed, setAllowed] = useState<boolean | null>(null);
-  const [adminContextSet, setAdminContextSet] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     let mounted = true;
-    let checkInProgress = false;
 
-    const check = async () => {
-      if (checkInProgress) {
-        console.log('🔍 Admin check already in progress, skipping duplicate');
-        return;
-      }
-      checkInProgress = true;
-
+    const checkAdminAccess = async () => {
       try {
+        // Check if user has a valid session
         const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user?.email) {
+          console.log('❌ No valid session found');
+          setAllowed(false);
+          navigate('/affiliate/admin-login', { replace: true });
+          return;
+        }
+
+        // Check if user is admin
+        console.log('🔍 Checking admin access for:', session.user.email);
+        
+        // Simple admin check - verify user exists in admin_users table
+        const { data: adminData, error } = await supabase
+          .from('admin_users')
+          .select('id, email, name')
+          .eq('email', session.user.email)
+          .single();
+
         if (!mounted) return;
 
-        if (!session) {
-          // If returning from OAuth, Supabase will exchange the code for a session asynchronously.
-          const hasAuthParams = window.location.search.includes('code=') || window.location.search.includes('state=') || window.location.hash.includes('access_token');
-          if (hasAuthParams) {
-            setAllowed(null); // wait for auth to settle
-            return;
-          }
-          setAllowed(false);
-          if (window.location.pathname !== '/affiliate/admin-login') {
-            navigate('/affiliate/admin-login', { replace: true });
-          }
-          return;
-        }
-
-        // Skip verification if already verified to avoid redundant calls
-        if (allowed === true && adminContextSet) {
-          console.log('✅ Admin already verified, skipping duplicate check');
-          return;
-        }
-
-        // CRITICAL: verify-admin-google does verification AND sets RLS context
-        console.log('🔐 SECURITY: Verifying admin and setting RLS context for:', session.user.email);
-        const { data, error } = await supabase.functions.invoke('verify-admin-google', {
-          body: { email: session.user.email }
-        });
-        
-        console.log('🔍 SECURITY: Admin verification response:', { data, error });
-        
-        if (error) {
-          console.error('🚨 SECURITY: verify-admin error:', error);
-          toast({
-            title: "Security Error",
-            description: "Failed to establish secure admin context. Please try again.",
-            variant: "destructive",
-          });
-          setAllowed(false);
-          navigate('/affiliate/admin-login', { replace: true });
-          return;
-        }
-
-        if (data?.isAdmin) {
-          console.log('✅ SECURITY: Admin verified and RLS context established');
-          setAdminContextSet(true);
-          setAllowed(true);
-          
-          // Store admin session with enhanced persistence
-          AdminSessionManager.setAdminSession(session.user.email || '');
-          
-          // Start health monitoring for this admin session
-          startAdminHealthMonitoring();
-        } else {
-          console.log('❌ SECURITY: Access denied - not an admin user');
+        if (error || !adminData) {
+          console.log('❌ Not an admin user:', session.user.email);
           await supabase.auth.signOut();
           setAllowed(false);
-          toast({ 
-            title: 'Access denied', 
-            description: "Your account doesn't have admin privileges.",
-            variant: 'destructive' 
+          toast({
+            title: "Access Denied",
+            description: "Your account does not have admin privileges.",
+            variant: "destructive",
           });
           navigate('/affiliate/admin-login', { replace: true });
+          return;
         }
-      } catch (e) {
-        console.error('Admin guard error:', e);
+
+        console.log('✅ Admin access granted for:', session.user.email);
+        setAllowed(true);
+
+      } catch (error) {
+        console.error('❌ Admin check error:', error);
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });
-      } finally {
-        checkInProgress = false;
       }
     };
 
-    // Allow cached sessions for logged in admin users - no forced re-auth
-    // Users should stay logged in and have full admin access once authenticated
-    const shouldForceFreshAuth = false; // Allow cached sessions for better UX
-    
-    if (shouldForceFreshAuth) {
-      console.log('🔐 SECURITY: Forcing fresh Google authentication (cached sessions disabled)');
-      AdminSessionManager.clearAdminSession(); // Clear any cached sessions
-      // Skip cached session logic entirely
-    } else {
-      // CRITICAL: Always call verify-admin-google even for cached sessions
-      // This function does TWO things: verification AND context setting for RLS
-      const isAlreadyVerified = AdminSessionManager.isAdminSessionValid();
-      if (isAlreadyVerified && allowed === null) {
-        const cachedSession = AdminSessionManager.getAdminSession();
-        console.log('🔄 SECURITY: Found cached admin session, but MUST re-verify for RLS context:', cachedSession?.email);
-        
-        // NEVER skip this call - it sets admin context required for RLS policies
-        if (cachedSession?.email) {
-          const setContextForCached = async () => {
-            try {
-              console.log('🔐 SECURITY: Setting admin context for cached session (REQUIRED FOR RLS)');
-              const { data, error } = await supabase.functions.invoke('verify-admin-google', {
-                body: { email: cachedSession.email }
-              });
-              
-              if (!mounted) return;
-              
-              if (data?.isAdmin && !error) {
-                console.log('✅ SECURITY: Cached admin session verified and RLS context set');
-                setAdminContextSet(true);
-                setAllowed(true);
-              } else {
-                console.error('❌ SECURITY: Cached session invalid or context setting failed, clearing');
-                AdminSessionManager.clearAdminSession();
-                setAllowed(false);
-                navigate('/affiliate/admin-login', { replace: true });
-              }
-            } catch (contextError) {
-              console.error('🚨 SECURITY: Failed to set admin context for cached session:', contextError);
-              AdminSessionManager.clearAdminSession();
-              setAllowed(false);
-              navigate('/affiliate/admin-login', { replace: true });
-            }
-          };
-          
-          setContextForCached();
-          return;
-        }
-      }
-    }
-
-    // Set up auth state listener to react to login/logout only
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      
-      console.log('🔍 Auth state change:', { event, hasSession: !!session, allowed, adminContextSet });
-      
-      // Only handle explicit sign out, not token refreshes or other events
+
+      console.log('🔍 Auth state change:', event);
+
       if (event === 'SIGNED_OUT') {
-        console.log('🚪 User explicitly signed out, clearing admin session');
-        AdminSessionManager.clearAdminSession();
-        setAdminContextSet(false);
+        console.log('🚪 User signed out');
         setAllowed(false);
-        stopAdminHealthMonitoring();
         navigate('/affiliate/admin-login', { replace: true });
-      } else if (event === 'SIGNED_IN' && session && !adminContextSet) {
-        // Only re-check on new sign-in when we don't have admin context set
-        console.log('✅ New sign-in detected, verifying admin status');
-        setTimeout(() => {
-          check();
-        }, 100);
+      } else if (event === 'SIGNED_IN' && session) {
+        console.log('✅ User signed in, checking admin access');
+        checkAdminAccess();
       }
-      // Ignore TOKEN_REFRESHED and other events to prevent auth loops
     });
 
-    // Initial check when component mounts
-    if (allowed === null) {
-      check();
-    }
+    // Initial check
+    checkAdminAccess();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, toast]); // Removed allowed and adminContextSet from dependencies to prevent loops
+  }, [navigate, toast]);
 
-  if (allowed === null || !adminContextSet) {
+  // Show loading while checking
+  if (allowed === null) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
@@ -194,7 +96,10 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
     );
   }
 
+  // If not allowed, don't render anything (redirect will happen)
   if (!allowed) return null;
+
+  // If allowed, render the admin content
   return <>{children}</>;
 };
 
