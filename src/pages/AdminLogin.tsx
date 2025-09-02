@@ -121,14 +121,9 @@ export default function AdminLogin() {
         return;
       }
 
-      // Password login successful
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${data.admin?.name || 'Admin'}!`,
-      });
-      
-      // Immediate redirect without delay
-      navigate('/admin', { replace: true });
+      // Password login successful - force window location change
+      console.log('✅ Admin login successful, redirecting to /admin');
+      window.location.href = '/admin';
     } catch (error: any) {
       toast({
         title: "Authentication Error", 
