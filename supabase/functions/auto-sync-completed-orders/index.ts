@@ -93,11 +93,12 @@ async function syncCompletedOrdersToSheet(apiKey: string, orders: any[]) {
   // Convert orders to rows matching user's headers:
   // Date Order Placed, First Name, Last Name, Email, Phone, Order #, Order Total ($), Delivery Date, Delivery Time, Delivery Address
   const newRows = orders.map(order => {
-    // Parse customer name into first/last if available
-    const customerName = order.customer_name || '';
-    const nameParts = customerName.split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // We need to get customer info from customer_id lookup or session_id
+    // For now, we'll extract what we can from available data
+    const firstName = 'Customer'; // Will need customer lookup
+    const lastName = order.customer_id ? `ID: ${order.customer_id.substring(0, 8)}` : 'Guest';
+    const email = order.session_id || 'guest@example.com'; // Placeholder
+    const phone = ''; // Not available in current structure
     
     // Parse delivery address
     let deliveryAddressText = '';
@@ -114,8 +115,8 @@ async function syncCompletedOrdersToSheet(apiKey: string, orders: any[]) {
       new Date(order.created_at).toLocaleDateString(), // Date Order Placed
       firstName, // First Name
       lastName, // Last Name
-      order.customer_email || '', // Email
-      order.customer_phone || '', // Phone
+      email, // Email
+      phone, // Phone
       order.order_number || '', // Order #
       `$${(order.total_amount || 0).toFixed(2)}`, // Order Total ($)
       order.delivery_date || '', // Delivery Date
