@@ -484,32 +484,52 @@ export const CombinedSearchTabs = ({
 
         {/* Bottom Row - Search/Cart/Checkout Actions (Always visible) */}
         <div className="container mx-auto px-4 py-2 bg-background border-b" data-mobile-search-handler>
-          <div className="flex items-center justify-center gap-2">
+          <div className={`flex items-center justify-center gap-2 transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'animate-scale-in' : ''}`}>
             {/* Search Section - Expands when active */}
             {showSearch && (
-              <div className={`flex items-center transition-all duration-300 ${isSearchExpanded || isSearchActive ? 'flex-1 mr-2' : 'flex-shrink-0'}`}>
+              <div className={`flex items-center transition-all duration-300 ease-in-out ${
+                isSearchExpanded || isSearchActive 
+                  ? 'flex-1 mr-0' 
+                  : 'flex-shrink-0'
+              }`}>
                 {isSearchExpanded || isSearchActive ? (
-                  /* Expanded Search Bar - Full width */
-                  <div className="flex items-center w-full">
+                  /* Expanded Search Bar - Full width with smooth animation */
+                  <div className="flex items-center w-full animate-fade-in">
                     <div className="relative flex-1">
-                      <AdvancedSearchBar
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        ref={searchInputRef}
+                        type="search"
                         value={searchQuery}
-                        onChange={(newValue) => {
-                          onSearchChange(newValue);
-                          // Instant search - trigger immediately as user types
-                          if (newValue.trim()) {
-                            setTimeout(() => onSearchSubmit(), 100);
+                        onChange={(e) => {
+                          onSearchChange(e.target.value);
+                          // Real-time search as user types
+                          if (e.target.value.trim()) {
+                            setTimeout(() => onSearchSubmit(), 200);
                           }
                         }}
-                        onSubmit={onSearchSubmit}
+                        onBlur={handleSearchBlur}
                         placeholder="Search products..."
-                        className="w-full mobile-search-input"
-                        allProducts={allProducts}
+                        className="w-full pl-10 pr-4 h-10 text-base border-2 border-primary/30 focus:border-primary rounded-full bg-background/95 backdrop-blur-sm transition-all duration-200"
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck="false"
                         autoFocus={true}
+                        style={{ 
+                          fontSize: '16px', // Prevent iOS zoom
+                          WebkitAppearance: 'none',
+                          appearance: 'none'
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            onSearchSubmit();
+                          }
+                        }}
                       />
                       {isSearching && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                          <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                         </div>
                       )}
                     </div>
@@ -520,52 +540,64 @@ export const CombinedSearchTabs = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleSearchIconClick}
-                    className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
-                    title="Search"
+                    className="h-10 w-10 p-0 rounded-full border border-muted hover:border-primary transition-all duration-200 hover:scale-105"
+                    title="Search products"
                   >
-                    <Search className="w-4 h-4" />
+                    <Search className="w-5 h-5" />
                   </Button>
                 )}
               </div>
             )}
             
-            {/* Cart Button - Responsive: Shrinks to icon when search is expanded */}
+            {/* Cart Button - Slides right and shrinks when search is expanded */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className={`flex items-center justify-center border hover:bg-muted transition-all duration-300 relative ${
-                (isSearchExpanded || isSearchActive) ? 'h-9 w-9 p-0' : 'h-9 px-3 gap-1.5'
+              className={`flex items-center justify-center border hover:bg-muted transition-all duration-300 ease-in-out relative ${
+                (isSearchExpanded || isSearchActive) 
+                  ? 'h-10 w-10 p-0 ml-2 rounded-full transform translate-x-1' 
+                  : 'h-10 px-4 gap-2 rounded-full'
               }`}
               title={`Cart ${cartItemCount > 0 ? `(${cartItemCount} items)` : ''}`}
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-5 h-5" />
               {/* Show count as badge when expanded, inline when collapsed */}
               {(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 text-xs bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-bold animate-scale-in">
                   {cartItemCount}
                 </span>
               )}
               {!(isSearchExpanded || isSearchActive) && cartItemCount > 0 && (
-                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-semibold">
+                <span className="text-sm bg-primary text-primary-foreground rounded-full px-2 py-1 min-w-[1.5rem] h-6 flex items-center justify-center font-bold">
                   {cartItemCount}
                 </span>
               )}
+              {!(isSearchExpanded || isSearchActive) && (
+                <span className="text-sm font-medium">Cart</span>
+              )}
             </Button>
             
-            {/* Checkout Button - Responsive: Shrinks to icon when search is expanded */}
+            {/* Checkout Button - Slides right and shrinks when search is expanded */}
             <Button
               onClick={onCheckout}
-              className={`flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 ${
-                (isSearchExpanded || isSearchActive) ? 'h-9 w-9 p-0' : 'h-9 px-4 gap-1.5'
+              className={`flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 ease-in-out ${
+                (isSearchExpanded || isSearchActive) 
+                  ? 'h-10 w-10 p-0 ml-1 rounded-full transform translate-x-1' 
+                  : 'h-10 px-4 gap-2 rounded-full'
               }`}
               variant="default"
               disabled={cartItemCount === 0}
               title={`Checkout ${totalAmount > 0 ? `($${formatPrice(safePrice(totalAmount))})` : ''}`}
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-5 h-5" />
               {/* Show price inline when collapsed */}
               {!(isSearchExpanded || isSearchActive) && totalAmount > 0 && (
                 <span className="font-bold text-sm">${formatPrice(safePrice(totalAmount))}</span>
+              )}
+              {!(isSearchExpanded || isSearchActive) && (
+                <span className="text-sm font-medium">
+                  {totalAmount > 0 ? '' : 'Checkout'}
+                </span>
               )}
             </Button>
           </div>
