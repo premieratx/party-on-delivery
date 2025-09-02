@@ -14,11 +14,31 @@ import {
   AlertTriangle,
   CheckCircle,
   ExternalLink,
-  Link
+  Link,
+  GripVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 // CRITICAL: Always use UnifiedDeliveryAppCreator - NEVER UnifiedDeliveryAppEditor!
 import { UnifiedDeliveryAppCreator } from './UnifiedDeliveryAppCreator';
 
@@ -51,6 +71,7 @@ interface DeliveryApp {
   bg_video_url?: string;
   hero_config?: any;
   custom_post_checkout_config?: any;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -85,7 +106,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('sort_order', { ascending: true });
 
       if (error) throw error;
       setDeliveryApps(data || []);
@@ -96,6 +117,54 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
       setLoading(false);
     }
   }, []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = deliveryApps.findIndex((app) => app.id === active.id);
+    const newIndex = deliveryApps.findIndex((app) => app.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    const newDeliveryApps = arrayMove(deliveryApps, oldIndex, newIndex);
+    
+    // Update local state immediately for responsive UI
+    setDeliveryApps(newDeliveryApps);
+
+    // Update sort_order in database
+    try {
+      // Use individual updates instead of upsert to avoid schema conflicts
+      for (let i = 0; i < newDeliveryApps.length; i++) {
+        const app = newDeliveryApps[i];
+        const { error } = await supabase
+          .from('delivery_app_variations')
+          .update({ sort_order: i })
+          .eq('id', app.id);
+        
+        if (error) throw error;
+      }
+
+      toast.success('Tab order updated successfully');
+    } catch (error) {
+      console.error('Error updating tab order:', error);
+      toast.error('Failed to update tab order');
+      // Revert the local state on error
+      loadDeliveryApps();
+    }
+  };
 
   useEffect(() => {
     loadDeliveryApps();
@@ -245,6 +314,126 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     window.open(`/app/${app.app_slug}`, '_blank');
   };
 
+  // Sortable Item Component
+  const SortableDeliveryAppItem = ({ app }: { app: DeliveryApp }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: app.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <Card 
+        key={app.id} 
+        className="border" 
+        ref={setNodeRef} 
+        style={style}
+      >
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="flex items-start gap-3 flex-1">
+              {/* Drag Handle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 cursor-grab active:cursor-grabbing"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="font-semibold">{app.app_name}</h4>
+                  <Badge variant={app.is_active ? 'default' : 'secondary'}>
+                    {app.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                {app.description && (
+                  <p className="text-sm text-muted-foreground mb-1">Description: {app.description}</p>
+                )}
+                
+                {/* App URL with copy functionality */}
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
+                    {window.location.origin}/app/{app.app_slug}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyAppUrl(app)}
+                    className="h-6 w-6 p-0"
+                    title="Copy URL"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => openAppUrl(app)}
+                    className="h-6 w-6 p-0"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                </div>
+                
+                <div className="flex gap-4 text-xs text-muted-foreground">
+                  <span>Collections: {Array.isArray(app.collections_config) ? app.collections_config.length : 0}</span>
+                  <span>Created: {new Date(app.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleToggleActive(app)}
+                disabled={loading}
+              >
+                <Eye className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEdit(app)}
+                disabled={loading || showEditor}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDuplicate(app)}
+                disabled={loading}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleDelete(app)}
+                disabled={loading}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   const hasDeliveryApps = deliveryApps.length > 0;
 
   return (
@@ -320,91 +509,22 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
             </div>
           ) : (
             <ScrollArea className="h-[400px]">
-              <div className="space-y-4">
-                {deliveryApps.map((app) => (
-                  <Card key={app.id} className="border">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold">{app.app_name}</h4>
-                            <Badge variant={app.is_active ? 'default' : 'secondary'}>
-                              {app.is_active ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </div>
-                          {app.description && (
-                            <p className="text-sm text-muted-foreground mb-1">Description: {app.description}</p>
-                          )}
-                          
-                          {/* App URL with copy functionality */}
-                          <div className="flex items-center gap-2 mb-2">
-                            <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
-                              {window.location.origin}/app/{app.app_slug}
-                            </p>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => copyAppUrl(app)}
-                              className="h-6 w-6 p-0"
-                              title="Copy URL"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openAppUrl(app)}
-                              className="h-6 w-6 p-0"
-                              title="Open in new tab"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
-                          <div className="flex gap-4 text-xs text-muted-foreground">
-                            <span>Collections: {Array.isArray(app.collections_config) ? app.collections_config.length : 0}</span>
-                            <span>Created: {new Date(app.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleToggleActive(app)}
-                            disabled={loading}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(app)}
-                            disabled={loading || showEditor}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDuplicate(app)}
-                            disabled={loading}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(app)}
-                            disabled={loading}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={deliveryApps.map((app) => app.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-4">
+                    {deliveryApps.map((app) => (
+                      <SortableDeliveryAppItem key={app.id} app={app} />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </ScrollArea>
           )}
         </CardContent>

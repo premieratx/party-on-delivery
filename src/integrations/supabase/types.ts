@@ -1826,6 +1826,7 @@ export type Database = {
           main_app_config: Json | null
           post_checkout_config: Json | null
           short_path: string | null
+          sort_order: number | null
           start_screen_config: Json | null
           styles: Json | null
           theme: string | null
@@ -1848,6 +1849,7 @@ export type Database = {
           main_app_config?: Json | null
           post_checkout_config?: Json | null
           short_path?: string | null
+          sort_order?: number | null
           start_screen_config?: Json | null
           styles?: Json | null
           theme?: string | null
@@ -1870,6 +1872,7 @@ export type Database = {
           main_app_config?: Json | null
           post_checkout_config?: Json | null
           short_path?: string | null
+          sort_order?: number | null
           start_screen_config?: Json | null
           styles?: Json | null
           theme?: string | null
