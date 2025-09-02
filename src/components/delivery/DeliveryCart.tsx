@@ -98,17 +98,17 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - Full viewport coverage */}
       <div 
-        className="fixed inset-0 bg-black/50 z-50 animate-fade-in"
+        className="fixed inset-0 bg-black/50 z-[9998] animate-fade-in"
         onClick={onClose}
       />
       
-      {/* Cart Sidebar */}
-       <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col overflow-hidden isolate">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
+      {/* Cart Sidebar - Absolutely positioned to viewport */}
+       <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-background shadow-floating z-[9999] animate-slide-in-right flex flex-col overflow-hidden">
+        <div className="flex flex-col h-full min-h-screen">
+          {/* Fixed Header - Always visible at top */}
+          <div className="flex items-center justify-between p-4 border-b bg-background flex-shrink-0">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <ShoppingCart className="w-5 h-5" />
               Your Cart ({items.length})
@@ -130,18 +130,14 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
             </div>
           </div>
 
-          {/* Cart Items */}
+          {/* Scrollable Content Area - Between header and footer */}
           <div 
             ref={scrollContainerRef} 
-            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y relative"
+            className="flex-1 overflow-y-auto overscroll-contain touch-pan-y min-h-0"
             style={{ 
               /* Complete scroll isolation from main page */
               WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain',
-              position: 'relative',
-              zIndex: 1,
-              /* Ensure this container creates its own scroll context */
-              willChange: 'scroll-position'
+              overscrollBehavior: 'contain'
             }}
           >
             <div className="p-4 space-y-4">
@@ -257,9 +253,9 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
             )}
           </div>
 
-          {/* Fixed Bottom Checkout Bar */}
+          {/* Fixed Bottom Checkout Bar - Always visible at bottom */}
           {items.length > 0 && (
-            <div className="border-t p-3 bg-background space-y-2">
+            <div className="border-t p-3 bg-background space-y-2 flex-shrink-0">
               <Button 
                 variant="delivery" 
                 size="lg" 
