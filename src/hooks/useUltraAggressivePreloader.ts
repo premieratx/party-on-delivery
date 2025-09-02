@@ -167,14 +167,14 @@ export const useUltraAggressivePreloader = (options: UltraAggressivePreloaderOpt
     }
   }, [preloadCollections, preloadCollectionImages, preloadSearchSystems]);
 
-  // Auto-start preloading when collections are provided
-  useEffect(() => {
-    if (deliveryAppCollections.length > 0 && !preloadingRef.current) {
-      // Small delay to not interfere with initial app rendering
-      const timer = setTimeout(runUltraAggressivePreload, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [deliveryAppCollections, runUltraAggressivePreload]);
+  // DISABLED: Auto-start to prevent system overload
+  // Only runs when manually triggered via forcePreload()
+  // useEffect(() => {
+  //   if (deliveryAppCollections.length > 0 && !preloadingRef.current) {
+  //     const timer = setTimeout(runUltraAggressivePreload, 100);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [deliveryAppCollections, runUltraAggressivePreload]);
 
   // Manual trigger for additional preloading
   const forcePreload = useCallback(() => {

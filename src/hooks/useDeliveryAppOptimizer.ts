@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useCallback } from 'react';
-import { useUltraAggressivePreloader } from './useUltraAggressivePreloader';
-import { useInstantProductLoader } from './useInstantProductLoader';
+import { useEffect, useMemo, useCallback, useState } from 'react';
+import { useProductPreloader } from './useProductPreloader';
 
 interface DeliveryAppConfig {
   collections_config?: Array<{
@@ -32,17 +31,16 @@ export const useDeliveryAppOptimizer = (appConfig: DeliveryAppConfig) => {
       .map(collection => collection.handle);
   }, [appConfig]);
 
-  // Ultra-aggressive preloader for instant tab switching
-  const { status, isReady, forcePreload, getCollectionFromCache } = useUltraAggressivePreloader({
-    deliveryAppCollections: collectionHandles,
-    enableImagePreloading: true,
-    enableSearchPreloading: true
-  });
+  // SIMPLIFIED: Use existing product preloader to prevent conflicts
+  const { preloadMultipleCollections, getFromCache } = useProductPreloader();
+  
+  // Simplified status tracking without aggressive preloading
+  const [optimizerReady, setOptimizerReady] = useState(false);
 
   // Get optimized collection data with instant loading
   const getOptimizedCollectionData = useCallback((handle: string): OptimizedCollectionData => {
     const startTime = performance.now();
-    const products = getCollectionFromCache(handle) || [];
+    const products = getFromCache(handle) || [];
     const loadTime = performance.now() - startTime;
     
     return {
@@ -51,7 +49,7 @@ export const useDeliveryAppOptimizer = (appConfig: DeliveryAppConfig) => {
       isLoaded: products.length > 0,
       loadTime
     };
-  }, [getCollectionFromCache]);
+  }, [getFromCache]);
 
   // Get all collections data instantly
   const getAllCollectionsData = useCallback(() => {
@@ -70,20 +68,20 @@ export const useDeliveryAppOptimizer = (appConfig: DeliveryAppConfig) => {
       averageLoadTime,
       allCollectionsReady: allLoaded,
       under200ms: averageLoadTime < 200,
-      preloaderStatus: status
+      preloaderStatus: 'simplified'
     };
-  }, [getAllCollectionsData, collectionHandles.length, status]);
+  }, [getAllCollectionsData, collectionHandles.length]);
 
   // Log performance stats when ready
   useEffect(() => {
-    if (isReady) {
+    if (optimizerReady) {
       const stats = getPerformanceStats();
       console.log('📊 DELIVERY APP OPTIMIZER: Performance Stats', {
         ...stats,
         targetAchieved: stats.under200ms ? '✅ UNDER 200ms' : '❌ OVER 200ms'
       });
     }
-  }, [isReady, getPerformanceStats]);
+  }, [optimizerReady, getPerformanceStats]);
 
   return {
     // Main functions for components to use
@@ -91,12 +89,12 @@ export const useDeliveryAppOptimizer = (appConfig: DeliveryAppConfig) => {
     getAllCollectionsData,
     
     // Status and performance
-    isOptimized: isReady,
-    optimizerStatus: status,
+    isOptimized: optimizerReady,
+    optimizerStatus: { isReady: optimizerReady },
     performanceStats: getPerformanceStats(),
     
     // Manual controls
-    forceOptimize: forcePreload,
+    forceOptimize: () => setOptimizerReady(true),
     
     // Collection helpers
     isCollectionReady: (handle: string) => {

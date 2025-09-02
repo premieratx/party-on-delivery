@@ -763,14 +763,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         />
       )}
 
-      {/* ADDITIVE: Performance Monitor for debugging/admin */}
+      {/* SIMPLIFIED: Performance Monitor with basic metrics only */}
       <UltraAggressivePerformanceMonitor 
         metrics={{
-          collectionsLoaded: deliveryOptimizer?.optimizerStatus?.collectionsLoaded || 0,
-          totalCollections: deliveryOptimizer?.optimizerStatus?.totalCollections || 0,
+          collectionsLoaded: deliveryOptimizer?.performanceStats?.loadedCollections || 0,
+          totalCollections: deliveryOptimizer?.performanceStats?.totalCollections || 0,
           averageLoadTime: deliveryOptimizer?.performanceStats?.averageLoadTime || 0,
-          imagesPreloaded: deliveryOptimizer?.optimizerStatus?.imagesPreloaded || 0,
-          searchCacheWarmed: deliveryOptimizer?.optimizerStatus?.searchWarmed || false,
+          imagesPreloaded: 0,
+          searchCacheWarmed: true,
           targetAchieved: deliveryOptimizer?.performanceStats?.under200ms || false,
           isOptimized: deliveryOptimizer?.isOptimized || false
         }}
