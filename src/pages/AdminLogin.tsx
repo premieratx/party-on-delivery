@@ -105,13 +105,29 @@ export default function AdminLogin() {
     }
     
     setIsLoading(true);
+    console.log('🔐 Starting admin login process...');
     
     try {
+      console.log('📡 Calling admin-login edge function...');
       const { data, error } = await supabase.functions.invoke('admin-login', {
         body: { email, password }
       });
 
-      if (error || !data?.success) {
+      console.log('📡 Edge function response:', { data, error });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        toast({
+          title: "Authentication Error",
+          description: error.message || "Failed to authenticate.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!data?.success) {
+        console.log('❌ Login failed:', data?.message);
         toast({
           title: "Authentication Failed",
           description: data?.message || "Invalid email or password.",
@@ -121,10 +137,17 @@ export default function AdminLogin() {
         return;
       }
 
-      // Password login successful - force window location change
-      console.log('✅ Admin login successful, redirecting to /admin');
+      // Success - redirect immediately
+      console.log('✅ Admin login successful, redirecting...');
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${data.admin?.name || 'Admin'}!`,
+      });
+      
+      // Force immediate redirect to admin dashboard
       window.location.href = '/admin';
     } catch (error: any) {
+      console.error('💥 Login error:', error);
       toast({
         title: "Authentication Error", 
         description: `Login failed: ${error.message}`,

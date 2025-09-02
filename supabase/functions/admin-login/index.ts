@@ -14,7 +14,10 @@ serve(async (req) => {
 
   try {
     const { email, password } = await req.json();
+    console.log(`🔐 Admin login attempt for: ${email}`);
+    
     if (!email || !password) {
+      console.log(`❌ Missing credentials`);
       return new Response(JSON.stringify({ success: false, message: "Email and password are required" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -27,18 +30,29 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Only use a vetted RPC that verifies the password server-side
+    // Verify admin password using the RPC function
+    console.log(`🔍 Verifying admin password for: ${email}`);
     const { data: isValid, error: verifyError } = await supabase
       .rpc('verify_admin_password', { input_email: email, input_password: password });
 
-    if (verifyError || !isValid) {
+    if (verifyError) {
+      console.log(`❌ Password verification error:`, verifyError);
+      return new Response(JSON.stringify({ success: false, message: "Authentication error" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
+    if (!isValid) {
+      console.log(`❌ Invalid credentials for: ${email}`);
       return new Response(JSON.stringify({ success: false, message: "Invalid email or password" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
     }
 
-    // Fetch minimal admin details
+    // Fetch admin details
+    console.log(`✅ Password verified, fetching admin details`);
     const { data: admin, error: detailsError } = await supabase
       .from('admin_users')
       .select('id, email, name')
@@ -46,20 +60,34 @@ serve(async (req) => {
       .single();
 
     if (detailsError || !admin) {
+      console.log(`❌ Failed to fetch admin details:`, detailsError);
       return new Response(JSON.stringify({ success: false, message: "Authentication error" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
     }
 
-    return new Response(JSON.stringify({ success: true, admin }), {
+    // Set admin context for RLS policies
+    await supabase.rpc('set_admin_context', { admin_email: email });
+    
+    console.log(`🎉 Admin login successful for: ${email}`);
+    return new Response(JSON.stringify({ 
+      success: true, 
+      admin,
+      message: "Login successful"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (e) {
-    return new Response(JSON.stringify({ success: false, message: "Authentication failed" }), {
+    console.error(`💥 Admin login error:`, e);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      message: "Authentication failed",
+      error: e.message 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 401,
+      status: 500,
     });
   }
 });
