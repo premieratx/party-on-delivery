@@ -15,6 +15,9 @@ import {
   AlertCircle 
 } from 'lucide-react';
 
+// The specific spreadsheet ID for automation
+const SPREADSHEET_ID = '1P9Us5B6NMLE1I-e8XZWa9ZzgN5OAO7S9CI9DhnEtl5U';
+
 interface SyncResult {
   success: boolean;
   synced?: {
