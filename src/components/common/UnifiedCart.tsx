@@ -291,7 +291,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         
         {/* Sticky Footer - Checkout Button always visible at bottom */}
         {cartItems.length > 0 && (
-          <div className="border-t bg-background p-4 flex-shrink-0 sticky bottom-0 z-20">
+          <div className="border-t bg-background p-4 flex-shrink-0 sticky bottom-0 z-20 mb-safe-area-inset-bottom" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>
             <Button 
               className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
               size="lg" 

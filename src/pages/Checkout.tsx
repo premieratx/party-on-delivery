@@ -18,6 +18,11 @@ export const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, updateQuantity } = useUnifiedCart();
   
+  // Scroll to top when checkout page loads
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+  
   console.log('🔄 Checkout page rendering, cart items:', cartItems.length);
   
   const [deliveryInfo, setDeliveryInfo] = useState<LocalDeliveryInfo>({
