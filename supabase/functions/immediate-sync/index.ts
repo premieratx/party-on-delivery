@@ -22,8 +22,70 @@ Deno.serve(async (req) => {
     const shopifyDomain = Deno.env.get('SHOPIFY_STORE_DOMAIN') || 'premier-concierge.myshopify.com'
     const shopifyToken = Deno.env.get('SHOPIFY_ACCESS_TOKEN')
 
+    console.log('🔑 Shopify domain:', shopifyDomain)
+    console.log('🔑 Shopify token exists:', !!shopifyToken)
+
     if (!shopifyToken) {
-      throw new Error('Missing Shopify access token')
+      console.log('❌ Missing Shopify access token, trying to use fallback sync...')
+      
+      // Try to call the fetch-shopify-products function instead
+      try {
+        const { data: fetchResult, error: fetchError } = await supabase.functions.invoke('fetch-shopify-products')
+        
+        if (fetchError) {
+          console.error('❌ Fetch products failed:', fetchError)
+          throw fetchError
+        }
+        
+        if (fetchResult?.products && fetchResult.products.length > 0) {
+          console.log(`✅ Got ${fetchResult.products.length} products from fetch-shopify-products`)
+          
+          // Clear and insert products
+          console.log('🧹 Clearing existing product cache...')
+          await supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+          
+          // Insert products in batches
+          console.log('💾 Inserting products into cache...')
+          const batchSize = 100
+          let insertedCount = 0
+          
+          for (let i = 0; i < fetchResult.products.length; i += batchSize) {
+            const batch = fetchResult.products.slice(i, i + batchSize)
+            
+            const { error } = await supabase
+              .from('shopify_products_cache')
+              .insert(batch.map(product => ({
+                id: product.id,
+                title: product.title,
+                handle: product.handle,
+                vendor: product.vendor,
+                product_type: product.productType || product.product_type,
+                data: product
+              })))
+            
+            if (error) {
+              console.error(`❌ Batch insert error:`, error)
+            } else {
+              insertedCount += batch.length
+              console.log(`✅ Inserted batch: ${insertedCount}/${fetchResult.products.length}`)
+            }
+          }
+          
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              products_synced: insertedCount,
+              products_count: fetchResult.products.length,
+              message: `Successfully synced ${insertedCount} products via fallback` 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback sync also failed:', fallbackError)
+      }
+      
+      throw new Error('Missing Shopify access token and fallback failed')
     }
 
     console.log('🔄 Fetching products directly from Shopify...')
