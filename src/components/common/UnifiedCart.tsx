@@ -82,16 +82,19 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
   if (!isOpen) return null;
 
   return (
-    <RobustCartErrorBoundary>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 z-50 animate-fade-in"
-        onClick={onClose}
-      />
-      
-      {/* Cart Sidebar - Always positioned from viewport top, independent of page scroll */}
-      <div className="fixed right-0 top-0 h-screen max-h-screen w-full max-w-md bg-background shadow-floating z-[9999] animate-slide-in-right flex flex-col overflow-hidden" 
-           style={{ position: 'fixed', top: 0, right: 0 }}>
+    <div className="fixed inset-0 z-[9999]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+      <RobustCartErrorBoundary>
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/50 animate-fade-in"
+          onClick={onClose}
+        />
+        
+        {/* Cart Sidebar - Always positioned from viewport top, independent of page scroll */}
+        <div 
+          className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-background shadow-floating animate-slide-in-right flex flex-col overflow-hidden" 
+          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, height: '100vh', maxWidth: '28rem' }}
+        >
         
         {/* Sticky Header - Always at top of viewport */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background flex-shrink-0 sticky top-0 z-20">
@@ -280,6 +283,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         )}
         
       </div>
-    </RobustCartErrorBoundary>
+      </RobustCartErrorBoundary>
+    </div>
   );
 };
