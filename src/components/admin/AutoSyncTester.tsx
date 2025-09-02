@@ -113,8 +113,8 @@ export const AutoSyncTester: React.FC = () => {
         throw new Error('Not authenticated');
       }
 
-      // Sync existing sample data
-      const { data, error } = await supabase.functions.invoke('sync-existing-data-to-sheets', {
+      // Sync one real order from each category
+      const { data, error } = await supabase.functions.invoke('sync-real-orders-test', {
         body: {},
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -122,8 +122,8 @@ export const AutoSyncTester: React.FC = () => {
       if (error) throw error;
 
       toast({
-        title: "Sample Data Synced",
-        description: `Synced ${data.synced.completed} completed orders and ${data.synced.abandoned} abandoned orders to Google Sheets`,
+        title: "Real Orders Synced",
+        description: `Synced ${data.synced.completed} completed order and ${data.synced.abandoned} abandoned order to Google Sheets`,
       });
     } catch (error: any) {
       toast({
@@ -168,7 +168,7 @@ export const AutoSyncTester: React.FC = () => {
             className="flex items-center gap-2"
           >
             <CheckCircle2 className="h-4 w-4" />
-            Sync 5 Sample Orders
+            Sync 1 Real Order Each
           </Button>
         </div>
 
