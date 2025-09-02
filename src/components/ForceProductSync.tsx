@@ -12,8 +12,9 @@ export const ForceProductSync = () => {
     console.log('🔄 Force sync initiated...');
     
     try {
-      const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
-        body: { forceRefresh: true }
+      // Use emergency sync function instead of unified sync to avoid rate limiting
+      const { data, error } = await supabase.functions.invoke('emergency-product-sync', {
+        body: { forceRefresh: true, clearCache: true }
       });
 
       if (error) {
@@ -23,12 +24,17 @@ export const ForceProductSync = () => {
       }
 
       console.log('✅ Force sync completed:', data);
-      toast.success(`Products synced successfully! ${data.products_synced || 0} products loaded.`);
       
-      // Reload page to see fresh data
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      if (data.success) {
+        toast.success(`Products synced successfully! ${data.products_synced || 0} products loaded.`);
+        
+        // Reload page to see fresh data
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        toast.warning(data.error || 'Sync completed with warnings');
+      }
 
     } catch (error) {
       console.error('💥 Sync error:', error);

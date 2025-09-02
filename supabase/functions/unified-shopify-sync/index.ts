@@ -176,7 +176,13 @@ async function fetchAllProductsWithCollections(): Promise<ShopifyProduct[]> {
   const maxPages = 20 // Safety limit
 
   while (hasNextPage && pageCount < maxPages) {
-    const variables = { first: 100, ...(cursor && { after: cursor }) }
+    const variables = { first: 50, ...(cursor && { after: cursor }) } // Reduce batch size
+    
+    // Add delay between requests to avoid rate limiting
+    if (pageCount > 0) {
+      console.log('⏳ Waiting 2 seconds to avoid rate limits...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    }
     
     const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/graphql.json`, {
       method: 'POST',
@@ -194,6 +200,18 @@ async function fetchAllProductsWithCollections(): Promise<ShopifyProduct[]> {
     const data = await response.json()
     
     if (data.errors) {
+      // Check for throttling specifically
+      const isThrottled = data.errors.some((error: any) => 
+        error.extensions?.code === 'THROTTLED'
+      )
+      
+      if (isThrottled) {
+        console.log('⚠️ Rate limited by Shopify. Waiting 10 seconds...')
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        // Retry the same request
+        continue
+      }
+      
       console.error('GraphQL errors:', data.errors)
       throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`)
     }
@@ -258,10 +276,17 @@ async function buildAllCollections(products: ShopifyProduct[]) {
   
   // Fetch proper ordering from Shopify collections with sortKey: COLLECTION_DEFAULT
   const collectionsWithOrder = []
+  let collectionIndex = 0
   
   for (const [handle, collectionData] of collectionsMap) {
     try {
-      console.log(`🔄 Fetching ordered products for collection: ${handle}`)
+      console.log(`🔄 Fetching ordered products for collection: ${handle} (${collectionIndex + 1}/${collectionsMap.size})`)
+      
+      // Add delay between collection fetches to avoid rate limiting
+      if (collectionIndex > 0) {
+        console.log('⏳ Waiting 1.5 seconds between collections...')
+        await new Promise(resolve => setTimeout(resolve, 1500))
+      }
       
       const orderQuery = `
         query getCollectionByHandle($handle: String!) {
@@ -309,8 +334,26 @@ async function buildAllCollections(products: ShopifyProduct[]) {
         }),
       })
       
+      collectionIndex++
+      
       if (orderResponse.ok) {
         const orderData = await orderResponse.json()
+        
+        // Check for throttling in collection response
+        if (orderData.errors) {
+          const isThrottled = orderData.errors.some((error: any) => 
+            error.extensions?.code === 'THROTTLED'
+          )
+          
+          if (isThrottled) {
+            console.log(`⚠️ Rate limited on collection ${handle}. Waiting 10 seconds...`)
+            await new Promise(resolve => setTimeout(resolve, 10000))
+            // Skip this collection for now to avoid further throttling
+            console.log(`⏭️ Skipping collection ${handle} due to rate limiting`)
+            continue
+          }
+        }
+        
         const orderedCollection = orderData.data?.collectionByHandle
         
         if (orderedCollection) {
