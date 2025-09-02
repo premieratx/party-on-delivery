@@ -18,22 +18,16 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // First, trigger the unified shopify sync
-    console.log('🔄 Calling unified-shopify-sync with force refresh...')
+    // Skip unified sync - go straight to direct product fetch
+    console.log('🔄 Calling fetch-shopify-products directly...')
     
-    const { data: syncData, error: syncError } = await supabase.functions.invoke('unified-shopify-sync', {
-      body: { 
-        forceRefresh: true,
-        clearCache: true,
-        emergencySync: true 
-      }
-    })
+    const { data: syncData, error: syncError } = await supabase.functions.invoke('fetch-shopify-products')
     
     if (syncError) {
-      console.error('❌ Unified sync failed:', syncError)
-      // Continue anyway - try direct approach
+      console.error('❌ Direct fetch failed:', syncError)
+      throw syncError
     } else {
-      console.log('✅ Unified sync completed:', syncData)
+      console.log('✅ Direct fetch completed:', syncData)
     }
 
     // Check if we now have products
@@ -50,15 +44,15 @@ Deno.serve(async (req) => {
     console.log(`📊 Products in cache after sync: ${productCount}`)
     
     if (productCount === 0) {
-      console.log('🔄 No products found, trying alternative sync method...')
+      console.log('🔄 No products found, trying bulk sync...')
       
-      // Try calling fetch-shopify-products directly
-      const { data: fetchData, error: fetchError } = await supabase.functions.invoke('fetch-shopify-products')
+      // Try calling bulk-product-sync directly
+      const { data: fetchData, error: fetchError } = await supabase.functions.invoke('bulk-product-sync')
       
       if (fetchError) {
-        console.error('❌ Direct fetch failed:', fetchError)
+        console.error('❌ Bulk sync failed:', fetchError)
       } else {
-        console.log('✅ Direct fetch completed:', fetchData)
+        console.log('✅ Bulk sync completed:', fetchData)
       }
     }
 
