@@ -3,7 +3,7 @@ import { Search, X, Loader2, Zap } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ultraFastSearch } from '@/utils/ultraFastSearch';
+import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,9 +67,8 @@ export const UltraFastMobileSearch: React.FC<UltraFastMobileSearchProps> = ({
     try {
       console.log(`🚀 ULTRA-FAST MOBILE SEARCH: "${searchQuery}"`);
       
-      const searchResult = await ultraFastSearch.searchProducts(searchQuery, {
-        limit: isMobile ? 2000 : 2000, // Show all products in search
-        useCache: true
+      const searchResult = await optimizedUltraFastSearch.searchProductsInstant(searchQuery, {
+        limit: isMobile ? 2000 : 2000 // Show all products in search
       });
 
       const endTime = performance.now();
@@ -82,7 +81,7 @@ export const UltraFastMobileSearch: React.FC<UltraFastMobileSearchProps> = ({
       setSearchTime(`${duration.toFixed(0)}ms`);
       
       // Show performance toast for very fast searches
-      if (duration < 100 && searchResult.fromCache) {
+      if (duration < 100 && searchResult.fromLocalCache) {
         toast({
           title: `⚡ Ultra-fast search: ${duration.toFixed(0)}ms`,
           description: `Found ${searchResult.products.length} products instantly`,

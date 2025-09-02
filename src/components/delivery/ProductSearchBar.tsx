@@ -6,7 +6,6 @@ import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
-import { ultraFastSearch } from '@/utils/ultraFastSearch';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -91,11 +90,8 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     try {
       console.log('🔍 ProductSearchBar: ULTRA-AGGRESSIVE cache warming...');
       
-      // ADDITIVE: Pre-warm both search systems in parallel for maximum speed
-      await Promise.all([
-        optimizedUltraFastSearch.searchProductsInstant('', { limit: 2000 }),
-        ultraFastSearch.warmUpCache()
-      ]);
+      // SIMPLIFIED: Use only optimized search system
+      await optimizedUltraFastSearch.searchProductsInstant('', { limit: 2000 });
       
       console.log('✅ ULTRA-AGGRESSIVE: Search cache ready for sub-0.2s results');
       setAllProducts([]); // Not needed since search is handled by optimized cache

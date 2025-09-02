@@ -21,7 +21,7 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
-import { ultraFastSearch } from '@/utils/ultraFastSearch';
+// Removed ultraFastSearch - using optimizedUltraFastSearch only
 import { useImagePreloader } from '@/hooks/useImagePreloader';
 import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
 import { useRealTimeSearch } from '@/hooks/useRealTimeSearch';
@@ -30,7 +30,7 @@ import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 import { syncCollectionOrders } from '@/utils/syncCollectionOrders';
 import { useDeliveryAppOptimizer } from '@/hooks/useDeliveryAppOptimizer';
-import { UltraAggressivePerformanceMonitor } from '@/components/performance/UltraAggressivePerformanceMonitor';
+// Removed UltraAggressivePerformanceMonitor - using simplified monitoring
 
 interface ProductCategoriesProps {
   appName?: string;
@@ -197,7 +197,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // ENHANCED: Aggressive preloading + existing systems (additive only)
   useEffect(() => {
     // Keep existing warmup
-    ultraFastSearch.warmUpCache().catch(console.error);
+    // Remove ultraFastSearch warmup - using optimizedUltraFastSearch only
     
     const collectionHandles = tabs.map(tab => tab.handle);
     console.log('🚀 Preloading all collections:', collectionHandles);
@@ -763,18 +763,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         />
       )}
 
-      {/* SIMPLIFIED: Performance Monitor with basic metrics only */}
-      <UltraAggressivePerformanceMonitor 
-        metrics={{
-          collectionsLoaded: deliveryOptimizer?.performanceStats?.loadedCollections || 0,
-          totalCollections: deliveryOptimizer?.performanceStats?.totalCollections || 0,
-          averageLoadTime: deliveryOptimizer?.performanceStats?.averageLoadTime || 0,
-          imagesPreloaded: 0,
-          searchCacheWarmed: true,
-          targetAchieved: deliveryOptimizer?.performanceStats?.under200ms || false,
-          isOptimized: deliveryOptimizer?.isOptimized || false
-        }}
-      />
+      {/* SIMPLIFIED: Basic performance monitoring removed to prevent system overload */}
     </div>
   );
 };

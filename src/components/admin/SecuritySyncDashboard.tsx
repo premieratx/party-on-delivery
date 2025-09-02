@@ -22,8 +22,7 @@ import {
 // Import existing components
 import { TriggerShopifySync } from '@/components/admin/TriggerShopifySync';
 import { SystemStatus } from '@/components/SystemStatus';
-import { ManualSync } from '@/components/ManualSync';
-import { DirectBulkSync } from '@/components/DirectBulkSync';
+// Removed ManualSync and DirectBulkSync - deprecated systems
 
 type SecurityStatus = 'secure' | 'warning' | 'critical';
 
@@ -271,8 +270,16 @@ export const SecuritySyncDashboard: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ManualSync />
-                <DirectBulkSync />
+                {/* Removed deprecated sync tools - using core sync only */}
+                <Button 
+                  onClick={runBulkSync}
+                  disabled={loading}
+                  variant="outline"
+                  className="w-full gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Core Product Sync
+                </Button>
               </CardContent>
             </Card>
           </div>

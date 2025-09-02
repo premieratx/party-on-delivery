@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ultraFastSearch } from '@/utils/ultraFastSearch';
+import { optimizedUltraFastSearch } from '@/utils/optimizedUltraFastSearch';
 
 interface SearchSuggestion {
   text: string;
