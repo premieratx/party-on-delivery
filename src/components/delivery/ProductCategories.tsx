@@ -29,6 +29,8 @@ import { useImmediateKeyboardHiding } from '@/hooks/useImmediateKeyboardHiding';
 import { useUnifiedScrollBehavior } from '@/hooks/useUnifiedScrollBehavior';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 import { syncCollectionOrders } from '@/utils/syncCollectionOrders';
+import { useDeliveryAppOptimizer } from '@/hooks/useDeliveryAppOptimizer';
+import { UltraAggressivePerformanceMonitor } from '@/components/performance/UltraAggressivePerformanceMonitor';
 
 interface ProductCategoriesProps {
   appName?: string;
@@ -104,6 +106,35 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
   const { preloadMultipleCollections } = useProductPreloader();
   const { triggerCartFeedback } = useHapticFeedback();
+  
+  
+  // ONLY use Shopify collections from delivery app config - NO defaults
+  const tabs = useMemo(() => {
+    if (collectionsConfig?.tabs && collectionsConfig.tabs.length > 0) {
+      console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
+      return collectionsConfig.tabs.map((tab, index) => {
+        return {
+          id: tab.collection_handle || `tab-${index}`,
+          title: tab.name || `Tab ${index + 1}`,
+          handle: tab.collection_handle,
+          icon: '', // No icons to prevent overlap
+          isSearch: false
+        };
+      });
+    }
+    
+    console.log('❌ No delivery app configuration found - cannot load tabs');
+    return [];
+  }, [collectionsConfig]);
+
+  // ADDITIVE: Ultra-aggressive optimizer for sub-0.2s loading (moved after tabs definition)
+  const deliveryOptimizer = useDeliveryAppOptimizer({
+    collections_config: tabs.map(tab => ({
+      title: tab.title,
+      handle: tab.handle,
+      isSearch: tab.isSearch
+    }))
+  });
 
   // Use both keyboard hiding and unified scroll behavior
   const { hideKeyboard: forceHideKeyboard } = useImmediateKeyboardHiding();
@@ -162,34 +193,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const isSearchActive = searchQuery.trim().length > 0;
 
-  // ONLY use Shopify collections from delivery app config - NO defaults
-  const tabs = useMemo(() => {
-    if (collectionsConfig?.tabs && collectionsConfig.tabs.length > 0) {
-      console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
-      return collectionsConfig.tabs.map((tab, index) => {
-        return {
-          id: tab.collection_handle || `tab-${index}`,
-          title: tab.name || `Tab ${index + 1}`,
-          handle: tab.collection_handle,
-          icon: '', // No icons to prevent overlap
-          isSearch: false
-        };
-      });
-    }
-    
-    console.log('❌ No delivery app configuration found - cannot load tabs');
-    return [];
-  }, [collectionsConfig]);
 
-  // Preload all collections on mount + warm up ultra-fast search
+  // ENHANCED: Aggressive preloading + existing systems (additive only)
   useEffect(() => {
-    // Warm up ultra-fast search for instant results
+    // Keep existing warmup
     ultraFastSearch.warmUpCache().catch(console.error);
     
     const collectionHandles = tabs.map(tab => tab.handle);
     console.log('🚀 Preloading all collections:', collectionHandles);
     preloadMultipleCollections(collectionHandles);
-  }, [tabs, preloadMultipleCollections]);
+    
+    // ADDITIVE: Force optimizer preload for instant tab switching
+    if (deliveryOptimizer && !deliveryOptimizer.isOptimized) {
+      console.log('🚀 ULTRA-AGGRESSIVE: Force optimizing delivery app...');
+      deliveryOptimizer.forceOptimize();
+    }
+  }, [tabs, preloadMultipleCollections, deliveryOptimizer]);
 
 
   // Listen for collection updates and refresh
@@ -743,6 +762,19 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           onProceedToCheckout={onCheckout}
         />
       )}
+
+      {/* ADDITIVE: Performance Monitor for debugging/admin */}
+      <UltraAggressivePerformanceMonitor 
+        metrics={{
+          collectionsLoaded: deliveryOptimizer?.optimizerStatus?.collectionsLoaded || 0,
+          totalCollections: deliveryOptimizer?.optimizerStatus?.totalCollections || 0,
+          averageLoadTime: deliveryOptimizer?.performanceStats?.averageLoadTime || 0,
+          imagesPreloaded: deliveryOptimizer?.optimizerStatus?.imagesPreloaded || 0,
+          searchCacheWarmed: deliveryOptimizer?.optimizerStatus?.searchWarmed || false,
+          targetAchieved: deliveryOptimizer?.performanceStats?.under200ms || false,
+          isOptimized: deliveryOptimizer?.isOptimized || false
+        }}
+      />
     </div>
   );
 };
