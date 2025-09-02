@@ -1,8 +1,7 @@
-// Trigger the existing working Shopify sync - run this in browser console
-console.log('🔄 Triggering existing Shopify sync...');
+// AUTO-TRIGGER SHOPIFY SYNC
+console.log('🚀 FORCE TRIGGERING SHOPIFY SYNC...');
 
-// First try fetch-shopify-products
-fetch('https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/fetch-shopify-products', {
+fetch('https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/trigger-shopify-sync', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns',
@@ -12,21 +11,13 @@ fetch('https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/fetch-shopify-produ
 })
 .then(r => r.json())
 .then(d => {
-  console.log('✅ fetch-shopify-products result:', d);
-  
-  // Then trigger execute-sync to populate cache
-  return fetch('https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/execute-sync', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({})
-  });
-})
-.then(r => r.json())
-.then(d => {
-  console.log('✅ execute-sync result:', d);
-  console.log('🎉 Sync complete - refresh your page!');
+  console.log('✅ SYNC RESULT:', d);
+  if (d.success) {
+    console.log('🎉 PRODUCTS LOADED! Refreshing page...');
+    setTimeout(() => window.location.reload(), 1000);
+  }
 })
 .catch(e => console.error('❌ Sync failed:', e));
+
+// Auto-execute immediately
+console.log('Executing sync now...');

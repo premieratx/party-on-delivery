@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,112 +6,78 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('🚀 Triggering Shopify product sync...')
+    console.log('🚀 FORCE TRIGGERING SHOPIFY SYNC');
     
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    // First, fetch products from Shopify and populate cache
-    console.log('📦 Fetching products from Shopify...')
-    const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
-      body: { 
-        forceRefresh: true,
-        limit: 100
-      }
-    })
-
-    if (shopifyError) {
-      console.error('❌ Error fetching from Shopify:', shopifyError)
-      throw shopifyError
-    }
-
-    if (!shopifyData?.products || shopifyData.products.length === 0) {
-      console.warn('⚠️ No products returned from Shopify')
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'No products found in Shopify',
-          productsCount: 0
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    console.log(`✅ Got ${shopifyData.products.length} products from Shopify`)
-
-    // Now update the instant cache
-    console.log('💾 Updating instant cache...')
+    // Clear all caches first
+    console.log('🧹 Clearing all caches...');
+    await Promise.all([
+      supabase.from('cache').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    ]);
     
-    const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
-      body: { 
-        forceRefresh: true,
-        products: shopifyData.products
-      }
-    })
+    console.log('✅ Caches cleared');
 
-    if (cacheError) {
-      console.warn('⚠️ Error updating instant cache:', cacheError)
-    } else {
-      console.log('✅ Successfully updated instant cache')
-    }
-
-    // Update category mappings if needed
-    console.log('🏷️ Updating category mappings...')
-    const categories = ['beer', 'wine', 'spirits', 'mixers', 'snacks']
+    // Trigger fetch-shopify-products first
+    console.log('📦 Triggering fetch-shopify-products...');
+    const fetchResult = await supabase.functions.invoke('fetch-shopify-products', {
+      body: { force: true }
+    });
     
-    for (const category of categories) {
-      const { error: mappingError } = await supabase
-        .from('category_mappings_simple')
-        .upsert({
-          collection_handle: category,
-          app_category: category
-        })
-        .select()
+    console.log('📦 Fetch result:', fetchResult);
 
-      if (mappingError) {
-        console.warn(`⚠️ Error updating mapping for ${category}:`, mappingError)
-      }
-    }
+    // Wait a bit then trigger execute-sync
+    console.log('⏳ Waiting 2 seconds then triggering execute-sync...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const syncResult = await supabase.functions.invoke('execute-sync', {
+      body: { force: true }
+    });
+    
+    console.log('🔄 Sync result:', syncResult);
 
-    // Clear any stale cache entries
-    console.log('🗑️ Clearing stale cache entries...')
-    const { error: staleCacheError } = await supabase
-      .from('cache')
-      .delete()
-      .like('key', 'shopify_%')
-
-    if (staleCacheError) {
-      console.warn('⚠️ Error clearing stale cache:', staleCacheError)
-    }
+    // Check products count
+    const { count } = await supabase
+      .from('shopify_products_cache')
+      .select('*', { count: 'exact', head: true });
+    
+    console.log(`✅ SYNC COMPLETE - ${count} products in cache`);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Shopify sync completed successfully',
-        productsCount: shopifyData.products.length || 0,
-        categoriesMapped: categories.length
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
-  } catch (error) {
-    console.error('❌ Error in trigger-shopify-sync:', error)
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
+      JSON.stringify({ 
+        success: true, 
+        message: `Shopify sync complete - ${count} products loaded`,
+        fetchResult,
+        syncResult
       }),
       { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
       }
-    )
+    );
+
+  } catch (error) {
+    console.error('❌ Sync error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        details: error
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
   }
-})
+});
