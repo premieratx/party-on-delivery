@@ -10,6 +10,7 @@ import OrderComplete from "@/pages/OrderComplete";
 import AdminDashboard from "@/pages/AdminDashboard";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import { AutoProductOrderFix } from "@/components/admin/AutoProductOrderFix";
+import { AutoSync } from "@/components/AutoSync";
 
 const App = () => {
   console.log('🚀 APP STARTING WITH PROPER ROUTING');
@@ -18,6 +19,7 @@ const App = () => {
     <BrowserRouter>
       <AuthProvider>
         <GlobalCartProvider>
+          <AutoSync />
           <div className="min-h-screen">
             <Routes>
               {/* Homepage - redirect to delivery app */}
