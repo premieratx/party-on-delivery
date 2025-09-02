@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
+import { useUltraFastProductLoader } from '@/hooks/useUltraFastProductLoader';
 import { ProductSkeleton } from '@/components/common/ProductSkeleton';
 import { OptimizedProductCard } from './OptimizedProductCard';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
@@ -22,21 +22,19 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
   className = '',
   limit = 30
 }) => {
-  const { products, loading, error, refresh } = useOptimizedProductLoader({
-    app_slug,
-    lightweight: true,
-    auto_refresh: true
-  });
+  // Use existing ultra-fast system that preserves Shopify collection order
+  const { products, loading, error, searchProducts } = useUltraFastProductLoader();
 
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
 
-  // Filter products based on category and search
+  // Filter products based on category and search - preserves Shopify order
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
     if (selectedCategory && selectedCategory !== 'all') {
       filtered = filtered.filter(product => 
-        product.category?.toLowerCase() === selectedCategory.toLowerCase()
+        product.collection_handles?.includes(selectedCategory) ||
+        product.search_category?.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
 
@@ -44,7 +42,7 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(product =>
         product.title?.toLowerCase().includes(term) ||
-        product.category?.toLowerCase().includes(term) ||
+        product.description?.toLowerCase().includes(term) ||
         product.vendor?.toLowerCase().includes(term)
       );
     }
@@ -85,7 +83,7 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
       <div className="text-center py-8">
         <p className="text-muted-foreground mb-4">Failed to load products</p>
         <button 
-          onClick={refresh}
+          onClick={searchProducts ? () => searchProducts('', { limit: 100 }) : undefined}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           Try Again
@@ -123,17 +121,17 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
                 <p className="text-lg font-bold text-primary">${parseFloat(product.price).toFixed(2)}</p>
               </div>
               
-              <CartQuantityManager
-                productId={product.id}
-                product={{
-                  id: product.id,
-                  title: product.title,
-                  price: parseFloat(product.price) || 0,
-                  image: product.image
-                }}
-                size="sm"
-                className="w-full"
-              />
+                <CartQuantityManager
+                  productId={product.id}
+                  product={{
+                    id: product.id,
+                    title: product.title,
+                    price: parseFloat(String(product.price)) || 0,
+                    image: product.image
+                  }}
+                  size="sm"
+                  className="w-full"
+                />
             </div>
           </CardContent>
         </Card>

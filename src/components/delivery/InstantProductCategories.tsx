@@ -4,7 +4,7 @@ import { ProductSearchBar } from './ProductSearchBar';
 import { UltraFastMobileSearch } from '@/components/search/UltraFastMobileSearch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
+import { useUltraFastProductLoader } from '@/hooks/useUltraFastProductLoader';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface InstantProductCategoriesProps {
@@ -20,22 +20,26 @@ export const InstantProductCategories: React.FC<InstantProductCategoriesProps> =
   const [searchTerm, setSearchTerm] = useState('');
   const isMobile = useIsMobile();
   
-  const { collections, loading } = useOptimizedProductLoader({
-    app_slug,
-    lightweight: true,
-    auto_refresh: true
-  });
+  // Use existing ultra-fast system from ultra-fast-search
+  const { products, loading } = useUltraFastProductLoader();
 
-  // Extract unique categories from collections
+  // Extract unique categories from products (preserves collection organization)
   const categories = useMemo(() => {
     const cats = ['all'];
-    collections.forEach(collection => {
-      if (collection.handle && !cats.includes(collection.handle)) {
-        cats.push(collection.handle);
-      }
+    const categorySet = new Set<string>();
+    
+    products.forEach(product => {
+      // Use collection handles as categories to preserve Shopify organization
+      product.collection_handles?.forEach(handle => {
+        if (handle && !categorySet.has(handle)) {
+          categorySet.add(handle);
+          cats.push(handle);
+        }
+      });
     });
+    
     return cats;
-  }, [collections]);
+  }, [products]);
 
   const categoryDisplayNames: Record<string, string> = {
     all: 'All Products',
@@ -50,10 +54,11 @@ export const InstantProductCategories: React.FC<InstantProductCategoriesProps> =
 
   const getProductCount = (category: string) => {
     if (category === 'all') {
-      return collections.reduce((total, col) => total + (col.products?.length || 0), 0);
+      return products.length;
     }
-    const collection = collections.find(col => col.handle === category);
-    return collection?.products?.length || 0;
+    return products.filter(product => 
+      product.collection_handles?.includes(category)
+    ).length;
   };
 
   return (
