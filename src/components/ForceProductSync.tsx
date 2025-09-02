@@ -12,8 +12,8 @@ export const ForceProductSync = () => {
     console.log('🔄 Force sync initiated...');
     
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-shopify-products', {
-        body: { force: true }
+      const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
+        body: { forceRefresh: true }
       });
 
       if (error) {
@@ -23,7 +23,7 @@ export const ForceProductSync = () => {
       }
 
       console.log('✅ Force sync completed:', data);
-      toast.success(`Products synced successfully! ${data.count || 0} products loaded.`);
+      toast.success(`Products synced successfully! ${data.products_synced || 0} products loaded.`);
       
       // Reload page to see fresh data
       setTimeout(() => {
