@@ -90,25 +90,39 @@ async function syncCompletedOrdersToSheet(apiKey: string, orders: any[]) {
   // Get existing data to append to it
   const existingData = await getSheetData(apiKey, SPREADSHEET_ID, 'Completed Orders');
   
-  // Convert orders to rows
-  const newRows = orders.map(order => [
-    order.id,
-    order.order_number || '',
-    order.customer_id || '',
-    order.session_id || '',
-    order.status || '',
-    order.subtotal || 0,
-    order.delivery_fee || 0,
-    order.total_amount || 0,
-    order.delivery_date || '',
-    order.delivery_time || '',
-    typeof order.delivery_address === 'string' ? order.delivery_address : JSON.stringify(order.delivery_address || {}),
-    order.special_instructions || '',
-    order.affiliate_code || '',
-    order.is_group_order || false,
-    new Date(order.created_at).toISOString(),
-    Array.isArray(order.line_items) ? order.line_items.length : 0
-  ]);
+  // Convert orders to rows matching user's headers:
+  // Date Order Placed, First Name, Last Name, Email, Phone, Order #, Order Total ($), Delivery Date, Delivery Time, Delivery Address
+  const newRows = orders.map(order => {
+    // Parse customer name into first/last if available
+    const customerName = order.customer_name || '';
+    const nameParts = customerName.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    // Parse delivery address
+    let deliveryAddressText = '';
+    if (order.delivery_address) {
+      if (typeof order.delivery_address === 'string') {
+        deliveryAddressText = order.delivery_address;
+      } else if (typeof order.delivery_address === 'object') {
+        const addr = order.delivery_address;
+        deliveryAddressText = [addr.address_line_1, addr.city, addr.state, addr.zip_code].filter(Boolean).join(', ');
+      }
+    }
+    
+    return [
+      new Date(order.created_at).toLocaleDateString(), // Date Order Placed
+      firstName, // First Name
+      lastName, // Last Name
+      order.customer_email || '', // Email
+      order.customer_phone || '', // Phone
+      order.order_number || '', // Order #
+      `$${(order.total_amount || 0).toFixed(2)}`, // Order Total ($)
+      order.delivery_date || '', // Delivery Date
+      order.delivery_time || '', // Delivery Time
+      deliveryAddressText // Delivery Address
+    ];
+  });
 
   // Append new rows to existing data
   const allData = [...(existingData || []), ...newRows];
@@ -140,7 +154,7 @@ async function getSheetData(apiKey: string, spreadsheetId: string, sheetName: st
 async function updateGoogleSheetRange(apiKey: string, spreadsheetId: string, sheetName: string, data: any[][]) {
   if (data.length === 0) return;
   
-  const range = `${sheetName}!A2:P${data.length + 1}`; // Skip header row
+  const range = `${sheetName}!A2:J${data.length + 1}`; // Skip header row, 10 columns total
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:update?valueInputOption=RAW&key=${apiKey}`;
   
   const response = await fetch(url, {

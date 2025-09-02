@@ -74,23 +74,41 @@ async function syncAbandonedOrdersToSheet(apiKey: string, orders: any[]) {
   const existingData = await getSheetData(apiKey, SPREADSHEET_ID, 'Abandoned Orders');
   const existingIds = new Set(existingData.slice(1).map(row => row[0])); // Skip header row, get IDs
   
-  // Convert orders to rows, filtering out duplicates
+  // Convert orders to rows matching user's headers:
+  // Date Ab. Order Started, First Name, Last Name, Email, Phone, Order #, Order Total ($), Delivery Date, Delivery Time, Delivery Address
   const newRows = orders
     .filter(order => !existingIds.has(order.id))
-    .map(order => [
-      order.id,
-      order.customer_name || '',
-      order.customer_email || '',
-      order.customer_phone || '',
-      typeof order.delivery_address === 'string' ? order.delivery_address : JSON.stringify(order.delivery_address || {}),
-      order.subtotal || 0,
-      order.total_amount || 0,
-      new Date(order.abandoned_at).toISOString(),
-      new Date(order.last_activity_at).toISOString(),
-      order.affiliate_code || '',
-      order.session_id || '',
-      Array.isArray(order.cart_items) ? order.cart_items.length : 0
-    ]);
+    .map(order => {
+      // Parse customer name into first/last if available
+      const customerName = order.customer_name || '';
+      const nameParts = customerName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      // Parse delivery address
+      let deliveryAddressText = '';
+      if (order.delivery_address) {
+        if (typeof order.delivery_address === 'string') {
+          deliveryAddressText = order.delivery_address;
+        } else if (typeof order.delivery_address === 'object') {
+          const addr = order.delivery_address;
+          deliveryAddressText = [addr.address_line_1, addr.city, addr.state, addr.zip_code].filter(Boolean).join(', ');
+        }
+      }
+      
+      return [
+        new Date(order.abandoned_at).toLocaleDateString(), // Date Ab. Order Started
+        firstName, // First Name
+        lastName, // Last Name
+        order.customer_email || '', // Email
+        order.customer_phone || '', // Phone
+        order.session_id || '', // Order # (using session_id as order number for abandoned)
+        `$${(order.total_amount || 0).toFixed(2)}`, // Order Total ($)
+        order.delivery_date || '', // Delivery Date
+        order.delivery_time || '', // Delivery Time
+        deliveryAddressText // Delivery Address
+      ];
+    });
 
   if (newRows.length === 0) {
     console.log('[HOURLY-SYNC] No new abandoned orders to sync');
@@ -130,7 +148,7 @@ async function getSheetData(apiKey: string, spreadsheetId: string, sheetName: st
 async function updateGoogleSheetRange(apiKey: string, spreadsheetId: string, sheetName: string, data: any[][]) {
   if (data.length === 0) return;
   
-  const range = `${sheetName}!A2:L${data.length + 1}`; // Skip header row
+  const range = `${sheetName}!A2:J${data.length + 1}`; // Skip header row, 10 columns total
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:update?valueInputOption=RAW&key=${apiKey}`;
   
   const response = await fetch(url, {
