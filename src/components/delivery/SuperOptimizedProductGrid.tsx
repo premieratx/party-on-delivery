@@ -20,7 +20,7 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
   selectedCategory,
   searchTerm,
   className = '',
-  limit = 30
+  limit = 500
 }) => {
   // Use existing ultra-fast system that preserves Shopify collection order
   const { products, loading, error, searchProducts } = useUltraFastProductLoader();

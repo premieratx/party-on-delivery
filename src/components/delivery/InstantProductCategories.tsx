@@ -116,7 +116,7 @@ export const InstantProductCategories: React.FC<InstantProductCategoriesProps> =
         app_slug={app_slug}
         selectedCategory={selectedCategory === 'all' ? undefined : selectedCategory}
         searchTerm={searchTerm}
-        limit={50}
+        limit={500}
       />
     </div>
   );
