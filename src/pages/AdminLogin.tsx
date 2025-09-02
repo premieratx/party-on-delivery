@@ -127,10 +127,8 @@ export default function AdminLogin() {
         description: `Welcome back, ${data.admin?.name || 'Admin'}!`,
       });
       
-      // Add a small delay to ensure toast is shown
-      setTimeout(() => {
-        navigate('/admin', { replace: true });
-      }, 500);
+      // Immediate redirect without delay
+      navigate('/admin', { replace: true });
     } catch (error: any) {
       toast({
         title: "Authentication Error", 

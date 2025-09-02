@@ -16,6 +16,7 @@ import { TypingIntro } from '@/components/common/TypingIntro';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealTimeSearch } from '@/hooks/useRealTimeSearch';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WhiteLabelAppConfig {
@@ -127,13 +128,15 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
-  // Search functionality removed - using UltraFastMobileSearch component instead
-  const searchQuery = '';
-  const searchResults: any[] = [];
-  const isSearching = false;
-  const updateSearchQuery = () => {};
-  const clearSearch = () => {};
-  const hasResults = false;
+  // Real-time search functionality
+  const {
+    searchQuery,
+    searchResults,
+    isSearching,
+    updateSearchQuery,
+    clearSearch,
+    hasResults
+  } = useRealTimeSearch({ maxResults: 50 });
 
   // Apply custom branding
   useEffect(() => {
@@ -280,9 +283,9 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
 
   // Handle search functionality
   const handleSearchChange = useCallback((query: string) => {
-    updateSearchQuery();
+    updateSearchQuery(query);
     setShowSearchResults(!!query.trim());
-  }, []);
+  }, [updateSearchQuery]);
 
   const handleSearchSubmit = useCallback(() => {
     if (searchQuery.trim() && hasResults) {
