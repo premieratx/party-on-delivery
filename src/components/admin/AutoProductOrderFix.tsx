@@ -9,23 +9,24 @@ export const AutoProductOrderFix = () => {
   useEffect(() => {
     const fixProductOrdering = async () => {
       try {
-        console.log('🔄 Auto-fixing Shopify product ordering...');
+        console.log('⚡ IMMEDIATE FIX: Triggering product order sync...');
         
-        // Trigger the auto-fix function
-        const { data, error } = await supabase.functions.invoke('auto-fix-product-ordering');
+        // Trigger immediate fix for all product ordering
+        const { data, error } = await supabase.functions.invoke('immediate-product-order-fix');
         
         if (error) {
-          console.warn('⚠️ Auto-fix failed:', error);
+          console.warn('⚠️ Immediate fix failed:', error);
           return;
         }
         
-        console.log('✅ Product ordering automatically fixed:', data);
+        console.log('✅ IMMEDIATE FIX COMPLETE:', data);
+        console.log(`🎯 Fixed ordering for ${data.products_synced} products across ${data.collections_synced} collections`);
       } catch (error) {
-        console.warn('⚠️ Auto-fix error:', error);
+        console.warn('⚠️ Product order fix error:', error);
       }
     };
 
-    // Fix ordering on component mount
+    // Fix all product ordering immediately on app load
     fixProductOrdering();
   }, []);
 

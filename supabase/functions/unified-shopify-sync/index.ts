@@ -126,13 +126,22 @@ async function fetchAllProductsWithCollections(): Promise<ShopifyProduct[]> {
             productType
             vendor
             tags
-            collections(first: 20) {
+            collections(first: 20, sortKey: TITLE) {
               edges {
                 node {
                   id
                   title
                   handle
                   description
+                  products(first: 250, sortKey: COLLECTION_DEFAULT) {
+                    edges {
+                      node {
+                        id
+                        title
+                        handle
+                      }
+                    }
+                  }
                 }
               }
             }
