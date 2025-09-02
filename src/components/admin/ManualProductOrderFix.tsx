@@ -12,20 +12,31 @@ export const ManualProductOrderFix: React.FC = () => {
   const manualFixOrdering = async () => {
     setIsLoading(true);
     try {
-      console.log('🔧 MANUAL FIX: Emergency cache clear completed by direct database operation');
-      console.log('📊 All product caches have been cleared from the database');
-      console.log('✨ Next product load will fetch fresh data with correct Shopify ordering');
+      console.log('🚨 EMERGENCY: Triggering immediate product reload...');
+      
+      const { data, error } = await supabase.functions.invoke('emergency-product-sync');
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log('✅ EMERGENCY SYNC COMPLETE:', data);
       
       toast({
-        title: "Product Order Fixed",
-        description: "All product caches cleared. Products will now load with correct Shopify ordering.",
+        title: "Emergency Product Reload Complete",
+        description: `Products reloaded: ${data?.productsFound || 0}. Please refresh the page.`,
       });
       
+      // Force page refresh to see the products
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
     } catch (error: any) {
-      console.error('❌ Manual fix failed:', error);
+      console.error('❌ Emergency sync failed:', error);
       toast({
-        title: "Fix Failed", 
-        description: error.message || "Failed to fix product ordering",
+        title: "Emergency Sync Failed", 
+        description: error.message || "Failed to reload products",
         variant: "destructive",
       });
     } finally {
@@ -44,14 +55,14 @@ export const ManualProductOrderFix: React.FC = () => {
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Click this button to manually clear all product caches and force products to reload with correct Shopify collection ordering.
+            Click this button to emergency reload all products from Shopify. This will fix empty tabs.
           </p>
           <Button 
             onClick={manualFixOrdering}
             disabled={isLoading}
             className="w-full"
           >
-            {isLoading ? 'Fixing Order...' : 'Fix Product Ordering Now'}
+            {isLoading ? 'Emergency Reloading...' : 'Emergency Reload All Products'}
           </Button>
         </div>
       </CardContent>
