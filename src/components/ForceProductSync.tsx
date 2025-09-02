@@ -23,32 +23,7 @@ export const ForceProductSync = () => {
       }
 
       console.log('✅ Force sync completed:', data);
-      
-      // Now store the products in the cache table
-      if (data?.products && Array.isArray(data.products)) {
-        console.log(`💾 Storing ${data.products.length} products in cache...`);
-        
-        const productsToStore = data.products.map((product: any) => ({
-          id: product.id,
-          title: product.title,
-          handle: product.handle,
-          data: product,
-          updated_at: new Date().toISOString()
-        }));
-        
-        const { error: storeError } = await supabase
-          .from('shopify_products_cache')
-          .upsert(productsToStore, { onConflict: 'id' });
-          
-        if (storeError) {
-          console.error('❌ Failed to store products:', storeError);
-          toast.error('Failed to store products: ' + storeError.message);
-        } else {
-          console.log(`✅ Successfully stored ${data.products.length} products`);
-        }
-      }
-      
-      toast.success(`Products synced successfully! ${data.products?.length || 0} products loaded.`);
+      toast.success(`Products synced successfully! ${data.count || 0} products loaded.`);
       
       // Reload page to see fresh data
       setTimeout(() => {

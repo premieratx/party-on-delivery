@@ -40,7 +40,31 @@ Deno.serve(async (req) => {
       throw new Error(`Fetch failed: ${productsError.message}`);
     }
 
-    console.log('✅ Products fetched successfully:', productsData);
+    console.log('✅ Products fetched successfully, count:', productsData?.count || 0);
+    
+    // Store products in cache using service role permissions
+    if (productsData?.products && Array.isArray(productsData.products)) {
+      console.log(`💾 Storing ${productsData.products.length} products in cache...`);
+      
+      const productsToStore = productsData.products.map((product: any) => ({
+        id: product.id,
+        title: product.title,
+        handle: product.handle,
+        data: product,
+        updated_at: new Date().toISOString()
+      }));
+      
+      const { error: storeError } = await supabase
+        .from('shopify_products_cache')
+        .upsert(productsToStore, { onConflict: 'id' });
+        
+      if (storeError) {
+        console.error('❌ Failed to store products:', storeError);
+        throw new Error(`Storage failed: ${storeError.message}`);
+      }
+      
+      console.log(`✅ Successfully stored ${productsData.products.length} products in cache`);
+    }
     
     return new Response(
       JSON.stringify({
