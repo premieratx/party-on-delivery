@@ -94,9 +94,9 @@ class OptimizedUltraFastSearchClient {
     const startTime = performance.now();
 
     try {
-      // Use instant-product-cache for fastest loading
+      // Use instant-product-cache for fastest loading - get ALL products
       const { data, error } = await supabase.functions.invoke('instant-product-cache', {
-        body: { collection_handle: 'all', force_refresh: false }
+        body: { collection_handle: 'all', force_refresh: true }
       });
 
       if (error) throw error;
@@ -218,6 +218,7 @@ class OptimizedUltraFastSearchClient {
     try {
       console.log('🔄 Background refresh of product index...');
       
+      // Force refresh to get all 1067+ products
       const { data, error } = await supabase.functions.invoke('instant-product-cache', {
         body: { collection_handle: 'all', force_refresh: true }
       });

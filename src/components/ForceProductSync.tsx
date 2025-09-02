@@ -55,11 +55,24 @@ export const ForceProductSync = () => {
           }
         }
         
-        // Clear instant product cache to force fresh order
+        // Clear ALL caches to force fresh data
+        console.log('🧹 Clearing all product caches...');
         await supabase
           .from('cache')
           .delete()
           .like('key', 'instant_products_%');
+          
+        // Also clear ultra-fast search cache 
+        await supabase
+          .from('cache')
+          .delete()
+          .like('key', 'ultra_fast_search_%');
+        
+        // Clear optimized product loader cache
+        await supabase
+          .from('cache')
+          .delete()
+          .like('key', 'optimized_product_%');
         
         toast.success(`Products synced with correct Shopify ordering! Refreshing...`);
         
