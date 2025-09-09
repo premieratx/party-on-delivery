@@ -1982,6 +1982,42 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_code_usage: {
+        Row: {
+          applied_at: string | null
+          created_at: string | null
+          customer_email: string | null
+          discount_amount: number
+          discount_code: string
+          id: string
+          order_id: string | null
+          order_subtotal: number
+          session_id: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          discount_amount?: number
+          discount_code: string
+          id?: string
+          order_id?: string | null
+          order_subtotal?: number
+          session_id?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          discount_amount?: number
+          discount_code?: string
+          id?: string
+          order_id?: string | null
+          order_subtotal?: number
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       failed_order_processing: {
         Row: {
           created_at: string
@@ -3562,6 +3598,72 @@ export type Database = {
         }
         Relationships: []
       }
+      shopify_discount_codes_cache: {
+        Row: {
+          code: string
+          created_at: string | null
+          customer_selection: string | null
+          ends_at: string | null
+          id: string
+          is_recomsale_code: boolean | null
+          minimum_order_amount: number | null
+          once_per_customer: boolean | null
+          raw_data: Json | null
+          shopify_discount_id: string
+          shopify_price_rule_id: string
+          starts_at: string | null
+          target_type: string | null
+          title: string | null
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+          value: string
+          value_type: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          customer_selection?: string | null
+          ends_at?: string | null
+          id?: string
+          is_recomsale_code?: boolean | null
+          minimum_order_amount?: number | null
+          once_per_customer?: boolean | null
+          raw_data?: Json | null
+          shopify_discount_id: string
+          shopify_price_rule_id: string
+          starts_at?: string | null
+          target_type?: string | null
+          title?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          value: string
+          value_type: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          customer_selection?: string | null
+          ends_at?: string | null
+          id?: string
+          is_recomsale_code?: boolean | null
+          minimum_order_amount?: number | null
+          once_per_customer?: boolean | null
+          raw_data?: Json | null
+          shopify_discount_id?: string
+          shopify_price_rule_id?: string
+          starts_at?: string | null
+          target_type?: string | null
+          title?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          value?: string
+          value_type?: string
+        }
+        Relationships: []
+      }
       shopify_orders: {
         Row: {
           amount: number
@@ -4558,6 +4660,22 @@ export type Database = {
         Args: { company_name: string }
         Returns: string
       }
+      get_active_discount_codes: {
+        Args: { recomsale_only?: boolean }
+        Returns: {
+          code: string
+          ends_at: string
+          is_recomsale_code: boolean
+          minimum_order_amount: number
+          once_per_customer: boolean
+          starts_at: string
+          title: string
+          usage_count: number
+          usage_limit: number
+          value: string
+          value_type: string
+        }[]
+      }
       get_categories_with_counts: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4827,6 +4945,15 @@ export type Database = {
           expires_timestamp_param: number
         }
         Returns: string
+      }
+      validate_discount_code: {
+        Args: { discount_code_param: string; order_subtotal_param?: number }
+        Returns: {
+          code_details: Json
+          discount_amount: number
+          error_message: string
+          is_valid: boolean
+        }[]
       }
       validate_security_setup: {
         Args: Record<PropertyKey, never>

@@ -10,6 +10,7 @@ import OrderComplete from "@/pages/OrderComplete";
 import AdminDashboard from "@/pages/AdminDashboard";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import { AutoProductOrderFix } from "@/components/admin/AutoProductOrderFix";
+import { TestDiscountCodes } from "@/components/TestDiscountCodes";
 
 const App = () => {
   console.log('🚀 APP STARTING WITH PROPER ROUTING');
@@ -34,6 +35,10 @@ const App = () => {
               
               {/* Admin Routes */}
               <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+              
+              {/* Test Discount Integration - REMOVE WHEN READY */}
+              <Route path="/test-discounts" element={<TestDiscountCodes />} />
+              
               <Route path="/affiliate/admin-login" element={<DynamicRouteHandler />} />
               
               {/* Catch-all for cover pages and 404 */}
