@@ -12,7 +12,7 @@ import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
 import { ImprovedCheckoutSummary } from './ImprovedCheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
-import { PromoCodeInput } from './PromoCodeInput';
+import { DiscountCodeInput } from './DiscountCodeInput';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -24,10 +24,10 @@ interface RefactoredCheckoutFlowProps {
   isAddingToOrder?: boolean;
   useSameAddress?: boolean;
   lastOrderInfo?: any;
-  onDiscountChange?: (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => void;
+  onDiscountChange?: (discount: {code: string, amount: number, type: 'fixed_amount' | 'percentage', value: string} | null) => void;
   onTipChange?: (tip: number) => void;
   onChangesDetected?: (hasChanges: boolean) => void;
-  appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null;
+  appliedDiscount?: {code: string, amount: number, type: 'fixed_amount' | 'percentage', value: string} | null;
   affiliateCode?: string;
 }
 
@@ -162,8 +162,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       console.warn('Failed to parse delivery app settings:', error);
     }
     
-    // Check for applied discount free shipping
-    if (appliedDiscount?.type === 'free_shipping') {
+    // Check for applied discount with 100% discount (acts as free shipping)
+    if (appliedDiscount?.type === 'percentage' && parseFloat(appliedDiscount.value) === 100) {
       return 0;
     }
     
@@ -174,8 +174,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const deliveryFee = getDeliveryFeeFromSettings();
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
-    ? cartSubtotal * (1 - appliedDiscount.value / 100)
-    : cartSubtotal;
+    ? cartSubtotal * (1 - parseFloat(appliedDiscount.value) / 100)
+    : appliedDiscount?.type === 'fixed_amount'
+      ? Math.max(0, cartSubtotal - appliedDiscount.amount)
+      : cartSubtotal;
   
   const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax
   const finalTotal = discountedSubtotal + deliveryFee + calculatedSalesTax + tipAmount;
@@ -202,7 +204,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   };
 
   // Discount management - ALWAYS ALLOWED
-  const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
+  const handleDiscountApplied = (discount: {code: string, amount: number, type: 'fixed_amount' | 'percentage', value: string} | null) => {
     if (onDiscountChange) {
       onDiscountChange(discount);
     }
@@ -299,13 +301,14 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               />
             </div>
 
-            {/* ALWAYS ACCESSIBLE: Promo Code */}
+            {/* ALWAYS ACCESSIBLE: Discount Code */}
             <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4 text-primary">🎫 Promo Code</h3>
-              <PromoCodeInput 
-                onDiscountApplied={handlePromoApplied}
+              <h3 className="text-lg font-semibold mb-4 text-primary">🎫 Discount Code</h3>
+              <DiscountCodeInput 
+                subtotal={cartSubtotal}
+                onDiscountApplied={handleDiscountApplied}
+                onDiscountRemoved={() => handleDiscountApplied(null)}
                 appliedDiscount={appliedDiscount}
-                cartSubtotal={cartSubtotal}
               />
             </div>
 

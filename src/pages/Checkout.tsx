@@ -33,7 +33,17 @@ export const Checkout = () => {
   });
   
   // Add discount state management
-  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    code: string;
+    amount: number;
+    type: 'fixed_amount' | 'percentage';
+    value: string;
+  } | null>(null);
+
+  const handleDiscountChange = (discount: {code: string, amount: number, type: 'fixed_amount' | 'percentage', value: string} | null) => {
+    console.log('🎫 Discount applied in checkout:', discount);
+    setAppliedDiscount(discount);
+  };
 
   // Remove loading state - not needed
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -173,10 +183,7 @@ export const Checkout = () => {
               updateQuantity(id, variant, quantity);
             }}
             appliedDiscount={appliedDiscount}
-            onDiscountChange={(discount) => {
-              console.log('🎫 Discount applied in checkout:', discount);
-              setAppliedDiscount(discount);
-            }}
+            onDiscountChange={handleDiscountChange}
           />
         </div>
       </div>

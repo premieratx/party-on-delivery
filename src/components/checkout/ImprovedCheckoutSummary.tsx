@@ -11,11 +11,12 @@ interface ImprovedCheckoutSummaryProps {
   subtotal: number;
   deliveryFee: number;
   salesTax: number;
-  tipAmount?: number; // Add tip amount prop
+  tipAmount?: number;
   appliedDiscount?: {
     code: string;
-    type: 'percentage' | 'free_shipping';
-    value: number;
+    amount: number;
+    type: 'fixed_amount' | 'percentage';
+    value: string;
   } | null;
   onUpdateQuantity?: (id: string, variant: string | undefined, quantity: number) => void;
 }
@@ -25,185 +26,159 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
   subtotal,
   deliveryFee,
   salesTax,
-  tipAmount = 0, // Default tip amount to 0
+  tipAmount = 0,
   appliedDiscount,
   onUpdateQuantity
 }) => {
+  // Get markup percent for consistent calculations
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   
-  const discountedSubtotal = appliedDiscount?.type === 'percentage' 
-    ? subtotal * (1 - appliedDiscount.value / 100)
-    : subtotal;
-  
-  const finalDeliveryFee = (() => {
-    // Check for delivery app free shipping settings first
-    try {
-      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
-      if (deliveryAppSettings.freeDeliveryEnabled) {
-        return 0;
-      }
-    } catch (error) {
-      console.warn('Failed to parse delivery app settings:', error);
-    }
+  // Calculate discount amount
+  const getDiscountAmount = () => {
+    if (!appliedDiscount) return 0;
     
-    // Then check for promo code free shipping
-    return appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
-  })();
+    if (appliedDiscount.type === 'percentage') {
+      return subtotal * (parseFloat(appliedDiscount.value) / 100);
+    } else if (appliedDiscount.type === 'fixed_amount') {
+      return Math.min(appliedDiscount.amount, subtotal); // Don't exceed subtotal
+    }
+    return 0;
+  };
 
-  // Enhanced product title cleaning for better display
-  const cleanTitle = (title: string) => {
+  const discountAmount = getDiscountAmount();
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  
+  // Check if discount provides free shipping (100% discount or specific free shipping codes)
+  const hasDiscountFreeShipping = appliedDiscount?.type === 'percentage' && parseFloat(appliedDiscount.value) === 100;
+  
+  const finalDeliveryFee = hasDiscountFreeShipping ? 0 : deliveryFee;
+  
+  const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
+
+  // Clean title function to remove URLs and unnecessary text
+  const cleanTitle = (title: string): string => {
     return title
-      .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs completely
-      .replace(/www\.[^\s]+/g, '') // Remove www URLs
-      .replace(/\b\d{8,}\b/g, '') // Remove long product IDs (8+ digits)
-      .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs  
-      .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
-      .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
-      .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
-      .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
-      .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
-      .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
-      .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
-      .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .replace(/(\d+)\s*Pack/gi, '$1pk')
-      .replace(/(\d+)\s*oz/gi, '$1oz')
-      .replace(/(\d+)\s*ml/gi, '$1ml')
-      .replace(/(\d+)\s*cl/gi, '$1cl')
-      .replace(/(\d+)\s*liter/gi, '$1L')
-      .replace(/(\d+)\s*count/gi, '$1ct')
-      .trim()
-      .replace(/^[-\s|]+|[-\s|]+$/g, ''); // Remove leading/trailing dashes, spaces, and pipes
+      .replace(/https?:\/\/[^\s]+/gi, '') // Remove URLs
+      .replace(/\s*\|\s*[^|]*$/gi, '') // Remove everything after the last |
+      .replace(/\s*-\s*[^-]*$/gi, '') // Remove everything after the last -
+      .replace(/\s*\([^)]*\)\s*/gi, '') // Remove content in parentheses
+      .replace(/\s*\[[^\]]*\]\s*/gi, '') // Remove content in brackets
+      .replace(/\b\d{10,}\b/gi, '') // Remove long numbers (IDs)
+      .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
+      .trim();
   };
 
   return (
-    <Card className="h-fit">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <ShoppingBag className="w-5 h-5" />
           Order Summary
         </CardTitle>
-        <div className="text-sm text-muted-foreground">
-          {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
-        </div>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        {/* Cart Items - Show ALL products without images */}
-        <div className="space-y-2">
-          {cartItems.map((item, index) => {
-            const cleanedTitle = cleanTitle(item.title);
-            
-            return (
-              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-center gap-2 py-2 border-b border-border/30">
-                {/* Mobile-optimized single row layout */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-xs sm:text-sm leading-tight truncate">
-                    {cleanedTitle}
-                  </div>
-                  {item.variant && !item.variant.includes('gid://') && item.variant !== 'default' && (
-                    <div className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                      {item.variant}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Mobile: Compact quantity and price on same line */}
-                <div className="flex items-center gap-2 text-xs">
-                  {/* Quantity Controls */}
-                  {onUpdateQuantity ? (
-                    <div className="flex items-center gap-0.5 bg-background rounded border">
+        {/* Cart Items */}
+        <div className="space-y-3 max-h-60 overflow-y-auto">
+          {cartItems.map((item, index) => (
+            <div key={`${item.id}-${item.variant || 'default'}-${index}`} className="flex items-start gap-3 p-2 bg-muted/30 rounded-lg">
+              {item.image && (
+                <img 
+                  src={item.image} 
+                  alt={item.name}
+                  className="w-12 h-12 object-cover rounded-md flex-shrink-0"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm leading-tight text-foreground">
+                  {cleanTitle(item.name)}
+                </h4>
+                {item.variant && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {item.variant}
+                  </p>
+                )}
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm font-semibold">
+                    ${applyMarkup(item.price).toFixed(2)} each
+                  </span>
+                  {onUpdateQuantity && (
+                    <div className="flex items-center gap-1">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
+                        className="h-6 w-6 p-0"
                         onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
-                        className="h-5 w-5 p-0"
                       >
-                        <Minus className="w-2 h-2" />
+                        <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="text-xs font-medium min-w-[1rem] text-center">
+                      <span className="text-sm font-medium mx-2 min-w-[20px] text-center">
                         {item.quantity}
                       </span>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
+                        className="h-6 w-6 p-0"
                         onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                        className="h-5 w-5 p-0"
                       >
-                        <Plus className="w-2 h-2" />
+                        <Plus className="w-3 h-3" />
                       </Button>
                     </div>
-                  ) : (
-                    <span className="text-xs">×{item.quantity}</span>
                   )}
-                  
-                  <span className="font-semibold text-xs text-right min-w-[2.5rem]">
-                    ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
-                  </span>
+                  {!onUpdateQuantity && (
+                    <Badge variant="secondary" className="text-xs">
+                      Qty: {item.quantity}
+                    </Badge>
+                  )}
                 </div>
               </div>
-            );
-          })}
+              <div className="text-right flex-shrink-0">
+                <div className="text-sm font-semibold">
+                  ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <Separator className="my-3" />
-        
-        {/* Pricing Details */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+        <Separator />
+
+        {/* Pricing Breakdown */}
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
             <span>Subtotal</span>
-            <span className="font-medium">${subtotal.toFixed(2)}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
           
-          {appliedDiscount?.type === 'percentage' && (
-            <div className="flex justify-between text-sm text-green-600">
+          {appliedDiscount && discountAmount > 0 && (
+            <div className="flex justify-between text-green-600">
               <span>Discount ({appliedDiscount.code})</span>
-              <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+              <span>-${discountAmount.toFixed(2)}</span>
             </div>
           )}
           
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between">
+            <span>Delivery Fee</span>
             <span>
-              Delivery Fee
-              {subtotal >= 200 && (
-                <span className="text-xs text-muted-foreground ml-1">(10%)</span>
-              )}
-            </span>
-            <div className="text-right">
-              {(appliedDiscount?.type === 'free_shipping' || (() => {
-                try {
-                  const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
-                  return deliveryAppSettings.freeDeliveryEnabled;
-                } catch (error) {
-                  return false;
-                }
-              })()) && deliveryFee > 0 && (
-                <div className="text-xs text-muted-foreground line-through">
-                  ${deliveryFee.toFixed(2)}
-                </div>
-              )}
-              <span className={`font-medium ${finalDeliveryFee === 0 ? 'text-green-600' : ''}`}>
-                {finalDeliveryFee === 0 ? (
-                  (() => {
-                    try {
-                      const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
-                      if (deliveryAppSettings.freeDeliveryEnabled) {
-                        return 'FREE (App)';
-                      } else if (appliedDiscount?.type === 'free_shipping') {
-                        return `FREE (${appliedDiscount.code})`;
-                      }
-                      return 'FREE';
-                    } catch (error) {
-                      return appliedDiscount?.type === 'free_shipping' ? `FREE (${appliedDiscount.code})` : 'FREE';
+              {finalDeliveryFee === 0 ? (
+                (() => {
+                  try {
+                    const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
+                    if (deliveryAppSettings.freeDeliveryEnabled) {
+                      return 'FREE (App)';
+                    } else if (hasDiscountFreeShipping) {
+                      return `FREE (${appliedDiscount?.code})`;
                     }
-                  })()
-                ) : `$${finalDeliveryFee.toFixed(2)}`}
-              </span>
-            </div>
+                    return 'FREE';
+                  } catch (error) {
+                    return hasDiscountFreeShipping ? `FREE (${appliedDiscount?.code})` : 'FREE';
+                  }
+                })()
+              ) : `$${finalDeliveryFee.toFixed(2)}`}
+            </span>
           </div>
-          
-          {finalDeliveryFee === 0 && deliveryFee > 0 && (
+
+          {finalDeliveryFee === 0 && (
             <div className="flex justify-between text-xs text-green-600">
               <span>
                 {(() => {
@@ -211,63 +186,67 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
                     const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
                     if (deliveryAppSettings.freeDeliveryEnabled) {
                       return 'Free delivery savings (App)';
-                    } else if (appliedDiscount?.type === 'free_shipping') {
-                      return `Free shipping savings (${appliedDiscount.code})`;
+                    } else if (hasDiscountFreeShipping) {
+                      return `Free shipping savings (${appliedDiscount?.code})`;
                     }
                     return 'Free delivery savings';
                   } catch (error) {
-                    return appliedDiscount?.type === 'free_shipping' ? `Free shipping savings (${appliedDiscount.code})` : 'Free delivery savings';
+                    return hasDiscountFreeShipping ? `Free shipping savings (${appliedDiscount?.code})` : 'Free delivery savings';
                   }
                 })()}
               </span>
-              <span>-${deliveryFee.toFixed(2)}</span>
+              <span>
+                ${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}
+              </span>
             </div>
           )}
-          
-          <div className="flex justify-between text-sm">
+
+          <div className="flex justify-between">
             <span>Sales Tax (8.25%)</span>
-            <span className="font-medium">${salesTax.toFixed(2)}</span>
+            <span>${salesTax.toFixed(2)}</span>
           </div>
 
-          {/* Driver Tip Display */}
           {tipAmount > 0 && (
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
               <span>Driver Tip</span>
-              <span className="font-medium">${tipAmount.toFixed(2)}</span>
+              <span>${tipAmount.toFixed(2)}</span>
             </div>
           )}
         </div>
 
-        <Separator className="my-4" />
-        
-        {/* Final Total with Tip */}
-        <div className="flex justify-between items-center py-3 bg-primary/5 rounded-lg px-4">
-          <span className="text-lg font-bold">Total</span>
-          <span className="text-xl font-bold text-primary">
-            ${(discountedSubtotal + finalDeliveryFee + salesTax + tipAmount).toFixed(2)}
-          </span>
+        <Separator />
+
+        {/* Total */}
+        <div className="flex justify-between text-lg font-bold">
+          <span>Total</span>
+          <span>${finalTotal.toFixed(2)}</span>
         </div>
 
-        {/* Savings Summary */}
+        {/* Savings Message */}
         {(appliedDiscount || finalDeliveryFee === 0) && (
-          <div className="text-center py-2 bg-green-50 rounded-lg border border-green-200">
-            <span className="text-sm font-medium text-green-700">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm text-green-800 font-medium">
               🎉 {(() => {
                 try {
                   const deliveryAppSettings = JSON.parse(sessionStorage.getItem('delivery-app-settings') || '{}');
                   if (deliveryAppSettings.freeDeliveryEnabled && appliedDiscount?.type === 'percentage') {
-                    const discountAmount = subtotal * (appliedDiscount.value / 100);
                     const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
                     return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total! (${appliedDiscount.value}% off + Free delivery)`;
+                  } else if (deliveryAppSettings.freeDeliveryEnabled && appliedDiscount?.type === 'fixed_amount') {
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total! ($${discountAmount.toFixed(2)} off + Free delivery)`;
                   } else if (deliveryAppSettings.freeDeliveryEnabled) {
                     const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
                     return `Saving $${deliverySavings.toFixed(2)} on delivery!`;
-                  } else if (appliedDiscount?.type === 'percentage' && finalDeliveryFee === 0) {
-                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                  } else if (appliedDiscount?.type === 'percentage' && hasDiscountFreeShipping) {
                     const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
                     return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total! (${appliedDiscount.value}% off + Free shipping)`;
+                  } else if (appliedDiscount?.type === 'fixed_amount' && hasDiscountFreeShipping) {
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total! ($${discountAmount.toFixed(2)} off + Free shipping)`;
                   } else if (appliedDiscount?.type === 'percentage') {
-                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    return `Saving $${discountAmount.toFixed(2)} with promo ${appliedDiscount.code}!`;
+                  } else if (appliedDiscount?.type === 'fixed_amount') {
                     return `Saving $${discountAmount.toFixed(2)} with promo ${appliedDiscount.code}!`;
                   } else if (finalDeliveryFee === 0) {
                     const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
@@ -275,12 +254,15 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
                   }
                   return 'You\'re saving money with this order!';
                 } catch (error) {
-                  if (appliedDiscount?.type === 'percentage' && finalDeliveryFee === 0) {
-                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                  if (appliedDiscount?.type === 'percentage' && hasDiscountFreeShipping) {
+                    const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
+                    return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total!`;
+                  } else if (appliedDiscount?.type === 'fixed_amount' && hasDiscountFreeShipping) {
                     const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
                     return `Saving $${(discountAmount + deliverySavings).toFixed(2)} total!`;
                   } else if (appliedDiscount?.type === 'percentage') {
-                    const discountAmount = subtotal * (appliedDiscount.value / 100);
+                    return `Saving $${discountAmount.toFixed(2)} with promo ${appliedDiscount.code}!`;
+                  } else if (appliedDiscount?.type === 'fixed_amount') {
                     return `Saving $${discountAmount.toFixed(2)} with promo ${appliedDiscount.code}!`;
                   } else if (finalDeliveryFee === 0) {
                     const deliverySavings = subtotal >= 200 ? subtotal * 0.1 : 20;
@@ -289,7 +271,7 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
                   return 'You\'re saving money with this order!';
                 }
               })()}
-            </span>
+            </p>
           </div>
         )}
       </CardContent>
