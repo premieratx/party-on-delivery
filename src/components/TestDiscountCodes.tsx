@@ -72,6 +72,7 @@ export const TestDiscountCodes: React.FC = () => {
   const syncFromShopify = async () => {
     try {
       console.log('🔄 Syncing from Shopify...');
+      console.log('🧪 Testing Shopify discount sync...');
       
       const { data, error } = await supabase.functions.invoke('fetch-shopify-discounts', {
         body: { activeOnly: true, includeExpired: false }
@@ -79,6 +80,7 @@ export const TestDiscountCodes: React.FC = () => {
 
       if (error) {
         console.error('❌ Sync failed:', error);
+        console.log('❌ Sync test failed:', error);
         toast.error('Failed to sync from Shopify: ' + error.message);
         return;
       }
@@ -90,6 +92,7 @@ export const TestDiscountCodes: React.FC = () => {
       loadDiscountCodes();
     } catch (error: any) {
       console.error('❌ Unexpected sync error:', error);
+      console.log('❌ Sync test failed:', error);
       toast.error('Sync failed: ' + error.message);
     }
   };
