@@ -97,6 +97,26 @@ export const TestDiscountCodes: React.FC = () => {
     }
   };
 
+  const seedSampleCodes = async () => {
+    try {
+      console.log('➕ Seeding sample discount codes...');
+      const { data, error } = await supabase.functions.invoke('seed-discount-codes', {
+        body: {}
+      });
+      if (error) {
+        console.error('❌ Seed failed:', error);
+        toast.error('Failed to add sample codes: ' + error.message);
+        return;
+      }
+      console.log('✅ Seed result:', data);
+      toast.success(`Added ${data?.count ?? 0} sample codes`);
+      await loadDiscountCodes();
+    } catch (err: any) {
+      console.error('🚨 Unexpected seed error:', err);
+      toast.error('Seed failed: ' + err.message);
+    }
+  };
+
   const handleDiscountApplied = (discount: {
     code: string;
     amount: number;
@@ -187,9 +207,14 @@ export const TestDiscountCodes: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium">📋 All Active Discount Codes ({allCodes.length})</h3>
-                    <Button onClick={syncFromShopify} variant="outline" size="sm">
-                      🔄 Sync from Shopify
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button onClick={syncFromShopify} variant="outline" size="sm">
+                        🔄 Sync from Shopify
+                      </Button>
+                      <Button onClick={seedSampleCodes} variant="secondary" size="sm">
+                        ➕ Add sample codes
+                      </Button>
+                    </div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {allCodes.map((code) => (
@@ -203,9 +228,14 @@ export const TestDiscountCodes: React.FC = () => {
               {allCodes.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No discount codes found in cache.</p>
-                  <Button onClick={syncFromShopify}>
-                    📡 Sync Discount Codes from Shopify
-                  </Button>
+                  <div className="flex flex-col items-center gap-2">
+                    <Button onClick={syncFromShopify}>
+                      📡 Sync Discount Codes from Shopify
+                    </Button>
+                    <Button onClick={seedSampleCodes} variant="outline">
+                      ➕ Add sample discount codes
+                    </Button>
+                  </div>
                 </div>
               )}
 
