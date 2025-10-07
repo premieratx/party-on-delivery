@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, ShoppingCart, Car, Ship, MapPin, Settings } from 'lucide-react';
+import { Calendar, ShoppingCart, Car, Ship, MapPin, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -40,11 +40,11 @@ const services = [
     color: 'bg-orange-500'
   },
   {
-    icon: Settings,
-    title: 'Admin Dashboard',
-    description: 'Manage apps, covers, and track performance',
-    href: '/admin',
-    color: 'bg-gray-600'
+    icon: Home,
+    title: 'Vacation Rentals',
+    description: 'Book luxury mansions for your stay',
+    href: '/rentals',
+    color: 'bg-pink-500'
   }
 ];
 

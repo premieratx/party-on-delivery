@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, Music, Camera, Utensils, Mountain, Eye } from 'lucide-react';
 import { ActivityDetailModal } from './ActivityDetailModal';
+import { cn } from '@/lib/utils';
 import liveMusicImg from '@/assets/activities/live-music-tour.jpg';
 import foodTruckImg from '@/assets/activities/food-truck-crawl.jpg';
 import kayakImg from '@/assets/activities/kayak-adventure.jpg';
@@ -176,7 +177,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {categories.map((category) => {
               const IconComponent = category.icon;
               return (
@@ -184,10 +185,15 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                   key={category.id}
                   variant={selectedCategory === category.id ? "default" : "secondary"}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={selectedCategory === category.id ? "" : "bg-white/20 text-white hover:bg-white/30 border-0"}
+                  className={cn(
+                    "flex flex-col items-center justify-center h-auto py-4 gap-2",
+                    selectedCategory === category.id 
+                      ? "bg-white text-purple-700 hover:bg-white/90" 
+                      : "bg-white/20 text-white hover:bg-white/30 border-0"
+                  )}
                 >
-                  <IconComponent className="w-4 h-4 mr-2" />
-                  {category.label}
+                  <IconComponent className="w-6 h-6" />
+                  <span className="text-xs font-semibold text-center leading-tight">{category.label}</span>
                 </Button>
               );
             })}

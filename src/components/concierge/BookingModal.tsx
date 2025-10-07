@@ -75,12 +75,13 @@ export function BookingModal({ isOpen, onClose, itemType, itemTitle, itemDetails
       title: itemTitle,
       date: format(date, 'yyyy-MM-dd'),
       startTime: time,
+      imageUrl: itemDetails.imageUrl,
       meta: {
         ...itemDetails,
         numberOfPeople,
         pickupAddress: needsAddress ? pickupAddress : undefined,
         specialRequests: specialRequests || undefined,
-        status: 'pending_confirmation'
+        status: 'pending'
       }
     };
 

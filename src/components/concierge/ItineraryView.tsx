@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/useAppStore';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { ItineraryItemDetailModal } from './ItineraryItemDetailModal';
 
 interface ItineraryViewProps {
   onBack: () => void;
@@ -17,6 +18,8 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
   const removeFromItinerary = useAppStore((state) => state.removeFromItinerary);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const handleRemove = (id: string, title: string) => {
     removeFromItinerary(id);
@@ -32,11 +35,27 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
         return 'bg-green-500';
       case 'pending':
         return 'bg-yellow-500';
-      case 'cancelled':
-        return 'bg-red-500';
+      case 'saved':
+        return 'bg-blue-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-blue-500';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmed';
+      case 'pending':
+        return 'Pending';
+      default:
+        return 'Saved';
+    }
+  };
+
+  const handleViewDetails = (item: any) => {
+    setSelectedItem(item);
+    setIsDetailModalOpen(true);
   };
 
   const getTypeIcon = (type: string) => {
@@ -119,7 +138,8 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 + 0.2 }}
             >
-              <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300">
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer"
+                onClick={() => handleViewDetails(item)}>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     {/* Image */}
@@ -142,9 +162,9 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                         </div>
                         <Badge
                           variant="secondary"
-                          className="ml-3 bg-green-500 text-white border-0"
+                          className={`ml-3 ${getStatusColor(item.meta?.status || 'saved')} text-white border-0`}
                         >
-                          planned
+                          {getStatusLabel(item.meta?.status || 'saved')}
                         </Badge>
                       </div>
                       
@@ -166,7 +186,10 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                         variant="secondary" 
                         size="sm" 
                         className="bg-white/20 text-white hover:bg-white/30"
-                        onClick={() => handleRemove(item.id, item.title)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemove(item.id, item.title);
+                        }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -202,6 +225,13 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Item Detail Modal */}
+      <ItineraryItemDetailModal
+        item={selectedItem}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
     </div>
   );
 };

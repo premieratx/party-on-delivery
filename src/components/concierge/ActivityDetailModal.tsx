@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Users, Star, Calendar as CalendarIcon } from 'lucide-react';
 import { BookingModal } from './BookingModal';
+import { AddToItineraryButton } from './AddToItineraryButton';
 
 interface Activity {
   id: string;
@@ -117,17 +118,33 @@ export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetai
             </ul>
           </div>
 
-          {/* Action Button */}
-          <div className="pt-4 border-t border-white/10">
+          {/* Action Buttons */}
+          <div className="pt-4 border-t border-white/10 flex gap-3">
             <Button
               variant="default"
               size="lg"
-              className="w-full text-base py-6"
+              className="flex-1 text-base py-6"
               onClick={() => setIsBookingModalOpen(true)}
             >
               <CalendarIcon className="w-5 h-5 mr-2" />
               Book This Activity
             </Button>
+            <AddToItineraryButton
+              item={{
+                type: 'activity',
+                title: activity.title,
+                date: new Date().toISOString().split('T')[0],
+                imageUrl: activity.imageUrl,
+                meta: {
+                  description: activity.description,
+                  duration: activity.duration,
+                  price: activity.price,
+                  category: activity.category
+                }
+              }}
+              size="lg"
+              className="flex-1 text-base py-6"
+            />
           </div>
         </div>
       </DialogContent>

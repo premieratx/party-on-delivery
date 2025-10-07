@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, X } from 'lucide-react';
 import { BookingModal } from './BookingModal';
+import { AddToItineraryButton } from './AddToItineraryButton';
 
 interface VehicleDetailModalProps {
   isOpen: boolean;
@@ -106,14 +107,32 @@ export const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Book Now Button */}
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={() => setIsBookingModalOpen(true)}
-            >
-              Book Now
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button 
+                className="flex-1" 
+                size="lg"
+                onClick={() => setIsBookingModalOpen(true)}
+              >
+                Book Now
+              </Button>
+              <AddToItineraryButton
+                item={{
+                  type: 'transport',
+                  title: vehicle.name,
+                  date: new Date().toISOString().split('T')[0],
+                  imageUrl: vehicle.image,
+                  meta: {
+                    description: vehicle.description,
+                    capacity: vehicle.capacity,
+                    hourlyRate: vehicle.hourlyRate,
+                    features: vehicle.features
+                  }
+                }}
+                size="lg"
+                className="flex-1"
+              />
+            </div>
           </div>
         </DialogContent>
       </Dialog>
