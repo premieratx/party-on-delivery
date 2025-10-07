@@ -2,10 +2,14 @@ import { Navigation } from '@/components/concierge/Navigation';
 import { Ship } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useScrollToHideNav } from '@/hooks/useScrollToHideNav';
+import { BoatGalleryModal, boats } from '@/components/concierge/BoatGalleryModal';
+import { Button } from '@/components/ui/button';
 
 const BoatsPage = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeHeight, setIframeHeight] = useState(800);
+  const [selectedBoat, setSelectedBoat] = useState<typeof boats[0] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -54,7 +58,50 @@ const BoatsPage = () => {
             title="Boat Quote Builder"
           />
         </div>
+
+        {/* Boat Gallery Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 drop-shadow-2xl">Our Fleet</h2>
+          <p className="text-white/90 mb-6 drop-shadow-lg">Click to view photos and details of each boat</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {boats.map((boat, index) => (
+              <Button
+                key={index}
+                onClick={() => {
+                  setSelectedBoat(boat);
+                  setIsModalOpen(true);
+                }}
+                variant="outline"
+                className="h-auto p-0 overflow-hidden border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all bg-white/10 backdrop-blur-md"
+              >
+                <div className="w-full">
+                  <div className="aspect-video relative overflow-hidden">
+                    <img 
+                      src={boat.images[0]} 
+                      alt={boat.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-4 text-left bg-gradient-to-br from-purple-900/90 to-pink-900/90">
+                    <h3 className="text-xl font-bold text-white mb-1">{boat.name}</h3>
+                    <p className="text-white/90 font-semibold">{boat.capacity}</p>
+                  </div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
+      
+      <BoatGalleryModal 
+        boat={selectedBoat}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBoat(null);
+        }}
+      />
       <Navigation hideOnScroll={true} />
     </div>
   );

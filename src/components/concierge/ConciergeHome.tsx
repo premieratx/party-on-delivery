@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Calendar, ShoppingCart, Car, Ship, MapPin, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import heroImage from '@/assets/hero/party-hero.jpg';
 
 const services = [
   {
@@ -51,15 +52,26 @@ const services = [
 export function ConciergeHome() {
   return (
     <div className="min-h-screen pb-20 pt-0 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600">
-      {/* Header */}
-      <div className="bg-black/20 backdrop-blur-md border-b border-white/20 p-4 sm:p-6">
+      {/* Hero Section */}
+      <div className="relative h-64 sm:h-80 overflow-hidden">
+        <img 
+          src={heroImage} 
+          alt="Party celebration" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/60 via-purple-800/70 to-purple-600" />
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0 flex flex-col justify-center items-center text-center px-4"
         >
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white drop-shadow-2xl">Premier Concierge</h1>
-          <p className="text-white/90 text-sm sm:text-base drop-shadow-lg">Everything you need for an awesome weekend in Austin.</p>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black mb-3 text-white drop-shadow-2xl uppercase tracking-tight">
+            Austin's Premier Party Experience
+          </h1>
+          <p className="text-lg sm:text-xl md:text-2xl text-white/95 drop-shadow-xl font-semibold max-w-3xl">
+            Everything you need for an unforgettable weekend in Austin
+          </p>
         </motion.div>
       </div>
 
