@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Star, Calendar } from 'lucide-react';
-import { AddToItineraryButton } from './AddToItineraryButton';
+import { Button } from '@/components/ui/button';
+import { Clock, Users, Star, Calendar as CalendarIcon } from 'lucide-react';
+import { BookingModal } from './BookingModal';
 
 interface Activity {
   id: string;
@@ -24,6 +25,8 @@ interface ActivityDetailModalProps {
 }
 
 export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetailModalProps) {
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  
   if (!activity) return null;
 
   return (
@@ -75,7 +78,7 @@ export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetai
               </div>
             </div>
             <div className="flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-white/70" />
+              <CalendarIcon className="w-5 h-5 mr-2 text-white/70" />
               <div>
                 <p className="text-xs text-white/60">Availability</p>
                 <p className="font-semibold text-sm">{activity.availability}</p>
@@ -105,26 +108,32 @@ export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetai
 
           {/* Action Button */}
           <div className="pt-4 border-t border-white/10">
-            <AddToItineraryButton
-              item={{
-                type: 'activity',
-                title: activity.title,
-                date: new Date().toISOString().split('T')[0],
-                startTime: activity.availability,
-                meta: {
-                  description: activity.description,
-                  duration: activity.duration,
-                  price: activity.price,
-                  category: activity.category
-                }
-              }}
+            <Button
               variant="default"
               size="lg"
               className="w-full text-base py-6"
-            />
+              onClick={() => setIsBookingModalOpen(true)}
+            >
+              <CalendarIcon className="w-5 h-5 mr-2" />
+              Book This Activity
+            </Button>
           </div>
         </div>
       </DialogContent>
+
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        itemType="activity"
+        itemTitle={activity.title}
+        itemDetails={{
+          description: activity.description,
+          duration: activity.duration,
+          price: activity.price,
+          category: activity.category
+        }}
+      />
     </Dialog>
   );
 }

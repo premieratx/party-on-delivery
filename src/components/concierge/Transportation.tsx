@@ -4,14 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Car, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { AddToItineraryButton } from './AddToItineraryButton';
+import { BookingModal } from './BookingModal';
 
 interface TransportationProps {
   onBack: () => void;
 }
 
 const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const transportServices = [
     {
@@ -165,24 +166,15 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
                     </div>
 
                     <div className="flex gap-2">
-                      <AddToItineraryButton
-                        item={{
-                          type: 'transport',
-                          title: service.name,
-                          date: new Date().toISOString().split('T')[0],
-                          startTime: service.availability,
-                          meta: {
-                            description: service.description,
-                            capacity: service.capacity,
-                            price: service.price,
-                            features: service.features
-                          }
-                        }}
-                        variant="secondary"
+                      <Button 
+                        variant="default"
                         className="flex-1"
-                      />
-                      <Button variant="secondary" size="sm" className="bg-white/20 text-white hover:bg-white/30">
-                        Details
+                        onClick={() => {
+                          setSelectedService(service);
+                          setIsBookingModalOpen(true);
+                        }}
+                      >
+                        Book Now
                       </Button>
                     </div>
                   </CardContent>
@@ -192,36 +184,24 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
           </div>
         </motion.div>
 
-        {/* Booking Summary */}
-        {selectedService && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-8"
-          >
-            <Card className="bg-white/20 backdrop-blur-md border-white/30">
-              <CardHeader>
-                <CardTitle className="text-white">Ready to Book</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-white">
-                    <p className="font-semibold">{transportServices.find(s => s.id === selectedService)?.name}</p>
-                    <p className="text-white/70 text-sm">Selected for your transportation needs</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button variant="secondary" onClick={() => setSelectedService(null)} className="bg-white/20 text-white hover:bg-white/30">
-                      Change
-                    </Button>
-                    <Button variant="default" size="lg">
-                      Book Now
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+      {/* Booking Modal */}
+      {selectedService && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false);
+            setSelectedService(null);
+          }}
+          itemType="transport"
+          itemTitle={selectedService.name}
+          itemDetails={{
+            description: selectedService.description,
+            capacity: selectedService.capacity,
+            price: parseInt(selectedService.price.replace('$', '').split('/')[0]),
+            features: selectedService.features
+          }}
+        />
+      )}
       </div>
     </div>
   );

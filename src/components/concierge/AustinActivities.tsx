@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, Music, Camera, Utensils, Mountain, Eye } from 'lucide-react';
-import { AddToItineraryButton } from './AddToItineraryButton';
 import { ActivityDetailModal } from './ActivityDetailModal';
 
 interface AustinActivitiesProps {
@@ -215,22 +214,6 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
-                    <AddToItineraryButton
-                      item={{
-                        type: 'activity',
-                        title: activity.title,
-                        date: new Date().toISOString().split('T')[0],
-                        startTime: activity.availability,
-                        meta: {
-                          description: activity.description,
-                          duration: activity.duration,
-                          price: activity.price,
-                          category: activity.category
-                        }
-                      }}
-                      variant="default"
-                      className="flex-1"
-                    />
                   </div>
                 </CardContent>
               </Card>
