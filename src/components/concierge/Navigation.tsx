@@ -1,6 +1,7 @@
 import { Home, Calendar, ShoppingCart, Car, Ship, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useScrollToHideNav } from '@/hooks/useScrollToHideNav';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/home' },
@@ -11,11 +12,20 @@ const navItems = [
   { icon: MapPin, label: 'Explore', path: '/explore' },
 ];
 
-export function Navigation() {
+interface NavigationProps {
+  hideOnScroll?: boolean;
+}
+
+export function Navigation({ hideOnScroll = false }: NavigationProps) {
   const location = useLocation();
+  const isVisible = useScrollToHideNav(50);
+  const shouldShow = !hideOnScroll || isVisible;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 backdrop-blur-md border-t border-white/20 z-50 shadow-2xl">
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 backdrop-blur-md border-t border-white/20 z-50 shadow-2xl transition-transform duration-300",
+      shouldShow ? "translate-y-0" : "translate-y-full"
+    )}>
       <div className="flex items-center justify-around py-2 px-1 max-w-lg mx-auto">
         {navItems.map(({ icon: Icon, label, path }) => {
           const isActive = location.pathname === path || location.pathname.startsWith(path + '/');

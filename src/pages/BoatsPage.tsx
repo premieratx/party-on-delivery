@@ -1,6 +1,7 @@
 import { Navigation } from '@/components/concierge/Navigation';
 import { Ship } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useScrollToHideNav } from '@/hooks/useScrollToHideNav';
 
 const BoatsPage = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -54,7 +55,7 @@ const BoatsPage = () => {
           />
         </div>
       </div>
-      <Navigation />
+      <Navigation hideOnScroll={true} />
     </div>
   );
 };

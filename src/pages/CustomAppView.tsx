@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useGlobalCart } from '@/components/common/GlobalCartProvider';
 import { useTabScrollMemory } from '@/hooks/useTabScrollMemory';
+import { Navigation } from '@/components/concierge/Navigation';
 
 const CustomAppView = () => {
   const { appSlug } = useParams<{ appSlug: string }>();
@@ -153,24 +154,27 @@ const CustomAppView = () => {
   }
 
   return (
-    <ProductCategories
-      appName={appConfig.app_name}
-      heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
-      heroSubheading={appConfig.main_app_config?.hero_subheading || appConfig.description || "Premium Curated Experience"}
-      logoUrl={appConfig.logo_url}
-      appConfig={appConfig}
-      collectionsConfig={appConfig.collections_config}
-      cartItemCount={getTotalItems()}
-      cartItems={cartItems}
-      onAddToCart={handleAddToCart}
-      onUpdateQuantity={handleUpdateQuantity}
-      onOpenCart={handleOpenCart}
-      onProceedToCheckout={handleCheckout}
-      customSiteSlug={appConfig.app_slug}
-      maxProducts={1000}
-      forceRefresh={true}
-      onCheckout={handleCheckout}
-    />
+    <>
+      <ProductCategories
+        appName={appConfig.app_name}
+        heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
+        heroSubheading={appConfig.main_app_config?.hero_subheading || appConfig.description || "Premium Curated Experience"}
+        logoUrl={appConfig.logo_url}
+        appConfig={appConfig}
+        collectionsConfig={appConfig.collections_config}
+        cartItemCount={getTotalItems()}
+        cartItems={cartItems}
+        onAddToCart={handleAddToCart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onOpenCart={handleOpenCart}
+        onProceedToCheckout={handleCheckout}
+        customSiteSlug={appConfig.app_slug}
+        maxProducts={1000}
+        forceRefresh={true}
+        onCheckout={handleCheckout}
+      />
+      <Navigation hideOnScroll={true} />
+    </>
   );
 };
 
