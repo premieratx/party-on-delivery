@@ -20,6 +20,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import { AutoProductOrderFix } from "@/components/admin/AutoProductOrderFix";
 import { TestDiscountCodes } from "@/components/TestDiscountCodes";
+import HomePage from "@/pages/HomePage";
 
 const App = () => {
   console.log('🚀 APP STARTING WITH PROPER ROUTING');
@@ -30,8 +31,10 @@ const App = () => {
         <GlobalCartProvider>
           <div className="min-h-screen">
             <Routes>
-              {/* Cover pages as primary entry - restored */}
-              <Route path="/" element={<Navigate to="/cover/delivery" replace />} />
+              {/* Homepage - shows default cover page */}
+              <Route path="/" element={<HomePage />} />
+              
+              {/* Cover pages with specific slugs */}
               <Route path="/cover/:slug" element={<StandaloneCoverPage />} />
               
               {/* Concierge Framework - Accessible via /home */}
