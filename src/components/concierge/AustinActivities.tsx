@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, Clock, Star, Users, Calendar, Music, Camera, Utensils, Mountain } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { AddToItineraryButton } from './AddToItineraryButton';
 
 interface AustinActivitiesProps {
   onBack: () => void;
@@ -263,13 +264,22 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button 
-                      variant={selectedActivities.includes(activity.id) ? "default" : "secondary"}
+                    <AddToItineraryButton
+                      item={{
+                        type: 'activity',
+                        title: activity.title,
+                        date: new Date().toISOString().split('T')[0],
+                        startTime: activity.availability,
+                        meta: {
+                          description: activity.description,
+                          duration: activity.duration,
+                          price: activity.price,
+                          category: activity.category
+                        }
+                      }}
+                      variant="secondary"
                       className="flex-1"
-                      onClick={() => toggleActivitySelection(activity.id)}
-                    >
-                      {selectedActivities.includes(activity.id) ? 'Selected' : 'Add to Itinerary'}
-                    </Button>
+                    />
                     <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20">
                       Details
                     </Button>

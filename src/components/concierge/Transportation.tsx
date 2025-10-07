@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Car, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { AddToItineraryButton } from './AddToItineraryButton';
 
 interface TransportationProps {
   onBack: () => void;
@@ -164,13 +165,22 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button 
-                        variant="secondary" 
+                      <AddToItineraryButton
+                        item={{
+                          type: 'transport',
+                          title: service.name,
+                          date: new Date().toISOString().split('T')[0],
+                          startTime: service.availability,
+                          meta: {
+                            description: service.description,
+                            capacity: service.capacity,
+                            price: service.price,
+                            features: service.features
+                          }
+                        }}
+                        variant="secondary"
                         className="flex-1"
-                        onClick={() => setSelectedService(service.id)}
-                      >
-                        Select Vehicle
-                      </Button>
+                      />
                       <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20">
                         Details
                       </Button>

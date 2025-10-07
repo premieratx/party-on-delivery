@@ -2,52 +2,27 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Clock, Calendar } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Calendar, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAppStore } from '@/store/useAppStore';
+import { useToast } from '@/hooks/use-toast';
 
 interface ItineraryViewProps {
   onBack: () => void;
 }
 
 const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
-  const itineraryItems = [
-    {
-      id: '1',
-      time: '10:00 AM',
-      title: 'Boat Rental - Lake Austin',
-      description: 'Premium pontoon boat for 4 hours',
-      location: 'Lake Austin Marina',
-      status: 'confirmed',
-      type: 'activity'
-    },
-    {
-      id: '2',
-      time: '2:30 PM',
-      title: 'Lunch at The Oasis',
-      description: 'Sunset Capital of Texas',
-      location: '6550 Comanche Trail',
-      status: 'confirmed',
-      type: 'dining'
-    },
-    {
-      id: '3',
-      time: '6:00 PM',
-      title: 'Premium Whiskey Delivery',
-      description: "Tito's Handmade Vodka delivery",
-      location: 'Hotel Delivery',
-      status: 'pending',
-      type: 'delivery'
-    },
-    {
-      id: '4',
-      time: '8:00 PM',
-      title: 'Live Music at The Continental Club',
-      description: "Austin's legendary music venue",
-      location: '1315 S Congress Ave',
-      status: 'confirmed',
-      type: 'entertainment'
-    }
-  ];
+  const itinerary = useAppStore((state) => state.itinerary);
+  const removeFromItinerary = useAppStore((state) => state.removeFromItinerary);
+  const { toast } = useToast();
+
+  const handleRemove = (id: string, title: string) => {
+    removeFromItinerary(id);
+    toast({
+      title: "Removed from itinerary",
+      description: `${title} has been removed from your itinerary.`,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,13 +40,13 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'activity':
+        return '🎯';
+      case 'boat':
         return '🚤';
-      case 'dining':
-        return '🍽️';
+      case 'transport':
+        return '🚗';
       case 'delivery':
         return '🚚';
-      case 'entertainment':
-        return '🎵';
       default:
         return '📍';
     }
@@ -124,7 +99,16 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
 
         {/* Itinerary Timeline */}
         <div className="space-y-4">
-          {itineraryItems.map((item, index) => (
+          {itinerary.length === 0 ? (
+            <Card className="bg-white/10 backdrop-blur-md border-white/20">
+              <CardContent className="p-12 text-center">
+                <Calendar className="w-16 h-16 mx-auto mb-4 text-white/40" />
+                <h3 className="text-xl font-semibold text-white mb-2">No activities yet</h3>
+                <p className="text-white/70">Start exploring and add activities to your itinerary!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            itinerary.map((item, index) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, x: -20 }}
@@ -139,40 +123,45 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                         <div className="text-2xl mr-3">{getTypeIcon(item.type)}</div>
                         <div className="flex items-center text-white/80">
                           <Clock className="w-4 h-4 mr-1" />
-                          <span className="font-semibold">{item.time}</span>
+                          <span className="font-semibold">{item.startTime || item.date}</span>
                         </div>
                         <Badge
                           variant="secondary"
-                          className={`ml-3 ${getStatusColor(item.status)} text-white border-0`}
+                          className="ml-3 bg-green-500 text-white border-0"
                         >
-                          {item.status}
+                          planned
                         </Badge>
                       </div>
                       
                       <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
-                      <p className="text-white/70 mb-3">{item.description}</p>
+                      {item.meta?.description && (
+                        <p className="text-white/70 mb-3">{item.meta.description}</p>
+                      )}
                       
-                      <div className="flex items-center text-white/60">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{item.location}</span>
-                      </div>
+                      {item.meta?.duration && (
+                        <div className="flex items-center text-white/60 mb-2">
+                          <Clock className="w-4 h-4 mr-1" />
+                          <span className="text-sm">{item.meta.duration}</span>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex flex-col gap-2 ml-4">
-                      <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20">
-                        Details
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-white/30 text-white hover:bg-white/20"
+                        onClick={() => handleRemove(item.id, item.title)}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
-                      {item.status === 'pending' && (
-                        <Button variant="secondary" size="sm">
-                          Confirm
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Add New Item */}
