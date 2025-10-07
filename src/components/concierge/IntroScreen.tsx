@@ -19,7 +19,7 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
   };
 
   return (
-    <div className="size-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80">
+    <div className="size-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         {[...Array(20)].map((_, i) => (
@@ -72,11 +72,11 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
             </motion.div>
           </div>
 
-          <h1 className="text-6xl text-white mb-4 tracking-wide font-bold">
+          <h1 className="text-6xl text-white mb-4 tracking-wide font-bold drop-shadow-2xl">
             PREMIER CONCIERGE
           </h1>
 
-          <p className="text-2xl text-purple-200 mb-2">Premium Services</p>
+          <p className="text-2xl text-white/90 mb-2 drop-shadow-lg">Premium Services</p>
 
           <div className="flex items-center justify-center gap-2">
             {[...Array(5)].map((_, i) => (
@@ -98,7 +98,7 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
           transition={{ delay: 0.8, duration: 0.8 }}
           className="space-y-6"
         >
-          <p className="text-xl text-gray-100 leading-relaxed">
+          <p className="text-xl text-white/90 leading-relaxed drop-shadow-lg">
             Everything you need for an awesome weekend in Austin.
           </p>
 
@@ -109,7 +109,7 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
             <Button
               onClick={handleEnter}
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-6 rounded-full shadow-2xl border-0"
+              className="bg-white/20 hover:bg-white/30 text-white px-12 py-6 rounded-full shadow-2xl border border-white/30 backdrop-blur-md"
             >
               <span className="mr-3">Enter Experience</span>
               <motion.div
@@ -127,7 +127,7 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
             transition={{ delay: 1.2, duration: 0.8 }}
             className="space-y-2"
           >
-            <p className="text-sm text-gray-200">
+            <p className="text-sm text-white/80 drop-shadow-md">
               Available 24/7 • Austin, Texas
             </p>
           </motion.div>
