@@ -63,8 +63,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signInWithGoogle = async (redirectTo?: string, userType: 'admin' | 'customer' | 'affiliate' = 'customer') => {
     const baseUrl = window.location.origin;
     
+    // Admin login should only use email/password via edge function
+    if (userType === 'admin') {
+      return { error: new Error('Admin login requires email and password authentication') };
+    }
+    
     const redirectUrls = {
-      admin: `${baseUrl}/admin/login`,
       customer: redirectTo ? `${baseUrl}/customer/auth?redirect=${redirectTo}` : `${baseUrl}/customer/login?redirect=dashboard`,
       affiliate: `${baseUrl}/affiliate/intro`
     };
@@ -72,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrls[userType],
+        redirectTo: redirectUrls[userType as 'customer' | 'affiliate'],
         queryParams: {
           access_type: 'offline',
           prompt: 'select_account consent',
