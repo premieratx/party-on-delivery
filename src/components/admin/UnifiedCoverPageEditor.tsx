@@ -1265,6 +1265,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
                 entranceAnimation={entranceAnimation}
                 animationDuration={animationDuration}
+                logoOffsetY={logoOffsetY}
+                titleOffsetY={titleOffsetY}
+                subtitleOffsetY={subtitleOffsetY}
+                checklistOffsetY={checklistOffsetY}
+                buttonsOffsetY={buttonsOffsetY}
               />
               </div>
             </div>
@@ -1328,6 +1333,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 backgroundColor={COVER_THEMES[selectedTheme]?.background}
                 entranceAnimation={entranceAnimation}
                 animationDuration={animationDuration}
+                logoOffsetY={logoOffsetY}
+                titleOffsetY={titleOffsetY}
+                subtitleOffsetY={subtitleOffsetY}
+                checklistOffsetY={checklistOffsetY}
+                buttonsOffsetY={buttonsOffsetY}
               />
               </div>
             </div>

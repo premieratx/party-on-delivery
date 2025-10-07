@@ -203,7 +203,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
               marginBottom: '8px',
-              animationDelay: `${getAnimationDelay(0)}ms`
+              animationDelay: `${getAnimationDelay(0)}ms`,
+              transform: logoOffsetY ? `translateY(${logoOffsetY}px)` : undefined
             }}
           >
             {logoUrl ? (
@@ -246,7 +247,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(1)}`}
             style={{ 
               marginBottom: '12px',
-              animationDelay: `${getAnimationDelay(1)}ms`
+              animationDelay: `${getAnimationDelay(1)}ms`,
+              transform: titleOffsetY ? `translateY(${titleOffsetY}px)` : undefined
             }}
           >
             <h1 
@@ -264,7 +266,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
               <div 
                 className={`transition-all duration-700 ${getAnimationClass(2)}`}
                 style={{ 
-                  animationDelay: `${getAnimationDelay(2)}ms`
+                  animationDelay: `${getAnimationDelay(2)}ms`,
+                  transform: subtitleOffsetY ? `translateY(${subtitleOffsetY}px)` : undefined
                 }}
               >
                 <p 
@@ -287,7 +290,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
               className={`flex-none transition-all duration-700 ${getAnimationClass(3)}`}
               style={{ 
                 marginBottom: '12px',
-                animationDelay: `${getAnimationDelay(3)}ms`
+                animationDelay: `${getAnimationDelay(3)}ms`,
+                transform: checklistOffsetY ? `translateY(${checklistOffsetY}px)` : undefined
               }}
             >
               <div className="w-full max-w-xs mx-auto">
@@ -330,7 +334,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           <div 
             className={`flex-none pb-4 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
-              animationDelay: `${getAnimationDelay(4)}ms`
+              animationDelay: `${getAnimationDelay(4)}ms`,
+              transform: buttonsOffsetY ? `translateY(${buttonsOffsetY}px)` : undefined
             }}
           >
             <div className="flex flex-col gap-2 w-full max-w-xs mx-auto">
