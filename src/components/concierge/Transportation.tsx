@@ -1,68 +1,187 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Car, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { BookingModal } from './BookingModal';
+import { ArrowLeft, Users } from 'lucide-react';
+import { VehicleDetailModal } from './VehicleDetailModal';
+
+// Import vehicle images
+import executiveSedanImg from '@/assets/vehicles/executive-sedan.jpg';
+import executiveSuvImg from '@/assets/vehicles/executive-suv.jpg';
+import premiumSedanImg from '@/assets/vehicles/premium-sedan.jpg';
+import sprinterVanImg from '@/assets/vehicles/sprinter-van.jpg';
+import mini23PaxImg from '@/assets/vehicles/23-pax-mini.jpg';
+import mini29PaxImg from '@/assets/vehicles/29-pax-mini.jpg';
+import executive23PaxImg from '@/assets/vehicles/23-pax-executive.jpg';
+import executive29PaxImg from '@/assets/vehicles/29-pax-executive.jpg';
+import executive37PaxImg from '@/assets/vehicles/37-pax-executive.jpg';
+import coach49PaxImg from '@/assets/vehicles/49-pax-coach.jpg';
+import limo8PaxImg from '@/assets/vehicles/8-pax-limo.jpg';
+import sprinterLimo12PaxImg from '@/assets/vehicles/12-pax-sprinter-limo.jpg';
+import limoBus16PaxImg from '@/assets/vehicles/16-pax-limo-bus.jpg';
+import limoCoach32PaxImg from '@/assets/vehicles/32-pax-limo-coach.jpg';
+import ada10PaxImg from '@/assets/vehicles/ada-10-pax.jpg';
+import ada29PaxImg from '@/assets/vehicles/ada-29-pax.jpg';
 
 interface TransportationProps {
   onBack: () => void;
 }
 
 const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
-  const [selectedService, setSelectedService] = useState<any>(null);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const transportServices = [
+  const vehicles = [
     {
-      id: 'luxury-sedan',
-      name: 'Luxury Sedan',
-      description: 'Premium sedan for airport transfers and city rides',
+      id: 'executive-sedan',
+      name: 'Executive Sedan',
+      description: 'Premium sedan service for airport transfers and city rides',
       capacity: '1-3 passengers',
-      price: '$85/hour',
-      features: ['Professional driver', 'Leather seats', 'WiFi', 'Water bottles'],
-      rating: 4.9,
-      availability: 'Available now'
+      hourlyRate: 124.74,
+      features: ['Professional chauffeur', 'Leather interior', 'WiFi', 'Complimentary water'],
+      image: executiveSedanImg
     },
     {
-      id: 'suv',
-      name: 'Luxury SUV',
-      description: 'Spacious SUV perfect for groups and luggage',
+      id: 'executive-suv',
+      name: 'Executive SUV',
+      description: 'Spacious luxury SUV perfect for groups with luggage',
       capacity: '1-6 passengers',
-      price: '$125/hour',
-      features: ['Professional driver', 'Extra space', 'Premium sound', 'Refreshments'],
-      rating: 4.8,
-      availability: 'Available in 15 min'
+      hourlyRate: 138.60,
+      features: ['Professional chauffeur', 'Premium sound system', 'Extra cargo space', 'Refreshments'],
+      image: executiveSuvImg
     },
     {
-      id: 'party-bus',
-      name: 'Party Bus',
-      description: 'Ultimate group transportation with entertainment',
-      capacity: '8-20 passengers',
-      price: '$200/hour',
-      features: ['Professional driver', 'Sound system', 'LED lights', 'Mini bar'],
-      rating: 4.7,
-      availability: 'Book in advance'
+      id: 'premium-sedan',
+      name: 'Premium Sedan',
+      description: 'Top-tier luxury sedan experience with Mercedes S-Class service',
+      capacity: '1-3 passengers',
+      hourlyRate: 165.00,
+      features: ['Professional chauffeur', 'Premium leather', 'Advanced climate control', 'Premium amenities'],
+      image: premiumSedanImg
     },
     {
-      id: 'helicopter',
-      name: 'Helicopter Tours',
-      description: 'See Austin from above with scenic helicopter rides',
-      capacity: '1-4 passengers',
-      price: '$450/hour',
-      features: ['Licensed pilot', 'Scenic routes', 'Photo opportunities', 'Luxury experience'],
-      rating: 5.0,
-      availability: 'Weather dependent'
+      id: 'sprinter-van-14',
+      name: '14 Passenger Sprinter Van',
+      description: 'Comfortable Mercedes Sprinter for medium groups',
+      capacity: '1-14 passengers',
+      hourlyRate: 168.96,
+      features: ['Professional driver', 'Climate control', 'Comfortable seating', 'Luggage space'],
+      image: sprinterVanImg
+    },
+    {
+      id: '23-pax-mini',
+      name: '23 Passenger Mini Bus',
+      description: 'Efficient group transportation for medium-sized parties',
+      capacity: '1-23 passengers',
+      hourlyRate: 173.25,
+      features: ['Professional driver', 'Air conditioning', 'PA system', 'Storage'],
+      image: mini23PaxImg
+    },
+    {
+      id: '29-pax-mini',
+      name: '29 Passenger Mini Bus',
+      description: 'Spacious mini bus for larger group transportation',
+      capacity: '1-29 passengers',
+      hourlyRate: 181.91,
+      features: ['Professional driver', 'Climate control', 'Audio system', 'Luggage compartment'],
+      image: mini29PaxImg
+    },
+    {
+      id: '23-pax-executive',
+      name: '23 Passenger Executive Mini Bus',
+      description: 'Premium mini bus with executive amenities',
+      capacity: '1-23 passengers',
+      hourlyRate: 199.24,
+      features: ['Professional driver', 'Premium seating', 'Entertainment system', 'WiFi'],
+      image: executive23PaxImg
+    },
+    {
+      id: '29-pax-executive',
+      name: '29 Passenger Executive Mini Bus',
+      description: 'Luxury mini bus with enhanced comfort and features',
+      capacity: '1-29 passengers',
+      hourlyRate: 207.90,
+      features: ['Professional driver', 'Leather seats', 'Premium audio', 'Climate zones'],
+      image: executive29PaxImg
+    },
+    {
+      id: '37-pax-executive',
+      name: '37 Passenger Executive Mini Bus',
+      description: 'Large capacity executive bus for major events',
+      capacity: '1-37 passengers',
+      hourlyRate: 217.80,
+      features: ['Professional driver', 'Executive seating', 'Entertainment', 'Premium amenities'],
+      image: executive37PaxImg
+    },
+    {
+      id: '49-pax-coach',
+      name: '49 Passenger Motor Coach',
+      description: 'Full-size luxury motor coach for large groups',
+      capacity: '1-49 passengers',
+      hourlyRate: 233.89,
+      features: ['Professional driver', 'Reclining seats', 'Restroom', 'Entertainment system'],
+      image: coach49PaxImg
+    },
+    {
+      id: '8-pax-limo',
+      name: '8 Passenger Limousine',
+      description: 'Classic stretch limousine for special occasions',
+      capacity: '1-8 passengers',
+      hourlyRate: 173.25,
+      features: ['Professional chauffeur', 'Bar area', 'Premium sound', 'Mood lighting'],
+      image: limo8PaxImg
+    },
+    {
+      id: '12-pax-sprinter-limo',
+      name: '12 Passenger Sprinter Limousine',
+      description: 'Executive Mercedes Sprinter limo with luxury interior',
+      capacity: '1-12 passengers',
+      hourlyRate: 233.89,
+      features: ['Professional chauffeur', 'Luxury seating', 'Bar service', 'LED lighting'],
+      image: sprinterLimo12PaxImg
+    },
+    {
+      id: '16-pax-limo-bus',
+      name: '16 Passenger Limo Bus',
+      description: 'Party-ready limo bus with entertainment features',
+      capacity: '1-16 passengers',
+      hourlyRate: 272.25,
+      features: ['Professional driver', 'Dance floor', 'Premium sound system', 'Bar'],
+      image: limoBus16PaxImg
+    },
+    {
+      id: '32-pax-limo-coach',
+      name: '32 Passenger Limo Coach',
+      description: 'Ultimate party bus experience for large groups',
+      capacity: '1-32 passengers',
+      hourlyRate: 389.81,
+      features: ['Professional driver', 'Luxury interior', 'Entertainment system', 'Full bar'],
+      image: limoCoach32PaxImg
+    },
+    {
+      id: 'ada-10-pax',
+      name: 'ADA 10 Passenger (2 Wheelchair)',
+      description: 'Accessible transportation with wheelchair lift',
+      capacity: '10 passengers + 2 wheelchairs',
+      hourlyRate: 190.58,
+      features: ['Professional driver', 'Wheelchair lift', 'ADA compliant', 'Secure tie-downs'],
+      image: ada10PaxImg
+    },
+    {
+      id: 'ada-29-pax',
+      name: 'ADA 29 Passenger (2 Wheelchair)',
+      description: 'Large accessible bus for groups with mobility needs',
+      capacity: '29 passengers + 2 wheelchairs',
+      hourlyRate: 217.80,
+      features: ['Professional driver', 'Wheelchair accessible', 'Lift system', 'ADA certified'],
+      image: ada29PaxImg
     }
   ];
 
-  const quickBookOptions = [
-    { id: 'airport', title: 'Airport Transfer', description: 'To/from Austin-Bergstrom', price: '$65' },
-    { id: 'downtown', title: 'Downtown Austin', description: '2-hour city tour', price: '$180' },
-    { id: 'lake', title: 'Lake Austin', description: 'Scenic lake district ride', price: '$95' },
-    { id: 'hill-country', title: 'Hill Country', description: 'Half-day wine tour', price: '$350' }
-  ];
+  const handleViewDetails = (vehicle: any) => {
+    setSelectedVehicle(vehicle);
+    setIsDetailModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 p-6 pb-24">
@@ -84,97 +203,52 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-white drop-shadow-2xl">Transportation</h1>
-              <p className="text-white/90 drop-shadow-lg">Luxury transportation services in Austin</p>
+              <p className="text-white/90 drop-shadow-lg">Elegant Limousine - Austin's Premier Transportation</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Quick Book Options */}
+        {/* Vehicle Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          <h2 className="text-xl font-semibold text-white drop-shadow-lg mb-4">Quick Book</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickBookOptions.map((option) => (
-              <Card key={option.id} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer">
-                <CardContent className="p-4 text-center">
-                  <h3 className="text-white font-semibold mb-1">{option.title}</h3>
-                  <p className="text-white/70 text-sm mb-2">{option.description}</p>
-                  <Badge variant="secondary" className="text-sm bg-white/20 text-white">{option.price}</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Transportation Services */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
         >
           <h2 className="text-xl font-semibold text-white drop-shadow-lg mb-6">Available Vehicles</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {transportServices.map((service, index) => (
+            {vehicles.map((vehicle, index) => (
               <motion.div
-                key={service.id}
+                key={vehicle.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 + 0.3 }}
+                transition={{ delay: index * 0.05 }}
               >
-                <Card className={`bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer ${
-                  selectedService === service.id ? 'border-white/40 bg-white/20' : ''
-                }`}>
-                  <CardHeader className="p-4">
-                    <div className="aspect-[3/2] bg-white/20 rounded-lg mb-3 flex items-center justify-center">
-                      <Car className="w-12 h-12 text-white/60" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-xs bg-white/20 text-white">
-                        {service.availability}
-                      </Badge>
-                      <div className="flex items-center text-yellow-400">
-                        <span className="text-sm font-semibold">★ {service.rating}</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <h3 className="text-white font-semibold text-lg mb-2">{service.name}</h3>
-                    <p className="text-white/70 text-sm mb-3">{service.description}</p>
+                <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 overflow-hidden">
+                  <div className="aspect-video w-full overflow-hidden">
+                    <img
+                      src={vehicle.image}
+                      alt={vehicle.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="text-white font-semibold text-lg mb-2">{vehicle.name}</h3>
                     
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center text-white/80">
                         <Users className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{service.capacity}</span>
+                        <span className="text-sm">{vehicle.capacity}</span>
                       </div>
-                      <span className="text-white font-bold">{service.price}</span>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="text-white/80 text-sm font-semibold mb-2">Features included:</h4>
-                      <div className="grid grid-cols-2 gap-1">
-                        {service.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-center text-white/70 text-xs">
-                            <span className="w-1 h-1 bg-white/50 rounded-full mr-2"></span>
-                            {feature}
-                          </div>
-                        ))}
-                      </div>
+                      <span className="text-white font-bold">${vehicle.hourlyRate}/hr</span>
                     </div>
 
                     <div className="flex gap-2">
                       <Button 
-                        variant="default"
-                        className="flex-1"
-                        onClick={() => {
-                          setSelectedService(service);
-                          setIsBookingModalOpen(true);
-                        }}
+                        variant="outline"
+                        className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                        onClick={() => handleViewDetails(vehicle)}
                       >
-                        Book Now
+                        View Details
                       </Button>
                     </div>
                   </CardContent>
@@ -183,26 +257,19 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
             ))}
           </div>
         </motion.div>
+      </div>
 
-      {/* Booking Modal */}
-      {selectedService && (
-        <BookingModal
-          isOpen={isBookingModalOpen}
+      {/* Vehicle Detail Modal */}
+      {selectedVehicle && (
+        <VehicleDetailModal
+          isOpen={isDetailModalOpen}
           onClose={() => {
-            setIsBookingModalOpen(false);
-            setSelectedService(null);
+            setIsDetailModalOpen(false);
+            setSelectedVehicle(null);
           }}
-          itemType="transport"
-          itemTitle={selectedService.name}
-          itemDetails={{
-            description: selectedService.description,
-            capacity: selectedService.capacity,
-            price: parseInt(selectedService.price.replace('$', '').split('/')[0]),
-            features: selectedService.features
-          }}
+          vehicle={selectedVehicle}
         />
       )}
-      </div>
     </div>
   );
 };
