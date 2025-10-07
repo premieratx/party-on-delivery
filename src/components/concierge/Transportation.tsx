@@ -102,7 +102,7 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
                 <CardContent className="p-4 text-center">
                   <h3 className="text-white font-semibold mb-1">{option.title}</h3>
                   <p className="text-white/70 text-sm mb-2">{option.description}</p>
-                  <Badge variant="secondary" className="text-sm">{option.price}</Badge>
+                  <Badge variant="secondary" className="text-sm bg-white/20 text-white">{option.price}</Badge>
                 </CardContent>
               </Card>
             ))}
@@ -132,7 +132,7 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
                       <Car className="w-12 h-12 text-white/60" />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs bg-white/20 text-white">
                         {service.availability}
                       </Badge>
                       <div className="flex items-center text-yellow-400">
@@ -181,7 +181,7 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
                         variant="secondary"
                         className="flex-1"
                       />
-                      <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20">
+                      <Button variant="secondary" size="sm" className="bg-white/20 text-white hover:bg-white/30">
                         Details
                       </Button>
                     </div>
@@ -210,7 +210,7 @@ const Transportation: React.FC<TransportationProps> = ({ onBack }) => {
                     <p className="text-white/70 text-sm">Selected for your transportation needs</p>
                   </div>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setSelectedService(null)} className="border-white/30 text-white hover:bg-white/20">
+                    <Button variant="secondary" onClick={() => setSelectedService(null)} className="bg-white/20 text-white hover:bg-white/30">
                       Change
                     </Button>
                     <Button variant="default" size="lg">

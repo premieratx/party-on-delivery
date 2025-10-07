@@ -166,7 +166,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
           
           {selectedActivities.length > 0 && (
             <div className="text-white">
-              <Badge variant="secondary" className="mr-3">
+              <Badge variant="secondary" className="mr-3 bg-white/20 text-white">
                 {selectedActivities.length} selected
               </Badge>
               <span className="font-bold">${getTotalPrice()}</span>
@@ -187,9 +187,9 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
               return (
                 <Button
                   key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  variant={selectedCategory === category.id ? "default" : "secondary"}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={selectedCategory === category.id ? "" : "border-white/30 text-white hover:bg-white/20"}
+                  className={selectedCategory === category.id ? "" : "bg-white/20 text-white hover:bg-white/30 border-0"}
                 >
                   <IconComponent className="w-4 h-4 mr-2" />
                   {category.label}
@@ -216,7 +216,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                     <MapPin className="w-8 h-8 text-white/60" />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs capitalize">
+                    <Badge variant="secondary" className="text-xs capitalize bg-white/20 text-white">
                       {activity.category}
                     </Badge>
                     <div className="flex items-center text-yellow-400">
@@ -280,7 +280,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                       variant="secondary"
                       className="flex-1"
                     />
-                    <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20">
+                    <Button variant="secondary" size="sm" className="bg-white/20 text-white hover:bg-white/30">
                       Details
                     </Button>
                   </div>
@@ -305,7 +305,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                     <span className="text-white/70 ml-2">Total: ${getTotalPrice()}</span>
                   </div>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setSelectedActivities([])} className="border-white/30 text-white hover:bg-white/20">
+                    <Button variant="secondary" onClick={() => setSelectedActivities([])} className="bg-white/20 text-white hover:bg-white/30">
                       Clear All
                     </Button>
                     <Button variant="default" size="lg">

@@ -89,7 +89,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                   <Calendar className="w-5 h-5 mr-2" />
                   <span className="font-semibold">Today - March 15, 2024</span>
                 </div>
-                <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/20">
+                <Button variant="secondary" size="sm" className="bg-white/20 text-white hover:bg-white/30">
                   Change Date
                 </Button>
               </div>
@@ -148,9 +148,9 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                     
                     <div className="flex flex-col gap-2 ml-4">
                       <Button 
-                        variant="outline" 
+                        variant="secondary" 
                         size="sm" 
-                        className="border-white/30 text-white hover:bg-white/20"
+                        className="bg-white/20 text-white hover:bg-white/30"
                         onClick={() => handleRemove(item.id, item.title)}
                       >
                         <Trash2 className="w-4 h-4" />
