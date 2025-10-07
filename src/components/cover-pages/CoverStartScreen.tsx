@@ -130,44 +130,63 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         maxHeight: '720px'
       } as React.CSSProperties}
     >
-      {/* Background */}
+      {/* Background - Concierge Aesthetic */}
       <div 
-        className="relative h-full overflow-hidden" 
+        className="relative h-full overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600" 
         style={{ 
-          backgroundColor: backgroundColor || undefined,
           touchAction: 'none',
           overscrollBehavior: 'none',
-          height: '720px', // Reduced to match preview window visible area
+          height: '720px',
           maxHeight: '720px'
         } as React.CSSProperties}
       >
+        {/* Animated background particles */}
         <div className="absolute inset-0">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${fallbackSrc})` }}
-            aria-hidden="true"
-          />
-          {backgroundVideoUrl && showVideo && (
-            <video
-              ref={videoRef}
-              src={backgroundVideoUrl}
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              aria-hidden="true"
-              preload="metadata"
-              poster={fallbackSrc}
-              onCanPlay={() => setShowVideo(true)}
-              onLoadedData={() => {
-                try { videoRef.current?.play(); } catch {}
-                setShowVideo(true);
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-white/20 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${3 + Math.random() * 2}s`
               }}
             />
-          )}
+          ))}
         </div>
-        <div className="absolute inset-0 bg-black/70" />
+        
+        {/* Optional custom background image/video overlay */}
+        {(backgroundImageUrl || backgroundVideoUrl) && (
+          <div className="absolute inset-0">
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-30"
+              style={{ backgroundImage: `url(${fallbackSrc})` }}
+              aria-hidden="true"
+            />
+            {backgroundVideoUrl && showVideo && (
+              <video
+                ref={videoRef}
+                src={backgroundVideoUrl}
+                className="absolute inset-0 w-full h-full object-cover opacity-30"
+                autoPlay
+                muted
+                loop
+                playsInline
+                aria-hidden="true"
+                preload="metadata"
+                poster={fallbackSrc}
+                onCanPlay={() => setShowVideo(true)}
+                onLoadedData={() => {
+                  try { videoRef.current?.play(); } catch {}
+                  setShowVideo(true);
+                }}
+              />
+            )}
+          </div>
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
 
         {/* Content Container - Fixed layout to fit all elements properly */}
         <div 
@@ -235,10 +254,11 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             }}
           >
             <h1 
-              className="font-bold mb-3 px-3 leading-tight bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl"
+              className="font-bold mb-3 px-3 leading-tight text-white drop-shadow-2xl"
               style={{ 
-                fontSize: titleSizeProp ? `${titleSizeProp}px` : '24px',
-                fontFamily: titleFont || 'system-ui'
+                fontSize: titleSizeProp ? `${titleSizeProp}px` : '28px',
+                fontFamily: titleFont || 'system-ui',
+                textShadow: '0 0 40px rgba(255, 255, 255, 0.5), 0 2px 10px rgba(0, 0, 0, 0.5)'
               }}
             >
               {title}
@@ -253,10 +273,11 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 }}
               >
                 <p 
-                  className="text-white/80 px-3 leading-relaxed"
+                  className="text-white/90 px-3 leading-relaxed"
                   style={{ 
-                    fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '14px',
-                    fontFamily: subtitleFont || 'system-ui'
+                    fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '16px',
+                    fontFamily: subtitleFont || 'system-ui',
+                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
                   }}
                 >
                   {subtitle}
@@ -282,20 +303,23 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                   {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
                     <div 
                       key={index} 
-                      className={`bg-white/10 backdrop-blur-sm rounded-xl p-2.5 border border-white/20 transition-all duration-700 ${getAnimationClass(3)}`}
+                      className={`bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg transition-all duration-700 hover:bg-white/25 ${getAnimationClass(3)}`}
                       style={{ 
                         animationDelay: `${getAnimationDelay(3) + (index * 100)}ms`
                       }}
                     >
                       <div className="flex items-center">
-                        <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg mr-3">
-                          <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg mr-3">
+                          <svg className="w-3.5 h-3.5 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </div>
                         <h3 
-                          className="font-bold text-white"
-                          style={{ fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px' }}
+                          className="font-semibold text-white"
+                          style={{ 
+                            fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '15px',
+                            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+                          }}
                         >
                           {item}
                         </h3>
@@ -320,10 +344,11 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 <button
                   key={`${button.text}-${index}`}
                   onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
-                  className="w-full text-sm font-semibold h-11 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white border border-blue-400/40"
+                  className="w-full text-base font-bold h-12 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-pink-500/50 bg-white text-purple-700 border-2 border-white/50"
                   style={{
                     backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
-                    color: button.textColor || '#FFFFFF'
+                    color: button.textColor || undefined,
+                    boxShadow: '0 10px 30px rgba(236, 72, 153, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)'
                   }}
                 >
                   <span className="relative z-10">{button.text}</span>

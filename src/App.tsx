@@ -28,14 +28,17 @@ const App = () => {
         <GlobalCartProvider>
           <div className="min-h-screen">
             <Routes>
-              {/* Concierge Framework - Main Entry */}
-              <Route path="/" element={<ConciergeIndex />} />
+              {/* Cover pages as primary entry - restored */}
+              <Route path="/" element={<Navigate to="/cover/delivery" replace />} />
+              
+              {/* Concierge Framework - Accessible via /home */}
               <Route path="/home" element={
                 <div>
                   <ConciergeHome />
                   <Navigation />
                 </div>
               } />
+              <Route path="/concierge" element={<ConciergeIndex />} />
               
               {/* Concierge Service Pages */}
               <Route path="/itinerary" element={<ItineraryPage />} />
