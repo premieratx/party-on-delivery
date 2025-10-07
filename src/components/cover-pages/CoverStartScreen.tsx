@@ -77,6 +77,15 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
   const [showVideo, setShowVideo] = React.useState(false);
   const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
 
+  // Track viewport height for responsive spacing
+  const [viewportHeight, setViewportHeight] = React.useState(window.innerHeight);
+  
+  React.useEffect(() => {
+    const handleResize = () => setViewportHeight(window.innerHeight);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Animation state
   const [animationsStarted, setAnimationsStarted] = React.useState(!entranceAnimation);
   
@@ -327,8 +336,16 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Flexible spacer to push buttons to bottom */}
-          <div className="flex-grow min-h-2" />
+          {/* Flexible spacer to push buttons to bottom - responsive to viewport height */}
+          <div 
+            className="flex-grow" 
+            style={{ 
+              minHeight: '8px',
+              // On small mobile screens (< 700px height), cap the spacer to ensure buttons stay visible
+              // On larger screens (desktop/tablet), allow unlimited growth
+              maxHeight: viewportHeight < 700 ? '40px' : 'none'
+            }} 
+          />
 
           {/* Buttons Section - Anchored to bottom with padding */}
           <div 
