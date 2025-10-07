@@ -31,123 +31,125 @@ export function RentalDetailModal({ rental, isOpen, onClose }: RentalDetailModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white">
-            {rental.name}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-3xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[90vh] md:max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <div className="overflow-y-auto flex-1 px-4 md:px-6 py-4 md:py-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl md:text-2xl font-bold text-white">
+              {rental.name}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6 mt-4">
-          {/* Main Image */}
-          <div className="aspect-video bg-white/10 rounded-lg overflow-hidden">
-            <img 
-              src={rental.imageUrl} 
-              alt={rental.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <div className="space-y-4 md:space-y-6">
+            {/* Main Image */}
+            <div className="aspect-video bg-white/10 rounded-lg overflow-hidden -mx-4 md:mx-0">
+              <img 
+                src={rental.imageUrl} 
+                alt={rental.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
 
-          {/* Description */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">About This Property</h3>
-            <p className="text-white/80 leading-relaxed">{rental.description}</p>
-          </div>
+            {/* Description */}
+            <div>
+              <h3 className="text-base md:text-lg font-semibold mb-2">About This Property</h3>
+              <p className="text-sm md:text-base text-white/80 leading-relaxed">{rental.description}</p>
+            </div>
 
-          {/* Property Details Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/5 rounded-lg p-4">
-            <div className="flex flex-col items-center text-center">
-              <Users className="w-6 h-6 mb-2 text-white/70" />
-              <p className="text-xs text-white/60">Sleeps</p>
-              <p className="font-semibold">{rental.capacity} guests</p>
+            {/* Property Details Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 bg-white/5 rounded-lg p-3 md:p-4">
+              <div className="flex flex-col items-center text-center">
+                <Users className="w-5 h-5 md:w-6 md:h-6 mb-1 md:mb-2 text-white/70" />
+                <p className="text-xs text-white/60">Sleeps</p>
+                <p className="text-sm md:text-base font-semibold">{rental.capacity} guests</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <Bed className="w-5 h-5 md:w-6 md:h-6 mb-1 md:mb-2 text-white/70" />
+                <p className="text-xs text-white/60">Bedrooms</p>
+                <p className="text-sm md:text-base font-semibold">{rental.bedrooms}</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <Bath className="w-5 h-5 md:w-6 md:h-6 mb-1 md:mb-2 text-white/70" />
+                <p className="text-xs text-white/60">Bathrooms</p>
+                <p className="text-sm md:text-base font-semibold">{rental.bathrooms}</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <Wine className="w-5 h-5 md:w-6 md:h-6 mb-1 md:mb-2 text-green-400" />
+                <p className="text-xs text-white/60">Delivery</p>
+                <p className="text-sm md:text-base font-semibold">Available</p>
+              </div>
             </div>
-            <div className="flex flex-col items-center text-center">
-              <Bed className="w-6 h-6 mb-2 text-white/70" />
-              <p className="text-xs text-white/60">Bedrooms</p>
-              <p className="font-semibold">{rental.bedrooms}</p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <Bath className="w-6 h-6 mb-2 text-white/70" />
-              <p className="text-xs text-white/60">Bathrooms</p>
-              <p className="font-semibold">{rental.bathrooms}</p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <Wine className="w-6 h-6 mb-2 text-green-400" />
-              <p className="text-xs text-white/60">Delivery</p>
-              <p className="font-semibold text-sm">Available</p>
-            </div>
-          </div>
 
-          {/* Amenities */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Amenities</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {rental.amenities.map((amenity, idx) => (
-                <div key={idx} className="flex items-center bg-white/5 rounded-lg p-3">
-                  <span className="text-green-400 mr-3">✓</span>
-                  <span className="text-white/80">{amenity}</span>
+            {/* Amenities */}
+            <div>
+              <h3 className="text-base md:text-lg font-semibold mb-3">Amenities</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+                {rental.amenities.map((amenity, idx) => (
+                  <div key={idx} className="flex items-center bg-white/5 rounded-lg p-2 md:p-3">
+                    <span className="text-green-400 mr-2 md:mr-3">✓</span>
+                    <span className="text-sm md:text-base text-white/80">{amenity}</span>
+                  </div>
+                ))}
+                <div className="flex items-center bg-green-500/20 rounded-lg p-2 md:p-3">
+                  <Wine className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3 text-green-400" />
+                  <span className="text-sm md:text-base text-white/80">Alcohol Delivery Available</span>
                 </div>
-              ))}
-              <div className="flex items-center bg-green-500/20 rounded-lg p-3">
-                <Wine className="w-5 h-5 mr-3 text-green-400" />
-                <span className="text-white/80">Alcohol Delivery Available</span>
+              </div>
+            </div>
+
+            {/* Pricing Breakdown */}
+            <div className="bg-white/5 rounded-lg p-4 md:p-6 space-y-2 md:space-y-3">
+              <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Pricing</h3>
+              
+              <div className="flex justify-between text-sm md:text-base text-white/80">
+                <span>Nightly Rate</span>
+                <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              </div>
+              
+              <div className="flex justify-between text-sm md:text-base text-white/80">
+                <span>Sales Tax (8.25%)</span>
+                <span className="font-semibold">${salesTax.toFixed(2)}</span>
+              </div>
+              
+              <div className="h-px bg-white/10 my-2 md:my-3"></div>
+              
+              <div className="flex justify-between text-base md:text-lg font-bold">
+                <span>Total per Night</span>
+                <span>${grandTotal.toFixed(2)}</span>
+              </div>
+
+              <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-white/10 text-xs md:text-sm text-white/70 space-y-1">
+                <p>• 25% deposit required to book</p>
+                <p>• Remaining balance due 30 days before check-in</p>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Pricing Breakdown */}
-          <div className="bg-white/5 rounded-lg p-6 space-y-3">
-            <h3 className="text-lg font-semibold mb-4">Pricing</h3>
-            
-            <div className="flex justify-between text-white/80">
-              <span>Nightly Rate</span>
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between text-white/80">
-              <span>Sales Tax (8.25%)</span>
-              <span className="font-semibold">${salesTax.toFixed(2)}</span>
-            </div>
-            
-            <div className="h-px bg-white/10 my-3"></div>
-            
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total per Night</span>
-              <span>${grandTotal.toFixed(2)}</span>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-white/10 text-sm text-white/70 space-y-1">
-              <p>• 25% deposit required to book</p>
-              <p>• Remaining balance due 30 days before check-in</p>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button
-              variant="default"
-              size="lg"
-              className="flex-1 text-base py-6"
-            >
-              <CalendarIcon className="w-5 h-5 mr-2" />
-              Book Now
-            </Button>
-            <AddToItineraryButton
-              item={{
-                type: 'rental',
-                title: rental.name,
-                date: new Date().toISOString().split('T')[0],
-                imageUrl: rental.imageUrl,
-                meta: {
-                  description: rental.description,
-                  capacity: rental.capacity,
-                  pricePerNight: rental.pricePerNight
-                }
-              }}
-              size="lg"
-              className="flex-1 text-base py-6"
-            />
-          </div>
+        {/* Sticky Action Buttons */}
+        <div className="border-t border-white/10 bg-purple-900/50 backdrop-blur-sm px-4 md:px-6 py-3 md:py-4 flex gap-2 md:gap-3">
+          <Button
+            variant="default"
+            size="lg"
+            className="flex-1 text-sm md:text-base py-4 md:py-6"
+          >
+            <CalendarIcon className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
+            Book Now
+          </Button>
+          <AddToItineraryButton
+            item={{
+              type: 'rental',
+              title: rental.name,
+              date: new Date().toISOString().split('T')[0],
+              imageUrl: rental.imageUrl,
+              meta: {
+                description: rental.description,
+                capacity: rental.capacity,
+                pricePerNight: rental.pricePerNight
+              }
+            }}
+            size="lg"
+            className="flex-1 text-sm md:text-base py-4 md:py-6"
+          />
         </div>
       </DialogContent>
     </Dialog>
