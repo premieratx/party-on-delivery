@@ -31,8 +31,8 @@ export function RentalDetailModal({ rental, isOpen, onClose }: RentalDetailModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[90vh] md:max-h-[85vh] overflow-hidden flex flex-col p-0">
-        <div className="overflow-y-auto flex-1 px-4 md:px-6 py-4 md:py-6">
+      <DialogContent className="max-w-3xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[85vh] overflow-y-auto p-4 md:p-6">
+        <div>
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl md:text-2xl font-bold text-white">
               {rental.name}
@@ -122,34 +122,34 @@ export function RentalDetailModal({ rental, isOpen, onClose }: RentalDetailModal
                 <p>• Remaining balance due 30 days before check-in</p>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Sticky Action Buttons */}
-        <div className="border-t border-white/10 bg-purple-900/50 backdrop-blur-sm px-4 md:px-6 py-3 md:py-4 flex gap-2 md:gap-3">
-          <Button
-            variant="default"
-            size="lg"
-            className="flex-1 text-sm md:text-base py-4 md:py-6"
-          >
-            <CalendarIcon className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-            Book Now
-          </Button>
-          <AddToItineraryButton
-            item={{
-              type: 'rental',
-              title: rental.name,
-              date: new Date().toISOString().split('T')[0],
-              imageUrl: rental.imageUrl,
-              meta: {
-                description: rental.description,
-                capacity: rental.capacity,
-                pricePerNight: rental.pricePerNight
-              }
-            }}
-            size="lg"
-            className="flex-1 text-sm md:text-base py-4 md:py-6"
-          />
+          {/* Action Buttons */}
+          <div className="mt-4 pt-4 border-t border-white/10 flex gap-2 md:gap-3">
+            <Button
+              variant="default"
+              size="lg"
+              className="flex-1 text-sm md:text-base py-4 md:py-6"
+            >
+              <CalendarIcon className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
+              Book Now
+            </Button>
+            <AddToItineraryButton
+              item={{
+                type: 'rental',
+                title: rental.name,
+                date: new Date().toISOString().split('T')[0],
+                imageUrl: rental.imageUrl,
+                meta: {
+                  description: rental.description,
+                  capacity: rental.capacity,
+                  pricePerNight: rental.pricePerNight
+                }
+              }}
+              size="lg"
+              className="flex-1 text-sm md:text-base py-4 md:py-6"
+            />
+          </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

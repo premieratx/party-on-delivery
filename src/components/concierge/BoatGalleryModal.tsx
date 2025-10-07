@@ -56,8 +56,8 @@ export function BoatGalleryModal({ boat, isOpen, onClose }: BoatGalleryModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[90vh] md:max-h-[85vh] overflow-hidden flex flex-col p-0">
-        <div className="overflow-y-auto flex-1 px-4 md:px-6 py-4 md:py-6">
+      <DialogContent className="max-w-4xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[85vh] overflow-y-auto p-4 md:p-6">
+        <div className="space-y-4 md:space-y-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl md:text-2xl font-bold text-white flex items-center justify-between">
               <span>{boat.name}</span>
@@ -163,22 +163,22 @@ export function BoatGalleryModal({ boat, isOpen, onClose }: BoatGalleryModalProp
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Button */}
-        <div className="border-t border-white/10 bg-purple-900/50 backdrop-blur-sm px-4 md:px-6 py-3 md:py-4">
-          <Button
-            variant="default"
-            size="lg"
-            className="w-full text-sm md:text-base py-4 md:py-6 bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
-            onClick={() => {
-              // Scroll to top of booking iframe
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              onClose();
-            }}
-          >
-            Book This Boat Now
-          </Button>
+          {/* Action Button */}
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <Button
+              variant="default"
+              size="lg"
+              className="w-full text-sm md:text-base py-4 md:py-6 bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+              onClick={() => {
+                // Scroll to top of booking iframe
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                onClose();
+              }}
+            >
+              Book This Boat Now
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
