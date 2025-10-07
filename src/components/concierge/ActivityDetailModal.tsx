@@ -16,6 +16,7 @@ interface Activity {
   participants: string;
   highlights: string[];
   availability: string;
+  imageUrl?: string;
 }
 
 interface ActivityDetailModalProps {
@@ -50,9 +51,19 @@ export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetai
             </Badge>
           </div>
 
-          {/* Main Image Placeholder */}
-          <div className="aspect-video bg-white/10 rounded-lg flex items-center justify-center">
-            <span className="text-6xl">📸</span>
+          {/* Main Image */}
+          <div className="aspect-video bg-white/10 rounded-lg overflow-hidden">
+            {activity.imageUrl ? (
+              <img 
+                src={activity.imageUrl} 
+                alt={activity.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-6xl">📸</span>
+              </div>
+            )}
           </div>
 
           {/* Description */}

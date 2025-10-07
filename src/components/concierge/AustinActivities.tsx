@@ -4,6 +4,14 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, Music, Camera, Utensils, Mountain, Eye } from 'lucide-react';
 import { ActivityDetailModal } from './ActivityDetailModal';
+import liveMusicImg from '@/assets/activities/live-music-tour.jpg';
+import foodTruckImg from '@/assets/activities/food-truck-crawl.jpg';
+import kayakImg from '@/assets/activities/kayak-adventure.jpg';
+import muralImg from '@/assets/activities/mural-art-tour.jpg';
+import bbqImg from '@/assets/activities/bbq-masterclass.jpg';
+import batImg from '@/assets/activities/bat-watching.jpg';
+import breweryImg from '@/assets/activities/brewery-hopping.jpg';
+import hillCountryImg from '@/assets/activities/hill-country.jpg';
 
 interface AustinActivitiesProps {
   onBack: () => void;
@@ -33,7 +41,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.9,
       participants: '2-8 people',
       highlights: ['The Continental Club', "Antone's", 'Red River District', 'Local musician guide'],
-      availability: 'Tonight at 7 PM'
+      availability: 'Tonight at 7 PM',
+      imageUrl: liveMusicImg
     },
     {
       id: 'food-truck-crawl',
@@ -45,7 +54,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.8,
       participants: '2-12 people',
       highlights: ['5 food truck stops', 'Local favorites', 'Vegetarian options', 'Food guide'],
-      availability: 'Daily at 11 AM & 6 PM'
+      availability: 'Daily at 11 AM & 6 PM',
+      imageUrl: foodTruckImg
     },
     {
       id: 'kayak-adventure',
@@ -57,7 +67,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.7,
       participants: '1-8 people',
       highlights: ['Kayak rental included', 'Guided tour', 'Skyline photography', 'Safety equipment'],
-      availability: 'Multiple times daily'
+      availability: 'Multiple times daily',
+      imageUrl: kayakImg
     },
     {
       id: 'mural-art-tour',
@@ -69,7 +80,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.6,
       participants: '2-15 people',
       highlights: ['Famous murals', 'Artist stories', 'Photo opportunities', 'Art history'],
-      availability: 'Daily at 10 AM & 3 PM'
+      availability: 'Daily at 10 AM & 3 PM',
+      imageUrl: muralImg
     },
     {
       id: 'bbq-masterclass',
@@ -81,7 +93,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.9,
       participants: '6-12 people',
       highlights: ['Hands-on cooking', 'Meat selection', 'Smoking techniques', 'Full meal included'],
-      availability: 'Weekends only'
+      availability: 'Weekends only',
+      imageUrl: bbqImg
     },
     {
       id: 'bat-watching',
@@ -93,7 +106,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.5,
       participants: '2-20 people',
       highlights: ['Best viewing spots', 'Bat facts', 'Sunset viewing', 'Photography tips'],
-      availability: 'Every evening at sunset'
+      availability: 'Every evening at sunset',
+      imageUrl: batImg
     },
     {
       id: 'brewery-hopping',
@@ -105,7 +119,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.8,
       participants: '4-10 people',
       highlights: ['4 brewery stops', 'Transportation included', 'Beer tastings', 'Local beer expert'],
-      availability: 'Friday-Sunday'
+      availability: 'Friday-Sunday',
+      imageUrl: breweryImg
     },
     {
       id: 'hill-country-day-trip',
@@ -117,7 +132,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
       rating: 4.9,
       participants: '2-6 people',
       highlights: ['Wine tastings', 'Scenic drives', 'Historic towns', 'Lunch included'],
-      availability: 'Daily departures'
+      availability: 'Daily departures',
+      imageUrl: hillCountryImg
     }
   ];
 
@@ -189,9 +205,13 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
             >
               <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 h-full">
                 <CardHeader className="p-4">
-                  {/* Image Placeholder */}
-                  <div className="aspect-[16/9] bg-white/20 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                    <span className="text-6xl">📸</span>
+                  {/* Image */}
+                  <div className="aspect-[16/9] bg-white/20 rounded-lg mb-4 overflow-hidden">
+                    <img 
+                      src={activity.imageUrl} 
+                      alt={activity.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 flex flex-col">

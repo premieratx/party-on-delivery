@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, Clock, Calendar, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/useAppStore';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface ItineraryViewProps {
   onBack: () => void;
@@ -15,6 +16,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
   const itinerary = useAppStore((state) => state.itinerary);
   const removeFromItinerary = useAppStore((state) => state.removeFromItinerary);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleRemove = (id: string, title: string) => {
     removeFromItinerary(id);
@@ -47,6 +49,8 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
         return '🚗';
       case 'delivery':
         return '🚚';
+      case 'rental':
+        return '🏠';
       default:
         return '📍';
     }
@@ -117,8 +121,19 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
             >
               <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300">
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-start gap-4">
+                    {/* Image */}
+                    {item.imageUrl && (
+                      <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-2">
                         <div className="text-2xl mr-3">{getTypeIcon(item.type)}</div>
                         <div className="flex items-center text-white/80">
@@ -135,7 +150,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                       
                       <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
                       {item.meta?.description && (
-                        <p className="text-white/70 mb-3">{item.meta.description}</p>
+                        <p className="text-white/70 mb-3 line-clamp-2">{item.meta.description}</p>
                       )}
                       
                       {item.meta?.duration && (
@@ -146,7 +161,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-2 ml-4">
+                    <div className="flex flex-col gap-2">
                       <Button 
                         variant="secondary" 
                         size="sm" 
@@ -177,7 +192,10 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
                 <Calendar className="w-8 h-8 mx-auto mb-2" />
                 <p>Want to add something to your itinerary?</p>
               </div>
-              <Button variant="secondary">
+              <Button 
+                variant="secondary"
+                onClick={() => navigate('/explore')}
+              >
                 Add New Activity
               </Button>
             </CardContent>

@@ -2,11 +2,12 @@ import { create } from 'zustand';
 
 export interface ItineraryItem {
   id: string;
-  type: 'boat' | 'transport' | 'delivery' | 'activity';
+  type: 'boat' | 'transport' | 'delivery' | 'activity' | 'rental';
   title: string;
   date: string;
   startTime?: string;
   endTime?: string;
+  imageUrl?: string;
   meta?: Record<string, any>;
 }
 

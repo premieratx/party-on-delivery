@@ -12,6 +12,7 @@ import ItineraryPage from "@/pages/ItineraryPage";
 import TransportPage from "@/pages/TransportPage";
 import BoatsPage from "@/pages/BoatsPage";
 import ExplorePage from "@/pages/ExplorePage";
+import RentalsPage from "@/pages/RentalsPage";
 import QuoteBuilderPage from "@/pages/QuoteBuilderPage";
 import CustomAppView from "@/pages/CustomAppView";
 import Checkout from "@/pages/Checkout";
@@ -52,6 +53,7 @@ const App = () => {
               <Route path="/boats" element={<BoatsPage />} />
               <Route path="/boats/quote" element={<QuoteBuilderPage />} />
               <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/rentals" element={<RentalsPage />} />
               
               {/* Delivery apps - Integrated as a service */}
               <Route path="/app/:appSlug" element={<CustomAppView />} />
