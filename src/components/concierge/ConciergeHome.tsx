@@ -3,6 +3,12 @@ import { Calendar, ShoppingCart, Car, Ship, MapPin, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import heroImage from '@/assets/hero/party-hero.jpg';
+import itineraryHero from '@/assets/services/itinerary-hero.jpg';
+import alcoholHero from '@/assets/services/alcohol-delivery-hero.jpg';
+import transportHero from '@/assets/services/transport-hero.jpg';
+import boatsHero from '@/assets/services/boats-hero.jpg';
+import exploreHero from '@/assets/services/explore-hero.jpg';
+import rentalsHero from '@/assets/services/rentals-hero.jpg';
 
 const services = [
   {
@@ -10,42 +16,48 @@ const services = [
     title: 'View Itinerary',
     description: 'See your planned activities and reservations',
     href: '/itinerary',
-    color: 'bg-blue-500'
+    color: 'bg-blue-500',
+    image: itineraryHero
   },
   {
     icon: ShoppingCart,
     title: 'Order Alcohol Delivery',
     description: 'Premium spirits delivered to your location',
     href: '/app/delivery',
-    color: 'bg-purple-500'
+    color: 'bg-purple-500',
+    image: alcoholHero
   },
   {
     icon: Car,
     title: 'Arrange Transportation',
     description: 'Luxury vehicles for group transportation',
     href: '/transport',
-    color: 'bg-green-500'
+    color: 'bg-green-500',
+    image: transportHero
   },
   {
     icon: Ship,
     title: 'Reserve a Boat Rental',
     description: 'Austin lake adventures await',
     href: '/boats',
-    color: 'bg-blue-600'
+    color: 'bg-blue-600',
+    image: boatsHero
   },
   {
     icon: MapPin,
     title: 'Find Something Fun to Do',
     description: 'Discover Austin\'s best activities',
     href: '/explore',
-    color: 'bg-orange-500'
+    color: 'bg-orange-500',
+    image: exploreHero
   },
   {
     icon: Home,
     title: 'Vacation Rentals',
     description: 'Book luxury mansions for your stay',
     href: '/rentals',
-    color: 'bg-pink-500'
+    color: 'bg-pink-500',
+    image: rentalsHero
   }
 ];
 
@@ -96,14 +108,27 @@ export function ConciergeHome() {
               className="aspect-square"
             >
               <Link to={service.href} className="block h-full">
-                <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:shadow-2xl hover:shadow-pink-500/30 transition-all duration-300 h-full">
-                  <CardContent className="p-3 sm:p-4 flex flex-col justify-center items-center text-center h-full">
-                    <div className="bg-white/20 backdrop-blur-sm p-3 sm:p-4 rounded-xl text-white mb-3 shadow-lg">
-                      <service.icon className="h-6 w-6 sm:h-8 sm:w-8" />
+                <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 hover:shadow-2xl hover:shadow-pink-500/30 transition-all duration-300 h-full overflow-hidden group">
+                  <CardContent className="p-0 flex flex-col h-full relative">
+                    {/* Background Image with Overlay */}
+                    <div className="absolute inset-0">
+                      <img 
+                        src={service.image} 
+                        alt={service.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/80 via-purple-800/85 to-purple-900/90 group-hover:from-purple-900/70 group-hover:via-purple-800/75 group-hover:to-purple-900/80 transition-all duration-300" />
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-white text-sm sm:text-base leading-tight drop-shadow-lg">{service.title}</h3>
-                      <p className="text-white/80 text-xs leading-tight line-clamp-2 drop-shadow-sm">{service.description}</p>
+                    
+                    {/* Content */}
+                    <div className="relative z-10 p-3 sm:p-4 flex flex-col justify-center items-center text-center h-full">
+                      <div className="bg-white/20 backdrop-blur-sm p-3 sm:p-4 rounded-xl text-white mb-3 shadow-lg">
+                        <service.icon className="h-6 w-6 sm:h-8 sm:w-8" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-white text-sm sm:text-base leading-tight drop-shadow-lg">{service.title}</h3>
+                        <p className="text-white/90 text-xs leading-tight line-clamp-2 drop-shadow-md">{service.description}</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

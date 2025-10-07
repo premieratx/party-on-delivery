@@ -12,6 +12,11 @@ import cleverGirl2 from '@/assets/boats/clever-girl-2.jpg';
 import cleverGirl3 from '@/assets/boats/clever-girl-3.jpg';
 import cleverGirl4 from '@/assets/boats/clever-girl-4.jpg';
 import cleverGirl5 from '@/assets/boats/clever-girl-5.jpg';
+import dayTripper1 from '@/assets/boats/day-tripper-1.jpg';
+import dayTripper2 from '@/assets/boats/day-tripper-2.jpg';
+import dayTripper3 from '@/assets/boats/day-tripper-3.jpg';
+import dayTripper4 from '@/assets/boats/day-tripper-4.jpg';
+import dayTripper5 from '@/assets/boats/day-tripper-5.jpg';
 
 interface Boat {
   name: string;
@@ -22,10 +27,16 @@ interface Boat {
 
 const boats: Boat[] = [
   {
-    name: "Meseeks & The Irony",
-    capacity: "15-30 Guests",
+    name: "Meeseeks / The Irony",
+    capacity: "25-30 max",
     images: [meseeks1, meseeks2, meseeks3, irony1, irony2],
     description: "Perfect for medium-sized groups looking for an unforgettable Lake Travis experience. These boats feature covered seating, sound systems, and comfortable amenities for your party."
+  },
+  {
+    name: "Day Tripper",
+    capacity: "15-25 Guests",
+    images: [dayTripper1, dayTripper2, dayTripper3, dayTripper4, dayTripper5],
+    description: "Ideal for smaller groups seeking a premium Lake Travis experience. Features comfortable seating, excellent sound system, and all the amenities needed for an amazing day on the water."
   },
   {
     name: "Clever Girl",
@@ -56,7 +67,7 @@ export function BoatGalleryModal({ boat, isOpen, onClose }: BoatGalleryModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[85vh] overflow-y-auto p-4 md:p-6">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[90vh] overflow-y-auto p-4 md:p-6">
         <div className="space-y-4 md:space-y-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl md:text-2xl font-bold text-white flex items-center justify-between">
@@ -70,12 +81,12 @@ export function BoatGalleryModal({ boat, isOpen, onClose }: BoatGalleryModalProp
 
           <div className="space-y-4 md:space-y-6">
             {/* Image Gallery with Navigation */}
-            <div className="relative -mx-4 md:mx-0">
+            <div className="relative">
               <div className="relative aspect-video bg-white/10 rounded-lg overflow-hidden">
                 <img 
                   src={boat.images[currentImageIndex]} 
                   alt={`${boat.name} - Image ${currentImageIndex + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain md:object-cover"
                 />
                 
                 {/* Navigation Arrows */}
@@ -103,7 +114,7 @@ export function BoatGalleryModal({ boat, isOpen, onClose }: BoatGalleryModalProp
               </div>
 
               {/* Thumbnail Navigation */}
-              <div className="flex gap-2 mt-3 overflow-x-auto pb-2 px-4 md:px-0">
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
                 {boat.images.map((image, index) => (
                   <button
                     key={index}
