@@ -202,7 +202,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           <div 
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
-              marginBottom: '12px',
+              marginBottom: '8px',
               animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
@@ -245,12 +245,12 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           <div 
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(1)}`}
             style={{ 
-              marginBottom: '16px',
+              marginBottom: '12px',
               animationDelay: `${getAnimationDelay(1)}ms`
             }}
           >
             <h1 
-              className="font-bold mb-2 px-3 leading-tight text-white drop-shadow-2xl"
+              className="font-bold mb-1.5 px-3 leading-tight text-white drop-shadow-2xl"
               style={{ 
                 fontSize: titleSizeProp ? `${titleSizeProp}px` : '26px',
                 fontFamily: titleFont || 'system-ui',
@@ -268,7 +268,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 }}
               >
                 <p 
-                  className="text-white/90 px-3 leading-relaxed"
+                  className="text-white/90 px-3 leading-snug"
                   style={{ 
                     fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '15px',
                     fontFamily: subtitleFont || 'system-ui',
@@ -286,28 +286,28 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             <div 
               className={`flex-none transition-all duration-700 ${getAnimationClass(3)}`}
               style={{ 
-                marginBottom: '16px',
+                marginBottom: '12px',
                 animationDelay: `${getAnimationDelay(3)}ms`
               }}
             >
               <div className="w-full max-w-xs mx-auto">
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {checklistItems.filter(Boolean).slice(0, 3).map((item, index) => (
                     <div 
                       key={index} 
-                      className={`bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg transition-all duration-700 hover:bg-white/25 ${getAnimationClass(3)}`}
+                      className={`bg-white/20 backdrop-blur-md rounded-xl p-2.5 border border-white/30 shadow-lg transition-all duration-700 hover:bg-white/25 ${getAnimationClass(3)}`}
                       style={{ 
                         animationDelay: `${getAnimationDelay(3) + (index * 100)}ms`
                       }}
                     >
                       <div className="flex items-center">
-                        <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg mr-3 flex-shrink-0">
-                          <svg className="w-3.5 h-3.5 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="w-5 h-5 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg mr-2.5 flex-shrink-0">
+                          <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </div>
                         <h3 
-                          className="font-semibold text-white"
+                          className="font-semibold text-white leading-tight"
                           style={{ 
                             fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px',
                             textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
@@ -324,7 +324,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           )}
 
           {/* Flexible spacer to push buttons to bottom */}
-          <div className="flex-grow min-h-4" />
+          <div className="flex-grow min-h-2" />
 
           {/* Buttons Section - Anchored to bottom with padding */}
           <div 
@@ -333,7 +333,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
               animationDelay: `${getAnimationDelay(4)}ms`
             }}
           >
-            <div className="flex flex-col gap-2.5 w-full max-w-xs mx-auto">
+            <div className="flex flex-col gap-2 w-full max-w-xs mx-auto">
               {buttons && buttons.length > 0 && buttons.slice(0, 2).map((button, index) => (
                 <button
                   key={`${button.text}-${index}`}
