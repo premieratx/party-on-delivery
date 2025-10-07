@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DynamicRouteHandler } from "@/components/routing/DynamicRouteHandler";
+import { StandaloneCoverPage } from "@/components/cover-pages/StandaloneCoverPage";
 import ConciergeIndex from "@/pages/ConciergeIndex";
 import { ConciergeHome } from "@/components/concierge/ConciergeHome";
 import { Navigation } from "@/components/concierge/Navigation";
@@ -11,6 +12,7 @@ import ItineraryPage from "@/pages/ItineraryPage";
 import TransportPage from "@/pages/TransportPage";
 import BoatsPage from "@/pages/BoatsPage";
 import ExplorePage from "@/pages/ExplorePage";
+import QuoteBuilderPage from "@/pages/QuoteBuilderPage";
 import CustomAppView from "@/pages/CustomAppView";
 import Checkout from "@/pages/Checkout";
 import OrderComplete from "@/pages/OrderComplete";
@@ -30,6 +32,7 @@ const App = () => {
             <Routes>
               {/* Cover pages as primary entry - restored */}
               <Route path="/" element={<Navigate to="/cover/delivery" replace />} />
+              <Route path="/cover/:slug" element={<StandaloneCoverPage />} />
               
               {/* Concierge Framework - Accessible via /home */}
               <Route path="/home" element={
@@ -44,6 +47,7 @@ const App = () => {
               <Route path="/itinerary" element={<ItineraryPage />} />
               <Route path="/transport" element={<TransportPage />} />
               <Route path="/boats" element={<BoatsPage />} />
+              <Route path="/boats/quote" element={<QuoteBuilderPage />} />
               <Route path="/explore" element={<ExplorePage />} />
               
               {/* Delivery apps - Integrated as a service */}
