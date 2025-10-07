@@ -22,7 +22,7 @@ export const useCoverPageDetection = () => {
     if (segments.length === 1 && pathname !== '/') {
       const segment = segments[0];
       // Exclude known app routes
-      const knownRoutes = ['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery'];
+      const knownRoutes = ['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery', 'home', 'itinerary', 'navigation', 'transport', 'boats', 'quote', 'explore'];
       const isKnownRoute = knownRoutes.includes(segment);
       console.log('🔍 Single segment check:', { segment, isKnownRoute });
       
