@@ -177,7 +177,7 @@ const DEVICE_CONFIGS = {
 };
 
 // Types
-export type CoverButtonType = 'delivery_app' | 'checkout' | 'url'
+export type CoverButtonType = 'delivery_app' | 'checkout' | 'url' | 'concierge_app'
 export interface CoverButtonConfig {
   text: string;
   type: CoverButtonType;
@@ -770,8 +770,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                                   <SelectTrigger className="bg-background/50 border-border/50">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="bg-background border-border z-50">
                                     <SelectItem value="delivery_app">Delivery App</SelectItem>
+                                    <SelectItem value="concierge_app">Concierge App</SelectItem>
                                     <SelectItem value="checkout">Checkout</SelectItem>
                                     <SelectItem value="url">Custom URL</SelectItem>
                                   </SelectContent>

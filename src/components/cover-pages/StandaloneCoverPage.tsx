@@ -97,6 +97,9 @@ export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: 
           } else {
             window.open(button.url, '_blank', 'noopener,noreferrer');
           }
+        } else if (button.type === 'concierge_app') {
+          // Route to concierge home page
+          window.location.href = '/home';
         } else if ((button.type === 'delivery_app' || button.assignment_type === 'delivery_app') && (button.app_slug || button.delivery_app_id)) {
           // Handle both old (delivery_app_id) and new (app_slug) data structures
           const appIdentifier = button.app_slug || button.delivery_app_id;

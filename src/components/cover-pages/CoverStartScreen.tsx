@@ -324,11 +324,11 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
           )}
 
           {/* Flexible spacer to push buttons to bottom */}
-          <div className="flex-grow" />
+          <div className="flex-grow min-h-4" />
 
-          {/* Buttons Section - Anchored to bottom */}
+          {/* Buttons Section - Anchored to bottom with padding */}
           <div 
-            className={`flex-none transition-all duration-700 ${getAnimationClass(4)}`}
+            className={`flex-none pb-4 transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
               animationDelay: `${getAnimationDelay(4)}ms`
             }}
