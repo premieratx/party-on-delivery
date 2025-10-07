@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Clock, Star, Users, Calendar, Music, Camera, Utensils, Mountain } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, MapPin, Music, Camera, Utensils, Mountain, Eye } from 'lucide-react';
 import { AddToItineraryButton } from './AddToItineraryButton';
+import { ActivityDetailModal } from './ActivityDetailModal';
 
 interface AustinActivitiesProps {
   onBack: () => void;
@@ -12,7 +12,8 @@ interface AustinActivitiesProps {
 
 const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categories = [
     { id: 'all', label: 'All Activities', icon: MapPin },
@@ -26,7 +27,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'live-music-tour',
       title: 'Live Music Venue Tour',
-      description: "Experience Austin's legendary music scene with visits to iconic venues",
+      description: "Experience Austin's legendary music scene with visits to iconic venues including The Continental Club, Antone's, and the vibrant Red River District. Led by a local musician who will share insider stories and history.",
       category: 'music',
       duration: '4 hours',
       price: 85,
@@ -38,7 +39,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'food-truck-crawl',
       title: 'Austin Food Truck Crawl',
-      description: "Taste the best of Austin's diverse food truck scene",
+      description: "Taste the best of Austin's diverse food truck scene with stops at 5 carefully selected trucks featuring local favorites, from tacos to BBQ to innovative fusion cuisine.",
       category: 'food',
       duration: '3 hours',
       price: 65,
@@ -50,7 +51,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'kayak-adventure',
       title: 'Lady Bird Lake Kayak Adventure',
-      description: 'Paddle through downtown Austin with stunning skyline views',
+      description: 'Paddle through downtown Austin with stunning skyline views. Perfect for beginners and experienced kayakers alike. All equipment and safety gear included.',
       category: 'outdoor',
       duration: '2.5 hours',
       price: 75,
@@ -62,7 +63,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'mural-art-tour',
       title: 'Austin Street Art & Mural Tour',
-      description: "Discover Austin's vibrant street art and learn about local artists",
+      description: "Discover Austin's vibrant street art scene with visits to famous murals and hidden artistic gems. Learn about the artists and stories behind each piece.",
       category: 'culture',
       duration: '2 hours',
       price: 45,
@@ -74,7 +75,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'bbq-masterclass',
       title: 'Texas BBQ Masterclass',
-      description: 'Learn the secrets of authentic Texas BBQ from local pitmasters',
+      description: 'Learn the secrets of authentic Texas BBQ from local pitmasters. Hands-on experience with meat selection, rub preparation, and low-and-slow smoking techniques.',
       category: 'food',
       duration: '4 hours',
       price: 120,
@@ -86,7 +87,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'bat-watching',
       title: 'Congress Bridge Bat Watching',
-      description: "Witness the spectacular nightly emergence of Austin's famous bats",
+      description: "Witness the spectacular nightly emergence of over 1.5 million Mexican free-tailed bats from under Congress Bridge. A truly unique Austin experience.",
       category: 'outdoor',
       duration: '1.5 hours',
       price: 35,
@@ -98,7 +99,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'brewery-hopping',
       title: 'Craft Brewery Hopping Tour',
-      description: "Sample Austin's best craft beers with transportation included",
+      description: "Sample Austin's best craft beers with stops at 4 local breweries. Transportation included between locations. Perfect for beer enthusiasts.",
       category: 'food',
       duration: '4 hours',
       price: 95,
@@ -110,7 +111,7 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     {
       id: 'hill-country-day-trip',
       title: 'Texas Hill Country Day Trip',
-      description: 'Scenic drive through rolling hills, wineries, and charming towns',
+      description: 'Scenic drive through rolling hills, visiting wineries and charming historic towns. Includes wine tastings, lunch, and photo stops at breathtaking viewpoints.',
       category: 'outdoor',
       duration: '8 hours',
       price: 180,
@@ -125,19 +126,9 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
     ? activities 
     : activities.filter(activity => activity.category === selectedCategory);
 
-  const toggleActivitySelection = (activityId: string) => {
-    setSelectedActivities(prev => 
-      prev.includes(activityId) 
-        ? prev.filter(id => id !== activityId)
-        : [...prev, activityId]
-    );
-  };
-
-  const getTotalPrice = () => {
-    return selectedActivities.reduce((total, activityId) => {
-      const activity = activities.find(a => a.id === activityId);
-      return total + (activity ? activity.price : 0);
-    }, 0);
+  const handleViewDetails = (activity: any) => {
+    setSelectedActivity(activity);
+    setIsModalOpen(true);
   };
 
   return (
@@ -147,31 +138,20 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center mb-8"
         >
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="text-white hover:bg-white/20 mr-4"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-white drop-shadow-2xl">Austin Activities</h1>
-              <p className="text-white/90 drop-shadow-lg">Discover the best experiences Austin has to offer</p>
-            </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="text-white hover:bg-white/20 mr-4"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-white drop-shadow-2xl">Austin Activities</h1>
+            <p className="text-white/90 drop-shadow-lg">Discover the best experiences Austin has to offer</p>
           </div>
-          
-          {selectedActivities.length > 0 && (
-            <div className="text-white">
-              <Badge variant="secondary" className="mr-3 bg-white/20 text-white">
-                {selectedActivities.length} selected
-              </Badge>
-              <span className="font-bold">${getTotalPrice()}</span>
-            </div>
-          )}
         </motion.div>
 
         {/* Category Filter */}
@@ -199,8 +179,8 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
           </div>
         </motion.div>
 
-        {/* Activities Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Activities Grid - 2 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredActivities.map((activity, index) => (
             <motion.div
               key={activity.id}
@@ -208,62 +188,33 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 + 0.2 }}
             >
-              <Card className={`bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer ${
-                selectedActivities.includes(activity.id) ? 'border-white/40 bg-white/20' : ''
-              }`}>
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 h-full">
                 <CardHeader className="p-4">
-                  <div className="aspect-[4/3] bg-white/20 rounded-lg mb-3 flex items-center justify-center">
-                    <MapPin className="w-8 h-8 text-white/60" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs capitalize bg-white/20 text-white">
-                      {activity.category}
-                    </Badge>
-                    <div className="flex items-center text-yellow-400">
-                      <Star className="w-4 h-4 mr-1" />
-                      <span className="text-sm font-semibold">{activity.rating}</span>
-                    </div>
+                  {/* Image Placeholder */}
+                  <div className="aspect-[16/9] bg-white/20 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                    <span className="text-6xl">📸</span>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <h3 className="text-white font-semibold text-lg mb-2">{activity.title}</h3>
-                  <p className="text-white/70 text-sm mb-3">{activity.description}</p>
+                <CardContent className="p-4 pt-0 flex flex-col">
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-white mb-4">{activity.title}</h3>
                   
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="flex items-center text-white/80">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{activity.duration}</span>
-                    </div>
-                    <div className="flex items-center text-white/80">
-                      <Users className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{activity.participants}</span>
-                    </div>
+                  {/* Price */}
+                  <div className="text-white mb-4">
+                    <span className="text-sm text-white/70">From</span>
+                    <p className="font-bold text-2xl">${activity.price}</p>
                   </div>
 
-                  <div className="mb-4">
-                    <h4 className="text-white/80 text-sm font-semibold mb-2">Highlights:</h4>
-                    <div className="space-y-1">
-                      {activity.highlights.slice(0, 3).map((highlight, idx) => (
-                        <div key={idx} className="flex items-center text-white/70 text-xs">
-                          <span className="w-1 h-1 bg-white/50 rounded-full mr-2"></span>
-                          {highlight}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-white">
-                      <span className="text-sm text-white/70">From</span>
-                      <p className="font-bold text-lg">${activity.price}</p>
-                    </div>
-                    <div className="text-white/70 text-xs text-right">
-                      <Calendar className="w-3 h-3 inline mr-1" />
-                      {activity.availability}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 mt-auto">
+                    <Button 
+                      variant="secondary"
+                      className="flex-1 bg-white/20 text-white hover:bg-white/30"
+                      onClick={() => handleViewDetails(activity)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
                     <AddToItineraryButton
                       item={{
                         type: 'activity',
@@ -277,47 +228,23 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
                           category: activity.category
                         }
                       }}
-                      variant="secondary"
+                      variant="default"
                       className="flex-1"
                     />
-                    <Button variant="secondary" size="sm" className="bg-white/20 text-white hover:bg-white/30">
-                      Details
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           ))}
         </div>
-
-        {/* Selection Summary */}
-        {selectedActivities.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-20 left-4 right-4 max-w-6xl mx-auto z-10"
-          >
-            <Card className="bg-white/20 backdrop-blur-md border-white/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-white">
-                    <span className="font-semibold">{selectedActivities.length} activities selected</span>
-                    <span className="text-white/70 ml-2">Total: ${getTotalPrice()}</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button variant="secondary" onClick={() => setSelectedActivities([])} className="bg-white/20 text-white hover:bg-white/30">
-                      Clear All
-                    </Button>
-                    <Button variant="default" size="lg">
-                      Book Selected
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
       </div>
+
+      {/* Detail Modal */}
+      <ActivityDetailModal
+        activity={selectedActivity}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };
