@@ -126,8 +126,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
-        height: '720px', // Reduced to match preview window visible area
-        maxHeight: '720px'
+        height: '100%'
       } as React.CSSProperties}
     >
       {/* Background - Concierge Aesthetic */}
@@ -136,8 +135,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         style={{ 
           touchAction: 'none',
           overscrollBehavior: 'none',
-          height: '720px',
-          maxHeight: '720px'
+          height: '100%'
         } as React.CSSProperties}
       >
         {/* Animated background particles */}
@@ -188,25 +186,23 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
 
-        {/* Content Container - Fixed layout to fit all elements properly */}
+        {/* Content Container - Flexbox layout with proper spacing */}
         <div 
-          className="relative z-10 flex flex-col h-full px-4"
+          className="relative z-10 flex flex-col h-full px-4 py-4"
           style={{ 
             touchAction: 'none',
             userSelect: 'none',
             overscrollBehavior: 'none',
-            height: '720px', // Reduced to match preview window visible area
-            maxHeight: '720px',
+            height: '100%',
             overflow: 'hidden'
           } as React.CSSProperties}
         >
           
-          {/* Logo Section - 15px from top of preview window */}
+          {/* Logo Section - Top */}
           <div 
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(0)}`}
             style={{ 
-              paddingTop: '15px',
-              marginBottom: '15px',
+              marginBottom: '12px',
               animationDelay: `${getAnimationDelay(0)}ms`
             }}
           >
@@ -216,20 +212,20 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 alt="Logo" 
                 className="mx-auto object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
                 style={{ 
-                  height: `${logoHeight || 60}px`,
+                  height: `${logoHeight || 50}px`,
                   width: 'auto',
-                  maxWidth: `${logoHeight || 60}px`,
-                  maxHeight: `${logoHeight || 60}px`
+                  maxWidth: '100px',
+                  maxHeight: `${logoHeight || 50}px`
                 }}
               />
             ) : (
               <div 
                 className="relative rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center filter drop-shadow-lg mx-auto"
                 style={{ 
-                  height: `${logoHeight || 60}px`,
-                  width: `${logoHeight || 60}px`,
-                  maxWidth: `${logoHeight || 60}px`,
-                  maxHeight: `${logoHeight || 60}px`
+                  height: `${logoHeight || 50}px`,
+                  width: `${logoHeight || 50}px`,
+                  maxWidth: '100px',
+                  maxHeight: `${logoHeight || 50}px`
                 }}
               >
                 <svg 
@@ -245,18 +241,18 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Title & Content Section */}
+          {/* Title & Subtitle Section */}
           <div 
             className={`flex-none text-center transition-all duration-700 ${getAnimationClass(1)}`}
             style={{ 
-              marginBottom: '20px',
+              marginBottom: '16px',
               animationDelay: `${getAnimationDelay(1)}ms`
             }}
           >
             <h1 
-              className="font-bold mb-3 px-3 leading-tight text-white drop-shadow-2xl"
+              className="font-bold mb-2 px-3 leading-tight text-white drop-shadow-2xl"
               style={{ 
-                fontSize: titleSizeProp ? `${titleSizeProp}px` : '28px',
+                fontSize: titleSizeProp ? `${titleSizeProp}px` : '26px',
                 fontFamily: titleFont || 'system-ui',
                 textShadow: '0 0 40px rgba(255, 255, 255, 0.5), 0 2px 10px rgba(0, 0, 0, 0.5)'
               }}
@@ -264,7 +260,6 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
               {title}
             </h1>
             
-            {/* Subtitle */}
             {subtitle && (
               <div 
                 className={`transition-all duration-700 ${getAnimationClass(2)}`}
@@ -275,7 +270,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                 <p 
                   className="text-white/90 px-3 leading-relaxed"
                   style={{ 
-                    fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '16px',
+                    fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '15px',
                     fontFamily: subtitleFont || 'system-ui',
                     textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
                   }}
@@ -286,15 +281,12 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             )}
           </div>
 
-          {/* Minimal spacer between content and features */}
-          <div style={{ height: '30px' }} />
-
-          {/* Features Section */}
+          {/* Features/Checklist Section */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
               className={`flex-none transition-all duration-700 ${getAnimationClass(3)}`}
               style={{ 
-                marginBottom: '20px',
+                marginBottom: '16px',
                 animationDelay: `${getAnimationDelay(3)}ms`
               }}
             >
@@ -309,7 +301,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                       }}
                     >
                       <div className="flex items-center">
-                        <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg mr-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg mr-3 flex-shrink-0">
                           <svg className="w-3.5 h-3.5 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
@@ -317,7 +309,7 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                         <h3 
                           className="font-semibold text-white"
                           style={{ 
-                            fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '15px',
+                            fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px',
                             textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
                           }}
                         >
@@ -331,11 +323,13 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Buttons Section - FIXED 15px from bottom */}
+          {/* Flexible spacer to push buttons to bottom */}
+          <div className="flex-grow" />
+
+          {/* Buttons Section - Anchored to bottom */}
           <div 
             className={`flex-none transition-all duration-700 ${getAnimationClass(4)}`}
             style={{ 
-              paddingBottom: '15px',
               animationDelay: `${getAnimationDelay(4)}ms`
             }}
           >
