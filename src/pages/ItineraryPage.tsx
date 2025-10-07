@@ -1,20 +1,15 @@
 import { Navigation } from '@/components/concierge/Navigation';
-import { Calendar } from 'lucide-react';
+import ItineraryView from '@/components/concierge/ItineraryView';
+import { useNavigate } from 'react-router-dom';
 
 const ItineraryPage = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 pb-20">
-      <div className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm shadow-lg">
-            <Calendar className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white drop-shadow-2xl">Your Itinerary</h1>
-        </div>
-        <p className="text-white/90 drop-shadow-lg">Plan and view your scheduled activities and reservations.</p>
-      </div>
+    <>
+      <ItineraryView onBack={() => navigate('/')} />
       <Navigation />
-    </div>
+    </>
   );
 };
 
