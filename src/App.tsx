@@ -4,6 +4,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DynamicRouteHandler } from "@/components/routing/DynamicRouteHandler";
+import ConciergeIndex from "@/pages/ConciergeIndex";
+import { ConciergeHome } from "@/components/concierge/ConciergeHome";
+import { Navigation } from "@/components/concierge/Navigation";
+import ItineraryPage from "@/pages/ItineraryPage";
+import TransportPage from "@/pages/TransportPage";
+import BoatsPage from "@/pages/BoatsPage";
+import ExplorePage from "@/pages/ExplorePage";
 import CustomAppView from "@/pages/CustomAppView";
 import Checkout from "@/pages/Checkout";
 import OrderComplete from "@/pages/OrderComplete";
@@ -21,10 +28,22 @@ const App = () => {
         <GlobalCartProvider>
           <div className="min-h-screen">
             <Routes>
-              {/* Homepage - redirect to delivery app */}
-              <Route path="/" element={<Navigate to="/app/delivery" replace />} />
+              {/* Concierge Framework - Main Entry */}
+              <Route path="/" element={<ConciergeIndex />} />
+              <Route path="/home" element={
+                <div>
+                  <ConciergeHome />
+                  <Navigation />
+                </div>
+              } />
               
-              {/* Delivery apps */}
+              {/* Concierge Service Pages */}
+              <Route path="/itinerary" element={<ItineraryPage />} />
+              <Route path="/transport" element={<TransportPage />} />
+              <Route path="/boats" element={<BoatsPage />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              
+              {/* Delivery apps - Integrated as a service */}
               <Route path="/app/:appSlug" element={<CustomAppView />} />
               
               {/* Checkout */}
