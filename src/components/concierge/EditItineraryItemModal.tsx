@@ -13,6 +13,7 @@ interface EditItineraryItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedItem: ItineraryItem) => void;
+  defaultDate?: Date;
 }
 
 const timeSlots = [
@@ -24,7 +25,7 @@ const timeSlots = [
   '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM'
 ];
 
-export function EditItineraryItemModal({ item, isOpen, onClose, onSave }: EditItineraryItemModalProps) {
+export function EditItineraryItemModal({ item, isOpen, onClose, onSave, defaultDate }: EditItineraryItemModalProps) {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [startTime, setStartTime] = useState('12:00 PM');
   const [endDate, setEndDate] = useState<Date | undefined>();
@@ -35,9 +36,11 @@ export function EditItineraryItemModal({ item, isOpen, onClose, onSave }: EditIt
 
   useEffect(() => {
     if (item) {
-      // Parse existing date
+      // Parse existing date, or use defaultDate (arrival date) if no date set
       if (item.date) {
         setStartDate(new Date(item.date));
+      } else if (defaultDate) {
+        setStartDate(defaultDate);
       }
       if (item.startTime) {
         setStartTime(item.startTime);
@@ -54,9 +57,11 @@ export function EditItineraryItemModal({ item, isOpen, onClose, onSave }: EditIt
         setEndDate(new Date(item.meta.endDate));
       } else if (item.date) {
         setEndDate(new Date(item.date));
+      } else if (defaultDate) {
+        setEndDate(defaultDate);
       }
     }
-  }, [item]);
+  }, [item, defaultDate]);
 
   const handleSave = () => {
     if (!item || !startDate) return;

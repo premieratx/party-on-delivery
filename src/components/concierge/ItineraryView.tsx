@@ -581,6 +581,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveItemEdit}
+        defaultDate={tripDates?.arrivalDate}
       />
     </div>
   );
