@@ -131,8 +131,9 @@ export const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
                     features: vehicle.features
                   }
                 }}
+                variant="secondary"
                 size="lg"
-                className="flex-1"
+                className="flex-1 bg-white/15 text-white hover:bg-white/25"
               />
             </div>
           </div>

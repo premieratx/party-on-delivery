@@ -103,8 +103,10 @@ export function BookingModal({ isOpen, onClose, itemType, itemTitle, itemDetails
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
+      <DialogContent className="max-w-lg bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 border-white/20 text-white max-h-[90vh] overflow-y-auto z-[110]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white">
             Book: {itemTitle}
