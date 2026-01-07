@@ -31,7 +31,7 @@ export function RentalDetailModal({ rental, isOpen, onClose }: RentalDetailModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-3xl bg-gradient-to-br from-purple-900/95 via-purple-800/95 to-pink-800/95 backdrop-blur-xl border-white/20 text-white max-h-[90vh] overflow-y-auto p-4 md:p-6">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 border-white/20 text-white max-h-[90vh] overflow-y-auto p-4 md:p-6 z-[100]">
         <div>
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl md:text-2xl font-bold text-white">
