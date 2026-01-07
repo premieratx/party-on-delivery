@@ -2,14 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Clock, Calendar, Trash2, Share2, Copy, Check, Plane, PlaneLanding } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, Trash2, Share2, Copy, Check, Plane, PlaneLanding, GripVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore, ItineraryItem } from '@/store/useAppStore';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { ItineraryItemDetailModal } from './ItineraryItemDetailModal';
 import { TripDatesModal } from './TripDatesModal';
 import { format } from 'date-fns';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ItineraryViewProps {
   onBack: () => void;
@@ -22,17 +39,138 @@ interface TripDates {
   departureTime: string;
 }
 
+// Sortable Item Component
+function SortableItineraryItem({ 
+  item, 
+  onViewDetails, 
+  onRemove, 
+  getTypeIcon, 
+  getStatusColor, 
+  getStatusLabel 
+}: { 
+  item: ItineraryItem; 
+  onViewDetails: (item: ItineraryItem) => void;
+  onRemove: (id: string, title: string) => void;
+  getTypeIcon: (type: string) => string;
+  getStatusColor: (status: string) => string;
+  getStatusLabel: (status: string) => string;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card 
+        className={`bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 ${isDragging ? 'shadow-2xl ring-2 ring-yellow-500/50' : ''}`}
+      >
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            {/* Drag Handle */}
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-2 -ml-2 touch-none"
+            >
+              <GripVertical className="w-5 h-5 text-white/50 hover:text-white" />
+            </div>
+
+            {/* Image */}
+            {item.imageUrl && (
+              <div 
+                className="w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+                onClick={() => onViewDetails(item)}
+              >
+                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+              </div>
+            )}
+            
+            <div 
+              className="flex-1 min-w-0 cursor-pointer"
+              onClick={() => onViewDetails(item)}
+            >
+              <div className="flex items-center flex-wrap gap-2 mb-2">
+                <div className="text-2xl">{getTypeIcon(item.type)}</div>
+                <div className="flex items-center text-white/80">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span className="font-semibold text-sm">{item.startTime || item.date}</span>
+                  {item.endTime && <span className="ml-1 text-sm">- {item.endTime}</span>}
+                </div>
+                <Badge
+                  variant="secondary"
+                  className={`${getStatusColor(item.meta?.status || 'saved')} text-white border-0 text-xs`}
+                >
+                  {getStatusLabel(item.meta?.status || 'saved')}
+                </Badge>
+              </div>
+              
+              <h3 className="text-lg md:text-xl font-semibold text-white mb-2">{item.title}</h3>
+              {item.meta?.description && (
+                <p className="text-white/70 mb-3 line-clamp-2 text-sm">{item.meta.description}</p>
+              )}
+              
+              {item.meta?.duration && (
+                <div className="flex items-center text-white/60">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span className="text-sm">{item.meta.duration}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="bg-white/20 text-white hover:bg-white/30"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(item.id, item.title);
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
   const itinerary = useAppStore((state) => state.itinerary);
   const removeFromItinerary = useAppStore((state) => state.removeFromItinerary);
+  const reorderItinerary = useAppStore((state) => state.reorderItinerary);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDatesModalOpen, setIsDatesModalOpen] = useState(false);
   const [tripDates, setTripDates] = useState<TripDates | null>(null);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Load trip dates from localStorage
   useEffect(() => {
@@ -46,6 +184,21 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
       });
     }
   }, []);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = itinerary.findIndex((item) => item.id === active.id);
+      const newIndex = itinerary.findIndex((item) => item.id === over.id);
+      const newOrder = arrayMove(itinerary, oldIndex, newIndex);
+      reorderItinerary(newOrder);
+      toast({
+        title: "Itinerary reordered",
+        description: "Your changes have been saved.",
+      });
+    }
+  };
 
   const handleSaveTripDates = (dates: TripDates) => {
     setTripDates(dates);
@@ -65,7 +218,6 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
   };
 
   const handlePublishLink = () => {
-    // Generate a shareable link (in production, this would save to backend)
     const shareId = btoa(JSON.stringify({ tripDates, itinerary, timestamp: Date.now() })).slice(0, 20);
     const link = `${window.location.origin}/shared-itinerary/${shareId}`;
     setShareLink(link);
@@ -100,7 +252,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
     }
   };
 
-  const handleViewDetails = (item: any) => {
+  const handleViewDetails = (item: ItineraryItem) => {
     setSelectedItem(item);
     setIsDetailModalOpen(true);
   };
@@ -230,83 +382,44 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ onBack }) => {
           </Card>
         </motion.div>
 
-        {/* Itinerary Timeline */}
-        <div className="space-y-4">
-          {itinerary.length === 0 ? (
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardContent className="p-12 text-center">
-                <Calendar className="w-16 h-16 mx-auto mb-4 text-white/40" />
-                <h3 className="text-xl font-semibold text-white mb-2">No activities yet</h3>
-                <p className="text-white/70">Start exploring and add activities to your itinerary!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            itinerary.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 + 0.2 }}
-            >
-              <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer"
-                onClick={() => handleViewDetails(item)}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    {item.imageUrl && (
-                      <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center mb-2">
-                        <div className="text-2xl mr-3">{getTypeIcon(item.type)}</div>
-                        <div className="flex items-center text-white/80">
-                          <Clock className="w-4 h-4 mr-1" />
-                          <span className="font-semibold">{item.startTime || item.date}</span>
-                          {item.endTime && <span className="ml-1">- {item.endTime}</span>}
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className={`ml-3 ${getStatusColor(item.meta?.status || 'saved')} text-white border-0`}
-                        >
-                          {getStatusLabel(item.meta?.status || 'saved')}
-                        </Badge>
-                      </div>
-                      
-                      <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
-                      {item.meta?.description && (
-                        <p className="text-white/70 mb-3 line-clamp-2">{item.meta.description}</p>
-                      )}
-                      
-                      {item.meta?.duration && (
-                        <div className="flex items-center text-white/60 mb-2">
-                          <Clock className="w-4 h-4 mr-1" />
-                          <span className="text-sm">{item.meta.duration}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="bg-white/20 text-white hover:bg-white/30"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemove(item.id, item.title);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))
-          )}
-        </div>
+        {/* Itinerary Timeline with Drag and Drop */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={itinerary.map(i => i.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-4">
+              {itinerary.length === 0 ? (
+                <Card className="bg-white/10 backdrop-blur-md border-white/20">
+                  <CardContent className="p-12 text-center">
+                    <Calendar className="w-16 h-16 mx-auto mb-4 text-white/40" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No activities yet</h3>
+                    <p className="text-white/70">Start exploring and add activities to your itinerary!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <p className="text-white/70 text-sm text-center mb-2">
+                    <GripVertical className="w-4 h-4 inline mr-1" />
+                    Drag items to reorder your itinerary
+                  </p>
+                  {itinerary.map((item) => (
+                    <SortableItineraryItem
+                      key={item.id}
+                      item={item}
+                      onViewDetails={handleViewDetails}
+                      onRemove={handleRemove}
+                      getTypeIcon={getTypeIcon}
+                      getStatusColor={getStatusColor}
+                      getStatusLabel={getStatusLabel}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         {/* Add New Item */}
         <motion.div
