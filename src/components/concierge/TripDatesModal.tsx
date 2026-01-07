@@ -65,7 +65,7 @@ export function TripDatesModal({ isOpen, onClose, onSave, initialDates }: TripDa
                     {arrivalDate ? format(arrivalDate, "MMM d, yyyy") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-purple-900 border-white/20" align="start">
+                <PopoverContent className="w-auto p-0 bg-purple-900 border-white/20 z-[200]" align="start">
                   <Calendar
                     mode="single"
                     selected={arrivalDate}
@@ -110,7 +110,7 @@ export function TripDatesModal({ isOpen, onClose, onSave, initialDates }: TripDa
                     {departureDate ? format(departureDate, "MMM d, yyyy") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-purple-900 border-white/20" align="start">
+                <PopoverContent className="w-auto p-0 bg-purple-900 border-white/20 z-[200]" align="start">
                   <Calendar
                     mode="single"
                     selected={departureDate}
