@@ -9,6 +9,7 @@ import ConciergeIndex from "@/pages/ConciergeIndex";
 import { ConciergeHome } from "@/components/concierge/ConciergeHome";
 import { Navigation } from "@/components/concierge/Navigation";
 import ItineraryPage from "@/pages/ItineraryPage";
+import SharedItineraryPage from "@/pages/SharedItineraryPage";
 import TransportPage from "@/pages/TransportPage";
 import BoatsPage from "@/pages/BoatsPage";
 import ExplorePage from "@/pages/ExplorePage";
@@ -49,6 +50,7 @@ const App = () => {
               
               {/* Concierge Service Pages */}
               <Route path="/itinerary" element={<ItineraryPage />} />
+              <Route path="/shared-itinerary/:shareId" element={<SharedItineraryPage />} />
               <Route path="/transport" element={<TransportPage />} />
               <Route path="/boats" element={<BoatsPage />} />
               <Route path="/boats/quote" element={<QuoteBuilderPage />} />
