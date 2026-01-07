@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface ItineraryItem {
   id: string;
@@ -66,67 +67,79 @@ interface AppState {
   clearCurrentBooking: (type: 'boat' | 'transport') => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  showIntro: true,
-  cart: [],
-  itinerary: [],
-  currentBooking: {},
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      showIntro: true,
+      cart: [],
+      itinerary: [],
+      currentBooking: {},
 
-  setShowIntro: (show) => set({ showIntro: show }),
+      setShowIntro: (show) => set({ showIntro: show }),
 
-  addToCart: (item) => set((state) => {
-    const existingItem = state.cart.find(cartItem => cartItem.id === item.id);
-    if (existingItem) {
-      return {
-        cart: state.cart.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: (cartItem.quantity || 1) + (item.quantity || 1) }
-            : cartItem
+      addToCart: (item) => set((state) => {
+        const existingItem = state.cart.find(cartItem => cartItem.id === item.id);
+        if (existingItem) {
+          return {
+            cart: state.cart.map(cartItem =>
+              cartItem.id === item.id
+                ? { ...cartItem, quantity: (cartItem.quantity || 1) + (item.quantity || 1) }
+                : cartItem
+            )
+          };
+        }
+        return { cart: [...state.cart, { ...item, quantity: item.quantity || 1 }] };
+      }),
+
+      removeFromCart: (id) => set((state) => ({
+        cart: state.cart.filter(item => item.id !== id)
+      })),
+
+      updateCartQuantity: (id, quantity) => set((state) => ({
+        cart: quantity <= 0
+          ? state.cart.filter(item => item.id !== id)
+          : state.cart.map(item => item.id === id ? { ...item, quantity } : item)
+      })),
+
+      clearCart: () => set({ cart: [] }),
+
+      addToItinerary: (item) => set((state) => ({
+        itinerary: [...state.itinerary, item]
+      })),
+
+      removeFromItinerary: (id) => set((state) => ({
+        itinerary: state.itinerary.filter(item => item.id !== id)
+      })),
+
+      updateItineraryItem: (updatedItem) => set((state) => ({
+        itinerary: state.itinerary.map(item => 
+          item.id === updatedItem.id ? updatedItem : item
         )
-      };
+      })),
+
+      reorderItinerary: (items) => set({ itinerary: items }),
+
+      setCurrentBooking: (type, data) => set((state) => ({
+        currentBooking: {
+          ...state.currentBooking,
+          [type]: { ...state.currentBooking[type], ...data }
+        }
+      })),
+
+      clearCurrentBooking: (type) => set((state) => ({
+        currentBooking: {
+          ...state.currentBooking,
+          [type]: undefined
+        }
+      })),
+    }),
+    {
+      name: 'concierge-app-storage',
+      partialize: (state) => ({
+        itinerary: state.itinerary,
+        cart: state.cart,
+        showIntro: state.showIntro,
+      }),
     }
-    return { cart: [...state.cart, { ...item, quantity: item.quantity || 1 }] };
-  }),
-
-  removeFromCart: (id) => set((state) => ({
-    cart: state.cart.filter(item => item.id !== id)
-  })),
-
-  updateCartQuantity: (id, quantity) => set((state) => ({
-    cart: quantity <= 0
-      ? state.cart.filter(item => item.id !== id)
-      : state.cart.map(item => item.id === id ? { ...item, quantity } : item)
-  })),
-
-  clearCart: () => set({ cart: [] }),
-
-  addToItinerary: (item) => set((state) => ({
-    itinerary: [...state.itinerary, item]
-  })),
-
-  removeFromItinerary: (id) => set((state) => ({
-    itinerary: state.itinerary.filter(item => item.id !== id)
-  })),
-
-  updateItineraryItem: (updatedItem) => set((state) => ({
-    itinerary: state.itinerary.map(item => 
-      item.id === updatedItem.id ? updatedItem : item
-    )
-  })),
-
-  reorderItinerary: (items) => set({ itinerary: items }),
-
-  setCurrentBooking: (type, data) => set((state) => ({
-    currentBooking: {
-      ...state.currentBooking,
-      [type]: { ...state.currentBooking[type], ...data }
-    }
-  })),
-
-  clearCurrentBooking: (type) => set((state) => ({
-    currentBooking: {
-      ...state.currentBooking,
-      [type]: undefined
-    }
-  })),
-}));
+  )
+);
