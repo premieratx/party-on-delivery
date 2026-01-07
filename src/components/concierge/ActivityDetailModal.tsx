@@ -145,8 +145,9 @@ export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetai
                     category: activity.category
                   }
                 }}
+                variant="secondary"
                 size="lg"
-                className="flex-1 text-base py-6"
+                className="flex-1 text-base py-6 bg-white/15 text-white hover:bg-white/25"
               />
             </div>
           </div>
