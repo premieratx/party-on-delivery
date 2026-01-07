@@ -1,8 +1,9 @@
 import { Navigation } from '@/components/concierge/Navigation';
-import { Ship } from 'lucide-react';
+import { Ship, CalendarHeart } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useScrollToHideNav } from '@/hooks/useScrollToHideNav';
 import { BoatGalleryModal, boats } from '@/components/concierge/BoatGalleryModal';
+import { BoatSaveTheDateModal } from '@/components/concierge/BoatSaveTheDateModal';
 import { Button } from '@/components/ui/button';
 
 const BoatsPage = () => {
@@ -10,6 +11,7 @@ const BoatsPage = () => {
   const [iframeHeight, setIframeHeight] = useState(800);
   const [selectedBoat, setSelectedBoat] = useState<typeof boats[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaveDateModalOpen, setIsSaveDateModalOpen] = useState(false);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -43,9 +45,18 @@ const BoatsPage = () => {
           </div>
           <h1 className="text-3xl font-bold text-white drop-shadow-2xl">Boat Rentals</h1>
         </div>
-        <p className="text-white/90 mb-6 drop-shadow-lg">Reserve boats for Austin lake adventures.</p>
+        <p className="text-white/90 mb-4 drop-shadow-lg">Reserve boats for Austin lake adventures.</p>
         
-        <div 
+        {/* Save the Date Button */}
+        <Button
+          onClick={() => setIsSaveDateModalOpen(true)}
+          className="mb-6 bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 text-lg"
+        >
+          <CalendarHeart className="w-5 h-5 mr-2" />
+          Save the Date - Party Cruise
+        </Button>
+        
+        <div
           className="w-full bg-white/10 backdrop-blur-md rounded-lg overflow-hidden shadow-2xl border border-white/20"
           style={{ minHeight: `${iframeHeight}px` }}
         >
@@ -101,6 +112,10 @@ const BoatsPage = () => {
           setIsModalOpen(false);
           setSelectedBoat(null);
         }}
+      />
+      <BoatSaveTheDateModal
+        isOpen={isSaveDateModalOpen}
+        onClose={() => setIsSaveDateModalOpen(false)}
       />
       <Navigation hideOnScroll={true} />
     </div>

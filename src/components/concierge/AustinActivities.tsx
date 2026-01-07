@@ -32,6 +32,127 @@ const AustinActivities: React.FC<AustinActivitiesProps> = ({ onBack }) => {
   ];
 
   const activities = [
+    // Brunch spots
+    {
+      id: 'jacobys-brunch',
+      title: "Jacoby's Restaurant & Mercantile",
+      description: "Farm-to-table brunch at a working ranch. Famous for their buttermilk biscuits, smoked meats, and stunning outdoor patio overlooking the Colorado River.",
+      category: 'food',
+      duration: '1.5 hours',
+      price: 35,
+      rating: 4.8,
+      participants: '2-10 people',
+      highlights: ['Farm-to-table', 'Smoked meats', 'River views', 'Weekend brunch'],
+      availability: 'Sat-Sun 10 AM - 2 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=600'
+    },
+    {
+      id: 'kerbey-lane',
+      title: 'Kerbey Lane Cafe',
+      description: "Austin's iconic 24/7 breakfast spot. Known for their legendary pancakes, migas, and quirky Austin vibe since 1980.",
+      category: 'food',
+      duration: '1 hour',
+      price: 20,
+      rating: 4.6,
+      participants: '1-8 people',
+      highlights: ['24/7 service', 'Legendary pancakes', 'Austin institution', 'Vegetarian options'],
+      availability: 'Open 24 hours',
+      imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600'
+    },
+    {
+      id: 'june-brunch',
+      title: 'June All Day',
+      description: "European-inspired cafe with stunning interiors. Perfect for Instagram-worthy brunch with fresh pastries, creative egg dishes, and craft cocktails.",
+      category: 'food',
+      duration: '1.5 hours',
+      price: 40,
+      rating: 4.9,
+      participants: '2-6 people',
+      highlights: ['European vibes', 'Fresh pastries', 'Craft cocktails', 'Beautiful space'],
+      availability: 'Daily 8 AM - 3 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1495147466023-ac5c588e2e94?w=600'
+    },
+    // Steak restaurants
+    {
+      id: 'jeffrey-steakhouse',
+      title: "Jeffrey's of Austin",
+      description: "Upscale Austin steakhouse serving prime cuts in an elegant setting. A local favorite for special occasions with impeccable service.",
+      category: 'food',
+      duration: '2 hours',
+      price: 120,
+      rating: 4.9,
+      participants: '2-8 people',
+      highlights: ['Prime steaks', 'Fine dining', 'Wine cellar', 'Special occasions'],
+      availability: 'Dinner nightly 5-10 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600'
+    },
+    {
+      id: 'perry-steakhouse',
+      title: "Perry's Steakhouse & Grille",
+      description: "Award-winning steakhouse famous for their pork chop Fridays and USDA Prime beef. Sophisticated atmosphere perfect for business or pleasure.",
+      category: 'food',
+      duration: '2 hours',
+      price: 100,
+      rating: 4.8,
+      participants: '2-10 people',
+      highlights: ['Friday pork chop', 'USDA Prime beef', 'Happy hour', 'Private dining'],
+      availability: 'Daily 4 PM - 10 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1558030006-450675393462?w=600'
+    },
+    {
+      id: 'red-ash',
+      title: 'Red Ash Italia',
+      description: "Italian steakhouse with wood-fired grilled steaks and fresh pasta. Unique blend of Italian cuisine with premium Texas beef.",
+      category: 'food',
+      duration: '2 hours',
+      price: 90,
+      rating: 4.7,
+      participants: '2-8 people',
+      highlights: ['Wood-fired steaks', 'Fresh pasta', 'Italian wines', 'Downtown location'],
+      availability: 'Dinner nightly 5-10 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=600'
+    },
+    // Mexican restaurants
+    {
+      id: 'suerte-mexican',
+      title: 'Suerte',
+      description: "Contemporary Mexican restaurant using Texas ingredients. Famous for their house-made tortillas and innovative takes on traditional dishes.",
+      category: 'food',
+      duration: '1.5 hours',
+      price: 55,
+      rating: 4.9,
+      participants: '2-6 people',
+      highlights: ['House-made tortillas', 'Farm-to-table', 'Craft mezcal', 'James Beard nominated'],
+      availability: 'Tue-Sun 5-10 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600'
+    },
+    {
+      id: 'matt-el-rancho',
+      title: "Matt's El Rancho",
+      description: "Legendary Tex-Mex since 1952. Famous for Bob Armstrong dip and serving Austin's best enchiladas in a festive, family-friendly atmosphere.",
+      category: 'food',
+      duration: '1.5 hours',
+      price: 30,
+      rating: 4.7,
+      participants: '2-12 people',
+      highlights: ['Since 1952', 'Bob Armstrong dip', 'Margaritas', 'Austin institution'],
+      availability: 'Daily 11 AM - 10 PM',
+      imageUrl: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=600'
+    },
+    {
+      id: 'fonda-san-miguel',
+      title: 'Fonda San Miguel',
+      description: "Interior Mexican cuisine in a stunning hacienda setting. Renowned Sunday brunch with traditional dishes from Oaxaca, Yucatan, and beyond.",
+      category: 'food',
+      duration: '2 hours',
+      price: 60,
+      rating: 4.8,
+      participants: '2-10 people',
+      highlights: ['Interior Mexican', 'Hacienda setting', 'Sunday brunch', 'Art collection'],
+      availability: 'Sun brunch, Tue-Sat dinner',
+      imageUrl: 'https://images.unsplash.com/photo-1504544750208-dc0358e63f7f?w=600'
+    },
+    // Original activities
     {
       id: 'live-music-tour',
       title: 'Live Music Venue Tour',
