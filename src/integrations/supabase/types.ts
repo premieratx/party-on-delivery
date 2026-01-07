@@ -3041,7 +3041,7 @@ export type Database = {
           product_id: string
           product_title: string
           product_type: string | null
-          search_vector: unknown | null
+          search_vector: unknown
           tags: string[] | null
           updated_at: string | null
           vendor: string | null
@@ -3057,7 +3057,7 @@ export type Database = {
           product_id: string
           product_title: string
           product_type?: string | null
-          search_vector?: unknown | null
+          search_vector?: unknown
           tags?: string[] | null
           updated_at?: string | null
           vendor?: string | null
@@ -3073,7 +3073,7 @@ export type Database = {
           product_id?: string
           product_title?: string
           product_type?: string | null
-          search_vector?: unknown | null
+          search_vector?: unknown
           tags?: string[] | null
           updated_at?: string | null
           vendor?: string | null
@@ -4577,62 +4577,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      auto_fix_all_security_issues: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_expired_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_cache_optimized: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_orders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_progress: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_integration_health_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_product_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_sensitive_payment_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      comprehensive_security_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      configure_auth_security: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      document_remaining_manual_actions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      enforce_security_standards: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      auto_fix_all_security_issues: { Args: never; Returns: Json }
+      cleanup_expired_cache: { Args: never; Returns: undefined }
+      cleanup_expired_cache_optimized: { Args: never; Returns: undefined }
+      cleanup_expired_orders: { Args: never; Returns: undefined }
+      cleanup_expired_progress: { Args: never; Returns: undefined }
+      cleanup_integration_health_logs: { Args: never; Returns: undefined }
+      cleanup_product_cache: { Args: never; Returns: undefined }
+      cleanup_sensitive_payment_data: { Args: never; Returns: undefined }
+      comprehensive_security_check: { Args: never; Returns: Json }
+      configure_auth_security: { Args: never; Returns: undefined }
+      document_remaining_manual_actions: { Args: never; Returns: Json }
+      enforce_security_standards: { Args: never; Returns: Json }
       execute_automation_template: {
         Args: { template_name_param: string }
         Returns: Json
       }
-      finalize_security_setup: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      finalize_security_setup: { Args: never; Returns: Json }
       find_group_order_by_token: {
         Args: { p_share_token: string }
         Returns: {
@@ -4648,10 +4609,7 @@ export type Database = {
           total_amount: number
         }[]
       }
-      fix_function_search_paths: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      fix_function_search_paths: { Args: never; Returns: Json }
       generate_affiliate_code: {
         Args: { company_name: string }
         Returns: string
@@ -4677,16 +4635,13 @@ export type Database = {
         }[]
       }
       get_categories_with_counts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           category: string
           product_count: number
         }[]
       }
-      get_checkout_config: {
-        Args: { config_type?: string }
-        Returns: Json
-      }
+      get_checkout_config: { Args: { config_type?: string }; Returns: Json }
       get_dashboard_data: {
         Args: {
           affiliate_code?: string
@@ -4703,18 +4658,12 @@ export type Database = {
         }
         Returns: Json
       }
-      get_final_security_summary: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_final_security_summary: { Args: never; Returns: Json }
       get_group_order_details: {
         Args: { p_share_token: string }
         Returns: Json
       }
-      get_post_checkout_url: {
-        Args: { app_name: string }
-        Returns: string
-      }
+      get_post_checkout_url: { Args: { app_name: string }; Returns: string }
       get_product_category: {
         Args: { p_collection_handles: string[] }
         Returns: string
@@ -4723,18 +4672,12 @@ export type Database = {
         Args: { p_category?: string; p_limit?: number }
         Returns: Json
       }
-      get_security_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_security_status: { Args: never; Returns: Json }
       get_system_guidelines: {
         Args: { p_guideline_type?: string }
         Returns: Json
       }
-      hash_password: {
-        Args: { password: string }
-        Returns: string
-      }
+      hash_password: { Args: { password: string }; Returns: string }
       hierarchical_product_search: {
         Args: { max_results?: number; search_query: string }
         Returns: {
@@ -4750,22 +4693,10 @@ export type Database = {
           vendor: string
         }[]
       }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_user_enhanced: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_user_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_admin_user_enhanced: { Args: never; Returns: boolean }
+      is_admin_user_safe: { Args: never; Returns: boolean }
+      is_current_user_admin: { Args: never; Returns: boolean }
       join_group_order: {
         Args: {
           p_customer_email: string
@@ -4804,10 +4735,7 @@ export type Database = {
         }
         Returns: Json
       }
-      load_figma_template: {
-        Args: { template_id: string }
-        Returns: Json
-      }
+      load_figma_template: { Args: { template_id: string }; Returns: Json }
       log_ai_work: {
         Args: {
           p_action_type: string
@@ -4863,22 +4791,13 @@ export type Database = {
         }
         Returns: string
       }
-      monitor_security_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      optimized_cache_cleanup: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      monitor_security_status: { Args: never; Returns: Json }
+      optimized_cache_cleanup: { Args: never; Returns: undefined }
       request_admin_password_reset: {
         Args: { admin_email: string }
         Returns: Json
       }
-      revoke_all_public_access: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      revoke_all_public_access: { Args: never; Returns: undefined }
       safe_cache_upsert: {
         Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
@@ -4887,26 +4806,17 @@ export type Database = {
         Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
       }
-      safe_timestamp_to_bigint: {
-        Args: { ts: string }
-        Returns: number
-      }
+      safe_timestamp_to_bigint: { Args: { ts: string }; Returns: number }
       sanitize_order_payment_data: {
         Args: { payment_intent_id_param: string }
         Returns: undefined
       }
-      set_admin_context: {
-        Args: { admin_email: string }
-        Returns: undefined
-      }
+      set_admin_context: { Args: { admin_email: string }; Returns: undefined }
       set_admin_password: {
         Args: { admin_email: string; new_password: string }
         Returns: boolean
       }
-      sync_shopify_to_hierarchical_categories: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      sync_shopify_to_hierarchical_categories: { Args: never; Returns: number }
       track_affiliate_order: {
         Args: {
           p_affiliate_slug: string
@@ -4915,14 +4825,8 @@ export type Database = {
         }
         Returns: string
       }
-      trigger_keep_alive: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      trigger_shopify_bulk_sync: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      trigger_keep_alive: { Args: never; Returns: undefined }
+      trigger_shopify_bulk_sync: { Args: never; Returns: Json }
       update_component_health: {
         Args: {
           p_component_name: string
@@ -4934,10 +4838,7 @@ export type Database = {
         }
         Returns: string
       }
-      update_daily_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_daily_analytics: { Args: never; Returns: undefined }
       upsert_cache_entry: {
         Args: {
           cache_data_param: Json
@@ -4956,7 +4857,7 @@ export type Database = {
         }[]
       }
       validate_security_setup: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           has_policies: boolean
           rls_enabled: boolean
@@ -4964,10 +4865,7 @@ export type Database = {
           table_name: string
         }[]
       }
-      verify_admin_access: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
+      verify_admin_access: { Args: { user_email: string }; Returns: boolean }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
         Returns: boolean
@@ -4976,10 +4874,7 @@ export type Database = {
         Args: { hash: string; password: string }
         Returns: boolean
       }
-      warm_system_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      warm_system_cache: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
