@@ -214,9 +214,7 @@ All colors MUST be HSL.
     touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
-    /* Performance improvements */
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    /* NOTE: don't apply transforms to <body>; it breaks fixed-position (Radix Dialog) */
   }
   
   /* Better mobile button targets */
