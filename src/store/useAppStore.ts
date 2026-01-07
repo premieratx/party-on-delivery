@@ -60,6 +60,7 @@ interface AppState {
   clearCart: () => void;
   addToItinerary: (item: ItineraryItem) => void;
   removeFromItinerary: (id: string) => void;
+  updateItineraryItem: (item: ItineraryItem) => void;
   reorderItinerary: (items: ItineraryItem[]) => void;
   setCurrentBooking: (type: 'boat' | 'transport', data: any) => void;
   clearCurrentBooking: (type: 'boat' | 'transport') => void;
@@ -105,6 +106,12 @@ export const useAppStore = create<AppState>((set) => ({
 
   removeFromItinerary: (id) => set((state) => ({
     itinerary: state.itinerary.filter(item => item.id !== id)
+  })),
+
+  updateItineraryItem: (updatedItem) => set((state) => ({
+    itinerary: state.itinerary.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    )
   })),
 
   reorderItinerary: (items) => set({ itinerary: items }),
