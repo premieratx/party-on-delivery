@@ -33,7 +33,9 @@ export function ActivityDetailModal({ activity, isOpen, onClose }: ActivityDetai
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) onClose();
+      }}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 border-white/20 text-white max-h-[85vh] overflow-y-auto z-[100]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white flex items-center justify-between">

@@ -30,7 +30,9 @@ export function RentalDetailModal({ rental, isOpen, onClose }: RentalDetailModal
   const grandTotal = subtotal + salesTax;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="max-w-[95vw] sm:max-w-3xl bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 border-white/20 text-white max-h-[90vh] overflow-y-auto p-4 md:p-6 z-[100]">
         <div>
           <DialogHeader className="mb-4">
